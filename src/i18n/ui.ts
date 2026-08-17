@@ -46,8 +46,8 @@ export const ui = {
       placesSub: "Every part of this site is a place. Walk in, or just click.",
       cards: {
         experience: "The quest board. Work I shipped at Gentek.ai, with the numbers to prove it.",
-        projects: "BeYou glowing at the top, older artifacts on the shelf below.",
-        writing: "Engineering stories from the BeYou docs, in English and Portuguese.",
+        projects: "Beyou glowing at the top, older artifacts on the shelf below.",
+        writing: "Engineering stories from the Beyou docs, in English and Portuguese.",
         about: "Who I am, the laptop that started everything, and where this is going.",
       },
     },
@@ -55,8 +55,8 @@ export const ui = {
       title: "About",
       paragraphs: [
         "I'm André, a software engineer living in Lisbon. At Gentek.ai I work on an AI SaaS platform used by banks: OLAP pipelines, reactive microservices, caching layers, the kind of system where being wrong is expensive.",
-        "I learned to code on a used LG S460 my mom bought me in 2020, for high school. That same laptop now runs real production. BeYou, my habit app, is served from it every day, behind a Cloudflare Tunnel, with a full monitoring stack watching over it.",
-        "BeYou is where I build things end to end: a Spring Boot backend, a React web app, a native Android app sharing the same monorepo, and an AI agent running on a chain of free-tier LLMs. It costs nothing to host and it has taught me more than any course.",
+        "I learned to code on a used LG S460 my mom bought me in 2020, for high school. That same laptop now runs real production. Beyou, my habit app, is served from it every day, behind a Cloudflare Tunnel, with a full monitoring stack watching over it.",
+        "Beyou is where I build things end to end: a Spring Boot backend, a React web app, a native Android app sharing the same monorepo, and an AI agent running on a chain of free-tier LLMs. It costs nothing to host and it has taught me more than any course.",
         "Game development is the long-term goal. I never had time to chase it properly, so I started here: this site is a small magic vale with a wizard in it, built with React Three Fiber. Piece by piece, it will grow. That is how I do everything.",
       ],
     },
@@ -69,7 +69,7 @@ export const ui = {
     projects: {
       title: "Projects",
       sub: "One artifact glows at the top of the tower. The rest live on the shelf.",
-      flagshipName: "BeYou",
+      flagshipName: "Beyou",
       flagshipTag: "A free, gamified habit and routine manager, running as a real production.",
       flagshipFacts: [
         "One TypeScript core, two clients: React on the web and React Native on Android, sharing state, API layer and i18n as source in a monorepo.",
@@ -86,7 +86,7 @@ export const ui = {
     },
     writing: {
       title: "Writing",
-      sub: "I write about the engineering behind BeYou on its docs site. Every post exists in English and Portuguese.",
+      sub: "I write about the engineering behind Beyou on its docs site. Every post exists in English and Portuguese.",
       latest: "Latest",
       readPost: "Read the post",
     },
@@ -143,8 +143,8 @@ export const ui = {
       placesSub: "Cada parte deste site é um lugar. Entre andando, ou só clique.",
       cards: {
         experience: "O mural de missões. O que entreguei na Gentek.ai, com os números para provar.",
-        projects: "O BeYou brilhando no topo, artefatos mais antigos na prateleira.",
-        writing: "Histórias de engenharia dos docs do BeYou, em inglês e português.",
+        projects: "O Beyou brilhando no topo, artefatos mais antigos na prateleira.",
+        writing: "Histórias de engenharia dos docs do Beyou, em inglês e português.",
         about: "Quem eu sou, o laptop que começou tudo, e para onde isso vai.",
       },
     },
@@ -152,8 +152,8 @@ export const ui = {
       title: "Sobre",
       paragraphs: [
         "Sou o André, engenheiro de software vivendo em Lisboa. Na Gentek.ai trabalho em uma plataforma de AI SaaS usada por bancos: pipelines OLAP, microsserviços reativos, camadas de cache, o tipo de sistema em que errar custa caro.",
-        "Aprendi a programar em um LG S460 usado que minha mãe comprou para mim em 2020, para o ensino médio. Esse mesmo laptop hoje roda produção de verdade. O BeYou, meu app de hábitos, é servido dele todos os dias, atrás de um Cloudflare Tunnel, com uma stack completa de monitoramento vigiando.",
-        "O BeYou é onde construo as coisas de ponta a ponta: um backend Spring Boot, um app web em React, um app Android nativo no mesmo monorepo, e um agente de IA rodando em uma cadeia de LLMs de free tier. Custa zero para hospedar e me ensinou mais que qualquer curso.",
+        "Aprendi a programar em um LG S460 usado que minha mãe comprou para mim em 2020, para o ensino médio. Esse mesmo laptop hoje roda produção de verdade. O Beyou, meu app de hábitos, é servido dele todos os dias, atrás de um Cloudflare Tunnel, com uma stack completa de monitoramento vigiando.",
+        "O Beyou é onde construo as coisas de ponta a ponta: um backend Spring Boot, um app web em React, um app Android nativo no mesmo monorepo, e um agente de IA rodando em uma cadeia de LLMs de free tier. Custa zero para hospedar e me ensinou mais que qualquer curso.",
         "Desenvolvimento de jogos é o objetivo de longo prazo. Nunca tive tempo de correr atrás direito, então comecei por aqui: este site é um pequeno vale mágico com um mago dentro, feito com React Three Fiber. Peça por peça, ele vai crescer. É assim que eu faço tudo.",
       ],
     },
@@ -166,7 +166,7 @@ export const ui = {
     projects: {
       title: "Projetos",
       sub: "Um artefato brilha no topo da torre. Os outros vivem na prateleira.",
-      flagshipName: "BeYou",
+      flagshipName: "Beyou",
       flagshipTag: "Um gestor de hábitos e rotinas gamificado, gratuito, rodando como produção de verdade.",
       flagshipFacts: [
         "Um núcleo TypeScript, dois clientes: React na web e React Native no Android, compartilhando estado, camada de API e i18n como código-fonte em um monorepo.",
@@ -183,7 +183,7 @@ export const ui = {
     },
     writing: {
       title: "Textos",
-      sub: "Escrevo sobre a engenharia do BeYou no site de docs dele. Todo post existe em inglês e português.",
+      sub: "Escrevo sobre a engenharia do Beyou no site de docs dele. Todo post existe em inglês e português.",
       latest: "Mais recente",
       readPost: "Ler o post",
     },

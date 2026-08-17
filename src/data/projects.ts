@@ -67,14 +67,14 @@ export const shelf: ShelfItem[] = [
     },
   },
   {
-    name: "BeYou HabitTracker",
+    name: "Beyou HabitTracker",
     lang: "JavaScript",
     year: "2023",
     url: "https://github.com/AndDev741/BeYou-HabitTracker",
     relic: true,
     blurb: {
-      en: "The ancestor. BeYou's first form, kept as a relic.",
-      pt: "O ancestral. A primeira forma do BeYou, guardada como relíquia.",
+      en: "The ancestor. Beyou's first form, kept as a relic.",
+      pt: "O ancestral. A primeira forma do Beyou, guardada como relíquia.",
     },
   },
 ];

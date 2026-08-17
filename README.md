@@ -36,7 +36,7 @@ Content lives in `src/i18n/ui.ts` (copy) and `src/data/` (quests, projects, writ
 ## Roadmap
 
 - Building interiors
-- A crystal ball in the Cottage streaming live Grafana metrics from the machine that hosts BeYou
+- A crystal ball in the Cottage streaming live Grafana metrics from the machine that hosts Beyou
 - Day/night cycle, ambient sound with a mute control
 - A "visited every place" achievement
 - A cat familiar that follows the wizard
