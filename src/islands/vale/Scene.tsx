@@ -269,22 +269,22 @@ export function Scene({
   return (
     <>
       <color attach="background" args={["#141c28"]} />
-      <fog attach="fog" args={["#141c28", 42, 112]} />
+      <fog attach="fog" args={["#141c28", 62, 190]} />
       <hemisphereLight args={["#8092c0", "#33422f", 0.8]} />
       {/* Low dusk sun. Its shadow camera covers the village only, so the
           plaza gets crisp shadows without spending resolution on the horizon. */}
       <directionalLight
         color="#ffd2a6"
         intensity={1.65}
-        position={[-26, 20, 10]}
+        position={[-34, 28, 14]}
         castShadow
         shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-32}
-        shadow-camera-right={32}
-        shadow-camera-top={32}
-        shadow-camera-bottom={-32}
+        shadow-camera-left={-40}
+        shadow-camera-right={40}
+        shadow-camera-top={40}
+        shadow-camera-bottom={-40}
         shadow-camera-near={1}
-        shadow-camera-far={90}
+        shadow-camera-far={120}
         shadow-bias={-0.0015}
         shadow-normalBias={0.02}
       />
@@ -310,7 +310,7 @@ export function Scene({
         </mesh>
       ))}
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
-        <circleGeometry args={[9.5, 44]} />
+        <circleGeometry args={[11, 48]} />
         <meshStandardMaterial color="#4d4636" />
       </mesh>
       {places.map((p) => {
@@ -335,7 +335,7 @@ export function Scene({
       </mesh>
 
       {/* The well at the heart of the plaza */}
-      <group scale={3.2}>
+      <group scale={5}>
         <Model path="/models/building_well_blue.gltf" />
       </group>
 

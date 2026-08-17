@@ -104,7 +104,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
       <Canvas
         dpr={[1, 1.75]}
         shadows={detail === 1}
-        camera={{ fov: 42, position: [0, 15, 29.5], near: 0.5, far: 340 }}
+        camera={{ fov: 42, position: [0, 15, 29.5], near: 0.5, far: 420 }}
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
@@ -129,8 +129,14 @@ export default function ValeApp({ lang }: { lang: Lang }) {
         />
       </Canvas>
 
-      {/* Dock: place shortcuts + walk toggle */}
-      <div className="pointer-events-auto absolute right-3 top-1/2 z-[6] flex -translate-y-1/2 flex-col items-end gap-1.5">
+      {/* Dock: place shortcuts + walk toggle. An open panel would sit on top of
+          it, so on wide screens it steps aside to the panel's left edge, and on
+          narrow ones (where the panel is full width) it gets out of the way. */}
+      <div
+        className={`pointer-events-auto absolute top-1/2 z-[6] -translate-y-1/2 flex-col items-end gap-1.5 ${
+          panel ? "hidden md:flex md:right-[29rem]" : "flex right-3"
+        }`}
+      >
         {places.map((p) => (
           <button
             key={p.key}
