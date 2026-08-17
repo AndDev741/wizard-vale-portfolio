@@ -24,15 +24,15 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const [focus, setFocus] = useState<Focus>("overview");
   const [panel, setPanel] = useState<SectionKey | null>(null);
   const [nearDoor, setNearDoor] = useState<SectionKey | null>(null);
-  const [coarse, setCoarse] = useState(false);
+  // Read synchronously: this island is client:only, and the Canvas reads
+  // `detail` for its shadow setting on the very first render.
+  const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  const [detail] = useState(() => (window.innerWidth < 700 ? 0.55 : 1));
 
   const inputRef = useRef<InputVec>({ x: 0, z: 0 });
   const wizardRef = useRef<Group>(null);
+  const camYawRef = useRef(Math.PI);
   useKeyboardInput(inputRef, mode === "roam" && panel === null);
-
-  useEffect(() => {
-    setCoarse(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
 
   const openPlace = useCallback((key: SectionKey) => {
     setFocus(key);
@@ -103,7 +103,8 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     <div className="relative h-full w-full">
       <Canvas
         dpr={[1, 1.75]}
-        camera={{ fov: 42, position: [0, 13.5, 27], near: 0.5, far: 130 }}
+        shadows={detail === 1}
+        camera={{ fov: 42, position: [0, 15, 29.5], near: 0.5, far: 340 }}
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
@@ -115,10 +116,17 @@ export default function ValeApp({ lang }: { lang: Lang }) {
             wizardRef={wizardRef}
             onPlaceClick={openPlace}
             onNearDoor={setNearDoor}
+            camYawRef={camYawRef}
+            detail={detail}
           />
           <Ready onReady={onReady} />
         </Suspense>
-        <CameraRig mode={mode} focus={focus} wizardRef={wizardRef} />
+        <CameraRig
+          mode={mode}
+          focus={focus}
+          wizardRef={wizardRef}
+          camYawRef={camYawRef}
+        />
       </Canvas>
 
       {/* Dock: place shortcuts + walk toggle */}

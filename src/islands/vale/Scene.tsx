@@ -1,32 +1,36 @@
-import { useMemo, useRef, type MutableRefObject, type RefObject } from "react";
+import { Suspense, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Clone, Html, Stars, useGLTF } from "@react-three/drei";
+import { Html, Stars, useGLTF } from "@react-three/drei";
 import type { Group, Points } from "three";
 import { t, type Lang, type SectionKey } from "../../i18n/ui";
 import { places, facingCenter, type PlaceConfig } from "./world";
+import {
+  clouds,
+  cloudModels,
+  grassPatches,
+  lanterns,
+  propModels,
+  ridge,
+  scatter,
+  thinGroups,
+  villageProps,
+  GROUND_RADIUS,
+  POND,
+} from "./props";
+import { Instanced, InstancedGroups, Model } from "./Instanced";
 import { Wizard } from "./Wizard";
 import type { InputVec } from "./useInput";
 
-const MODEL_PATHS = [
+const PLACE_MODELS = [
   "/models/building_tavern_red.gltf",
   "/models/building_tower_A_blue.gltf",
   "/models/building_church_yellow.gltf",
   "/models/building_home_A_green.gltf",
   "/models/building_well_blue.gltf",
-  "/models/tree_single_A.gltf",
-  "/models/tree_single_B.gltf",
-  "/models/trees_A_medium.gltf",
-  "/models/rock_single_A.gltf",
-  "/models/barrel.gltf",
   "/models/crate_A_small.gltf",
-  "/models/fence_wood_straight.gltf",
 ];
-MODEL_PATHS.forEach((p) => useGLTF.preload(p));
-
-function Model({ path }: { path: string }) {
-  const { scene } = useGLTF(path);
-  return <Clone object={scene} />;
-}
+PLACE_MODELS.forEach((p) => useGLTF.preload(p));
+propModels.forEach((m) => useGLTF.preload(`/models/${m}.gltf`));
 
 function PlaceLabel({
   place,
@@ -37,11 +41,13 @@ function PlaceLabel({
   name: string;
   onClick: () => void;
 }) {
+  // No distanceFactor: these are map markers, so they hold one screen size.
+  // Scaling them with distance made them fill the viewport whenever the camera
+  // moved in close, either on a place fly-to or while walking past a door.
   return (
     <Html
       position={[0, place.labelHeight / place.scale, 0]}
       center
-      distanceFactor={16}
       zIndexRange={[5, 0]}
     >
       <button
@@ -58,10 +64,12 @@ function PlaceLabel({
 function Building({
   place,
   name,
+  showLabel,
   onClick,
 }: {
   place: PlaceConfig;
   name: string;
+  showLabel: boolean;
   onClick: () => void;
 }) {
   return (
@@ -77,7 +85,7 @@ function Building({
       onPointerOut={() => (document.body.style.cursor = "auto")}
     >
       {place.model && <Model path={place.model} />}
-      <PlaceLabel place={place} name={name} onClick={onClick} />
+      {showLabel && <PlaceLabel place={place} name={name} onClick={onClick} />}
     </group>
   );
 }
@@ -86,10 +94,12 @@ function Building({
 function RavenPost({
   place,
   name,
+  showLabel,
   onClick,
 }: {
   place: PlaceConfig;
   name: string;
+  showLabel: boolean;
   onClick: () => void;
 }) {
   return (
@@ -102,58 +112,70 @@ function RavenPost({
       onPointerOver={() => (document.body.style.cursor = "pointer")}
       onPointerOut={() => (document.body.style.cursor = "auto")}
     >
-      <mesh position={[0, 1.2, 0]}>
+      <mesh position={[0, 1.2, 0]} castShadow>
         <cylinderGeometry args={[0.09, 0.12, 2.4, 8]} />
         <meshStandardMaterial color="#4a3c2c" />
       </mesh>
-      <mesh position={[0.55, 2.1, 0]}>
+      <mesh position={[0.55, 2.1, 0]} castShadow>
         <boxGeometry args={[1.1, 0.1, 0.1]} />
         <meshStandardMaterial color="#4a3c2c" />
       </mesh>
-      <mesh position={[0.8, 1.62, 0]}>
+      <mesh position={[0.8, 1.62, 0]} castShadow>
         <boxGeometry args={[0.9, 0.55, 0.06]} />
         <meshStandardMaterial color="#d99a3d" />
       </mesh>
       <group position={[-0.9, 0, 0.4]} scale={1.5}>
         <Model path="/models/crate_A_small.gltf" />
       </group>
-      <PlaceLabel place={place} name={name} onClick={onClick} />
+      {showLabel && <PlaceLabel place={place} name={name} onClick={onClick} />}
     </group>
   );
 }
 
-function Lantern({ position }: { position: [number, number, number] }) {
+function Lantern({
+  position,
+  light,
+}: {
+  position: [number, number, number];
+  light: boolean;
+}) {
   return (
     <group position={position}>
-      <mesh position={[0, 1.1, 0]}>
+      <mesh position={[0, 1.1, 0]} castShadow>
         <cylinderGeometry args={[0.07, 0.1, 2.2, 8]} />
         <meshStandardMaterial color="#39413a" />
       </mesh>
-      <mesh position={[0, 2.3, 0]}>
-        <boxGeometry args={[0.32, 0.4, 0.32]} />
+      <mesh position={[0, 2.32, 0]}>
+        <icosahedronGeometry args={[0.17, 1]} />
         <meshStandardMaterial
-          color="#ffb15e"
+          color="#ffc477"
           emissive="#ffb15e"
-          emissiveIntensity={2.4}
+          emissiveIntensity={1.6}
         />
       </mesh>
-      <pointLight
-        position={[0, 2.3, 0]}
-        color="#ffb15e"
-        intensity={10}
-        distance={13}
-        decay={2}
-      />
+      <mesh position={[0, 2.56, 0]} castShadow>
+        <boxGeometry args={[0.2, 0.08, 0.2]} />
+        <meshStandardMaterial color="#39413a" />
+      </mesh>
+      {light && (
+        <pointLight
+          position={[0, 2.3, 0]}
+          color="#ffb15e"
+          intensity={10}
+          distance={14}
+          decay={2}
+        />
+      )}
     </group>
   );
 }
 
-function Fireflies({ count = 42 }: { count?: number }) {
+function Fireflies({ count = 64 }: { count?: number }) {
   const ref = useRef<Points>(null);
   const seeds = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => ({
-        radius: 5 + ((i * 37) % 17),
+        radius: 5 + ((i * 37) % 19),
         angle: (i * 2.399) % (Math.PI * 2),
         height: 0.8 + ((i * 13) % 22) / 10,
         speed: 0.1 + ((i * 7) % 10) / 45,
@@ -194,35 +216,25 @@ function Fireflies({ count = 42 }: { count?: number }) {
   );
 }
 
-const TREES: Array<[number, number, "A" | "B" | "cluster", number]> = [
-  [16, -14, "A", 2.6],
-  [21, -4, "B", 3.0],
-  [19, 6, "A", 2.4],
-  [14, 15, "B", 2.8],
-  [-16, -14, "B", 2.7],
-  [-21, -2, "A", 3.1],
-  [-19, 13, "A", 2.5],
-  [-13, 17, "B", 2.6],
-  [4, -17, "A", 2.9],
-  [-5, -18, "B", 2.5],
-  [7, 18, "B", 2.4],
-  [-8, 19, "A", 2.8],
-  [25, -11, "cluster", 2.6],
-  [-25, 7, "cluster", 2.8],
-];
+/** The cloud layer turns as one piece, so the sky is never quite still. */
+function Clouds() {
+  const ref = useRef<Group>(null);
+  const groups = useMemo(() => {
+    const big = clouds.filter((_, i) => i % 2 === 0);
+    const small = clouds.filter((_, i) => i % 2 === 1);
+    return { [cloudModels[0]]: big, [cloudModels[1]]: small };
+  }, []);
 
-const ROCKS: Array<[number, number, number]> = [
-  [7, -13, 1.8],
-  [-6.5, 15.5, 2.2],
-  [20, 11, 1.6],
-];
+  useFrame((_, dt) => {
+    if (ref.current) ref.current.rotation.y += dt * 0.006;
+  });
 
-const LANTERNS: Array<[number, number, number]> = [
-  [5.5, 0, -5.5],
-  [-5.5, 0, -5.5],
-  [-5.5, 0, 5.5],
-  [5.5, 0, 5.5],
-];
+  return (
+    <group ref={ref}>
+      <InstancedGroups groups={groups} castShadow={false} />
+    </group>
+  );
+}
 
 interface SceneProps {
   lang: Lang;
@@ -232,6 +244,9 @@ interface SceneProps {
   wizardRef: RefObject<Group | null>;
   onPlaceClick: (key: SectionKey) => void;
   onNearDoor: (key: SectionKey | null) => void;
+  camYawRef: MutableRefObject<number>;
+  /** 1 on desktop, lower on small screens: thins the scattered rings. */
+  detail: number;
 }
 
 export function Scene({
@@ -242,24 +257,60 @@ export function Scene({
   wizardRef,
   onPlaceClick,
   onNearDoor,
+  camYawRef,
+  detail,
 }: SceneProps) {
   const dict = t(lang);
+  const scattered = useMemo(() => thinGroups(scatter, detail), [detail]);
+  // Labels are for the tour only, and on a phone they collide with the dock,
+  // which already lists every place. `detail` is 1 only on wide screens.
+  const showLabels = mode === "tour" && detail === 1;
 
   return (
     <>
       <color attach="background" args={["#141c28"]} />
-      <fog attach="fog" args={["#141c28", 30, 78]} />
-      <hemisphereLight args={["#7787b8", "#31402f", 0.55]} />
-      <directionalLight color="#ffb877" intensity={2.4} position={[-18, 16, 6]} />
-      <Stars radius={70} depth={30} count={1500} factor={3.5} saturation={0} fade speed={0.4} />
+      <fog attach="fog" args={["#141c28", 42, 112]} />
+      <hemisphereLight args={["#8092c0", "#33422f", 0.8]} />
+      {/* Low dusk sun. Its shadow camera covers the village only, so the
+          plaza gets crisp shadows without spending resolution on the horizon. */}
+      <directionalLight
+        color="#ffd2a6"
+        intensity={1.65}
+        position={[-26, 20, 10]}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-32}
+        shadow-camera-right={32}
+        shadow-camera-top={32}
+        shadow-camera-bottom={-32}
+        shadow-camera-near={1}
+        shadow-camera-far={90}
+        shadow-bias={-0.0015}
+        shadow-normalBias={0.02}
+      />
+      {/* Cool fill from the opposite side so shadowed faces keep some shape. */}
+      <directionalLight color="#6a8cc4" intensity={0.8} position={[22, 12, -16]} />
+      <Stars radius={150} depth={60} count={1800} factor={5} saturation={0} fade speed={0.4} />
 
-      {/* Ground: grass disc, packed-dirt plaza, dirt paths to each door */}
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.02}>
-        <circleGeometry args={[48, 48]} />
+      {/* Ground: a wide grass plate, soft colour patches, the packed plaza,
+          the roads out to each door, and the pond east of the village. */}
+      <mesh rotation-x={-Math.PI / 2} position-y={-0.03} receiveShadow>
+        <circleGeometry args={[GROUND_RADIUS, 64]} />
         <meshStandardMaterial color="#2c4534" />
       </mesh>
-      <mesh rotation-x={-Math.PI / 2}>
-        <circleGeometry args={[8.5, 40]} />
+      {grassPatches.map((p, i) => (
+        <mesh
+          key={`patch-${i}`}
+          rotation-x={-Math.PI / 2}
+          position={[p.x, -0.02, p.z]}
+          receiveShadow
+        >
+          <circleGeometry args={[p.r, 24]} />
+          <meshStandardMaterial color={p.color} />
+        </mesh>
+      ))}
+      <mesh rotation-x={-Math.PI / 2} receiveShadow>
+        <circleGeometry args={[9.5, 44]} />
         <meshStandardMaterial color="#4d4636" />
       </mesh>
       {places.map((p) => {
@@ -267,16 +318,24 @@ export function Scene({
         const len = Math.max(dist - 6, 2);
         return (
           <group key={`path-${p.key}`} rotation-y={Math.atan2(p.position[0], p.position[2])}>
-            <mesh rotation-x={-Math.PI / 2} position={[0, 0.006, dist / 2]}>
+            <mesh rotation-x={-Math.PI / 2} position={[0, 0.008, dist / 2]} receiveShadow>
               <planeGeometry args={[1.7, len]} />
               <meshStandardMaterial color="#4d4636" />
             </mesh>
           </group>
         );
       })}
+      <mesh rotation-x={-Math.PI / 2} position={[POND.x, -0.01, POND.z]} receiveShadow>
+        <circleGeometry args={[POND.r + 0.7, 36]} />
+        <meshStandardMaterial color="#463d2e" />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position={[POND.x, 0.012, POND.z]}>
+        <circleGeometry args={[POND.r, 36]} />
+        <meshStandardMaterial color="#2c5a6d" roughness={0.18} metalness={0.15} />
+      </mesh>
 
       {/* The well at the heart of the plaza */}
-      <group scale={2.6}>
+      <group scale={3.2}>
         <Model path="/models/building_well_blue.gltf" />
       </group>
 
@@ -286,6 +345,7 @@ export function Scene({
             key={p.key}
             place={p}
             name={dict.world.places[p.key]}
+            showLabel={showLabels}
             onClick={() => onPlaceClick(p.key)}
           />
         ) : (
@@ -293,6 +353,7 @@ export function Scene({
             key={p.key}
             place={p}
             name={dict.world.places[p.key]}
+            showLabel={showLabels}
             onClick={() => onPlaceClick(p.key)}
           />
         ),
@@ -307,53 +368,28 @@ export function Scene({
         decay={2}
       />
 
-      {LANTERNS.map((pos, i) => (
-        <Lantern key={i} position={pos} />
+      {lanterns.map(([x, z], i) => (
+        <Lantern key={`lantern-${i}`} position={[x, 0, z]} light={i < 4} />
       ))}
 
-      {TREES.map(([x, z, kind, scale], i) => (
-        <group key={`tree-${i}`} position={[x, 0, z]} scale={scale} rotation-y={i * 1.3}>
-          <Model
-            path={
-              kind === "cluster"
-                ? "/models/trees_A_medium.gltf"
-                : kind === "A"
-                  ? "/models/tree_single_A.gltf"
-                  : "/models/tree_single_B.gltf"
-            }
-          />
-        </group>
-      ))}
-
-      {ROCKS.map(([x, z, scale], i) => (
-        <group key={`rock-${i}`} position={[x, 0, z]} scale={scale} rotation-y={i * 2.1}>
-          <Model path="/models/rock_single_A.gltf" />
-        </group>
-      ))}
-
-      {/* Clutter by the tavern door and the cottage garden */}
-      <group position={[9.2, 0, -4.2]} scale={1.7}>
-        <Model path="/models/barrel.gltf" />
-      </group>
-      <group position={[8.3, 0, -5.4]} scale={1.6} rotation-y={0.6}>
-        <Model path="/models/crate_A_small.gltf" />
-      </group>
-      <group position={[7.6, 0, 11.2]} scale={1.4} rotation-y={0.68}>
-        <Model path="/models/fence_wood_straight.gltf" />
-      </group>
-      <group position={[9.1, 0, 12.4]} scale={1.4} rotation-y={0.68}>
-        <Model path="/models/fence_wood_straight.gltf" />
-      </group>
-
+      <InstancedGroups groups={villageProps} />
+      <InstancedGroups groups={scattered} />
+      <InstancedGroups groups={ridge} castShadow={false} tint={0.42} />
+      <Clouds />
       <Fireflies />
 
-      <Wizard
-        mode={mode}
-        paused={paused}
-        inputRef={inputRef}
-        wizardRef={wizardRef}
-        onNearDoor={onNearDoor}
-      />
+      {/* The wizard is the heaviest single download, so the vale is allowed to
+          appear before he walks on. */}
+      <Suspense fallback={null}>
+        <Wizard
+          mode={mode}
+          paused={paused}
+          inputRef={inputRef}
+          wizardRef={wizardRef}
+          camYawRef={camYawRef}
+          onNearDoor={onNearDoor}
+        />
+      </Suspense>
     </>
   );
 }

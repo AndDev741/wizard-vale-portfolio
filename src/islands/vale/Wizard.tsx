@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type MutableRefObject,
+  type RefObject,
+} from "react";
 import { useFrame } from "@react-three/fiber";
 import { useAnimations, useGLTF } from "@react-three/drei";
-import type { Group } from "three";
+import type { Group, Mesh } from "three";
 import type { SectionKey } from "../../i18n/ui";
+import { obstacles } from "./props";
 import {
   places,
   doorPoint,
@@ -15,15 +23,27 @@ import {
 } from "./world";
 import type { InputVec } from "./useInput";
 
+/** Loadout options in the source model that must not render together. */
+const HIDDEN_PROPS = new Set(["Spellbook", "Spellbook_open", "2H_Staff"]);
+
 interface WizardProps {
   mode: "tour" | "roam";
   paused: boolean;
   inputRef: MutableRefObject<InputVec>;
   wizardRef: RefObject<Group | null>;
+  /** Damped camera yaw, written by CameraRig. Input is relative to it. */
+  camYawRef: MutableRefObject<number>;
   onNearDoor: (key: SectionKey | null) => void;
 }
 
-export function Wizard({ mode, paused, inputRef, wizardRef, onNearDoor }: WizardProps) {
+export function Wizard({
+  mode,
+  paused,
+  inputRef,
+  wizardRef,
+  camYawRef,
+  onNearDoor,
+}: WizardProps) {
   const { scene, animations } = useGLTF("/models/Mage.glb");
   const { actions } = useAnimations(animations, wizardRef as RefObject<Group>);
   const current = useRef("Idle");
@@ -41,9 +61,21 @@ export function Wizard({ mode, paused, inputRef, wizardRef, onNearDoor }: Wizard
     () => [
       { x: 0, z: 0, r: WELL_RADIUS },
       ...places.map((p) => ({ x: p.position[0], z: p.position[2], r: p.colliderRadius })),
+      ...obstacles,
     ],
     [],
   );
+
+  useLayoutEffect(() => {
+    scene.traverse((o) => {
+      if ((o as Mesh).isMesh) (o as Mesh).castShadow = true;
+      // The pack ships every loadout option attached at once: both spellbooks
+      // share handslot.l and both the wand and the staff share handslot.r, so
+      // each hand held two intersecting objects. Keep the wand alone; in the
+      // idle pose the raised left hand tucks a book under the hat brim.
+      if (HIDDEN_PROPS.has(o.name)) o.visible = false;
+    });
+  }, [scene]);
 
   const setAction = (name: string) => {
     if (current.current === name) return;
@@ -71,6 +103,10 @@ export function Wizard({ mode, paused, inputRef, wizardRef, onNearDoor }: Wizard
       setAction("Idle");
       lastDoor.current = null;
       onNearDoor(null);
+    } else {
+      // Start walk mode facing into the village, so the first thing the visitor
+      // sees is his back and the road ahead.
+      g.rotation.y = Math.PI;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
@@ -85,8 +121,16 @@ export function Wizard({ mode, paused, inputRef, wizardRef, onNearDoor }: Wizard
     const { x, z } = inputRef.current;
     const len = Math.hypot(x, z);
     if (len > 0.12) {
-      const nx = x / Math.max(len, 1);
-      const nz = z / Math.max(len, 1);
+      // Input is read in screen space and rotated into the world by the camera's
+      // yaw, so "up" on the keyboard or stick always means away from the camera
+      // no matter which way the wizard has turned.
+      const yaw = camYawRef.current;
+      const sin = Math.sin(yaw);
+      const cos = Math.cos(yaw);
+      const wx = -z * sin - x * cos;
+      const wz = -z * cos + x * sin;
+      const nx = wx / Math.max(len, 1);
+      const nz = wz / Math.max(len, 1);
       const speed = WALK_SPEED * Math.min(len, 1);
       g.position.x += nx * speed * dt;
       g.position.z += nz * speed * dt;

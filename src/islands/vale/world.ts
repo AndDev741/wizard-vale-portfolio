@@ -73,8 +73,8 @@ export interface CameraTarget {
 }
 
 export const overviewCamera: CameraTarget = {
-  pos: [0, 15, 29.5],
-  look: [0, 0.8, -1],
+  pos: [0, 21, 39],
+  look: [0, 0.6, -1],
 };
 
 export function placeCamera(place: PlaceConfig): CameraTarget {
@@ -88,8 +88,11 @@ export function placeCamera(place: PlaceConfig): CameraTarget {
 }
 
 export const WALK_SPEED = 3.6;
-export const PLAZA_LIMIT = 17;
-export const WELL_RADIUS = 2.6;
+/** How far out the wizard may wander: the whole village, short of the treeline. */
+export const PLAZA_LIMIT = 22;
+/** The follow camera stays inside this radius so it never enters the forest. */
+export const ROAM_CAM_LIMIT = 26;
+export const WELL_RADIUS = 3.1;
 export const DOOR_TRIGGER = 2.3;
 
 /** Wizard idle spot next to the well while in tour mode. */
