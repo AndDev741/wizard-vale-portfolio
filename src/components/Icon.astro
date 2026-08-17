@@ -1,0 +1,40 @@
+---
+import github from "@phosphor-icons/core/assets/regular/github-logo.svg?raw";
+import linkedin from "@phosphor-icons/core/assets/regular/linkedin-logo.svg?raw";
+import envelope from "@phosphor-icons/core/assets/regular/envelope-simple.svg?raw";
+import arrowUpRight from "@phosphor-icons/core/assets/regular/arrow-up-right.svg?raw";
+import arrowRight from "@phosphor-icons/core/assets/regular/arrow-right.svg?raw";
+import circleHalf from "@phosphor-icons/core/assets/regular/circle-half.svg?raw";
+import scroll from "@phosphor-icons/core/assets/regular/scroll.svg?raw";
+import castleTurret from "@phosphor-icons/core/assets/regular/castle-turret.svg?raw";
+import bookOpen from "@phosphor-icons/core/assets/regular/book-open-text.svg?raw";
+import houseLine from "@phosphor-icons/core/assets/regular/house-line.svg?raw";
+import bird from "@phosphor-icons/core/assets/regular/bird.svg?raw";
+
+const icons: Record<string, string> = {
+  github,
+  linkedin,
+  envelope,
+  arrowUpRight,
+  arrowRight,
+  circleHalf,
+  scroll,
+  castleTurret,
+  bookOpen,
+  houseLine,
+  bird,
+};
+
+interface Props {
+  name: keyof typeof icons | string;
+  class?: string;
+}
+const { name, class: className = "h-4 w-4" } = Astro.props;
+const svg = icons[name] ?? "";
+---
+
+<span
+  class:list={["inline-flex shrink-0 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current", className]}
+  set:html={svg}
+  aria-hidden="true"
+/>

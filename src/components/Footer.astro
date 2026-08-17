@@ -1,0 +1,48 @@
+---
+import { t, type Lang } from "../i18n/ui";
+import { contact } from "../data/contact";
+import Icon from "./Icon.astro";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const dict = t(lang);
+const year = new Date().getFullYear();
+---
+
+<footer id="contact" class="border-t border-line">
+  <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <h2 class="text-2xl font-bold tracking-tight">{dict.contact.title}</h2>
+    <p class="mt-2 max-w-[55ch] text-muted">{dict.contact.sub}</p>
+    <div class="mt-6 flex flex-wrap gap-3">
+      <a
+        href={`mailto:${contact.email}`}
+        class="inline-flex items-center gap-2 rounded-full bg-accent-fill px-4 py-2 text-sm font-semibold text-accent-fill-ink hover:opacity-90 active:scale-[0.98]"
+      >
+        <Icon name="envelope" class="h-4 w-4" />
+        {dict.contact.email}
+      </a>
+      <a
+        href={contact.github}
+        rel="noopener"
+        class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold hover:bg-surface active:scale-[0.98]"
+      >
+        <Icon name="github" class="h-4 w-4" />
+        {dict.contact.github}
+      </a>
+      <a
+        href={contact.linkedin}
+        rel="noopener"
+        class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold hover:bg-surface active:scale-[0.98]"
+      >
+        <Icon name="linkedin" class="h-4 w-4" />
+        {dict.contact.linkedin}
+      </a>
+    </div>
+    <div class="mt-12 flex flex-col gap-1 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} André Luiz Gonçalves</p>
+      <p>{dict.footer.credits}</p>
+    </div>
+  </div>
+</footer>

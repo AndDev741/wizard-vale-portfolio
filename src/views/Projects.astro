@@ -1,0 +1,103 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+import { t, type Lang } from "../i18n/ui";
+import { flagshipLinks, shelf } from "../data/projects";
+
+interface Props {
+  lang: Lang;
+  path: string;
+}
+const { lang, path } = Astro.props;
+const dict = t(lang);
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={`${dict.nav.projects} · ${dict.site.name}`}
+  description={dict.projects.flagshipTag}
+>
+  <Nav lang={lang} path={path} />
+  <main class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <p class="text-sm font-semibold text-accent">{dict.world.places.projects}</p>
+    <h1 class="mt-2 text-4xl font-black tracking-tighter sm:text-5xl">
+      {dict.projects.title}
+    </h1>
+    <p class="mt-4 max-w-[58ch] text-muted">{dict.projects.sub}</p>
+
+    <article class="mt-10 rounded-xl border border-accent-fill/50 bg-surface p-6 sm:p-10">
+      <div class="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <h2 class="text-3xl font-black tracking-tight">{dict.projects.flagshipName}</h2>
+          <p class="mt-2 text-lg">{dict.projects.flagshipTag}</p>
+          <div class="mt-6 grid gap-4 sm:grid-cols-2">
+            {
+              dict.projects.flagshipFacts.map((fact) => (
+                <p class="text-sm leading-relaxed text-muted">{fact}</p>
+              ))
+            }
+          </div>
+        </div>
+        <div class="flex flex-col justify-center gap-3">
+          <a
+            href={flagshipLinks.app}
+            rel="noopener"
+            class="inline-flex items-center justify-between gap-2 rounded-full bg-accent-fill px-5 py-3 text-sm font-bold text-accent-fill-ink hover:opacity-90 active:scale-[0.98]"
+          >
+            {dict.projects.liveApp}
+            <Icon name="arrowUpRight" class="h-4 w-4" />
+          </a>
+          <a
+            href={flagshipLinks.docs}
+            rel="noopener"
+            class="inline-flex items-center justify-between gap-2 rounded-full border border-line px-5 py-3 text-sm font-bold hover:bg-bg active:scale-[0.98]"
+          >
+            {dict.projects.docs}
+            <Icon name="arrowUpRight" class="h-4 w-4" />
+          </a>
+          <a
+            href={flagshipLinks.source}
+            rel="noopener"
+            class="inline-flex items-center justify-between gap-2 rounded-full border border-line px-5 py-3 text-sm font-bold hover:bg-bg active:scale-[0.98]"
+          >
+            {dict.projects.source}
+            <Icon name="github" class="h-4 w-4" />
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <h2 class="mt-16 text-2xl font-bold tracking-tight">{dict.projects.shelfTitle}</h2>
+    <p class="mt-1 text-muted">{dict.projects.shelfSub}</p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        shelf.map((item) => (
+          <a
+            href={item.url}
+            rel="noopener"
+            class:list={[
+              "group flex flex-col rounded-xl border bg-surface p-5 transition-colors hover:border-accent-fill/60",
+              item.relic ? "border-accent-fill/50" : "border-line",
+            ]}
+          >
+            <div class="flex items-baseline gap-2">
+              <h3 class="font-bold">{item.name}</h3>
+              <span class="ml-auto text-xs text-muted">
+                {item.lang} · {item.year}
+              </span>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed text-muted">{item.blurb[lang]}</p>
+            <span class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
+              {dict.projects.viewOnGithub}
+              <Icon name="arrowUpRight" class="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </main>
+  <Footer lang={lang} />
+</Base>

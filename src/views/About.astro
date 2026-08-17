@@ -1,0 +1,48 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+import { t, localizePath, type Lang } from "../i18n/ui";
+import { postUrl } from "../data/writing";
+
+interface Props {
+  lang: Lang;
+  path: string;
+}
+const { lang, path } = Astro.props;
+const dict = t(lang);
+const selfHostPost = postUrl(lang, "self-hosting-beyou");
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={`${dict.about.title} · ${dict.site.name}`}
+>
+  <Nav lang={lang} path={path} />
+  <main class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <div class="max-w-[68ch]">
+      <p class="text-sm font-semibold text-accent">{dict.world.places.about}</p>
+      <h1 class="mt-2 text-4xl font-black tracking-tighter sm:text-5xl">
+        {dict.about.title}
+      </h1>
+      <div class="mt-8 space-y-6">
+        {
+          dict.about.paragraphs.map((p, i) => (
+            <p class:list={["leading-relaxed", i === 0 ? "text-lg" : "text-muted"]}>{p}</p>
+          ))
+        }
+      </div>
+      <a
+        href={selfHostPost}
+        rel="noopener"
+        class="mt-8 inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold hover:bg-surface active:scale-[0.98]"
+      >
+        {lang === "pt" ? "A história completa do self-host" : "The full self-hosting story"}
+        <Icon name="arrowUpRight" class="h-4 w-4" />
+      </a>
+    </div>
+  </main>
+  <Footer lang={lang} />
+</Base>

@@ -1,0 +1,169 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+import ValeIsland from "../islands/vale/ValeIsland";
+import { t, localizePath, type Lang } from "../i18n/ui";
+
+interface Props {
+  lang: Lang;
+  path: string;
+}
+const { lang, path } = Astro.props;
+const dict = t(lang);
+
+const places = [
+  {
+    key: "experience",
+    icon: "scroll",
+    href: localizePath(lang, "/experience"),
+    place: dict.world.places.experience,
+    label: dict.nav.experience,
+    desc: dict.home.cards.experience,
+    span: "md:col-span-2",
+  },
+  {
+    key: "projects",
+    icon: "castleTurret",
+    href: localizePath(lang, "/projects"),
+    place: dict.world.places.projects,
+    label: dict.nav.projects,
+    desc: dict.home.cards.projects,
+    span: "md:col-span-1",
+  },
+  {
+    key: "writing",
+    icon: "bookOpen",
+    href: localizePath(lang, "/writing"),
+    place: dict.world.places.writing,
+    label: dict.nav.writing,
+    desc: dict.home.cards.writing,
+    span: "md:col-span-1",
+  },
+  {
+    key: "about",
+    icon: "houseLine",
+    href: localizePath(lang, "/about"),
+    place: dict.world.places.about,
+    label: dict.nav.about,
+    desc: dict.home.cards.about,
+    span: "md:col-span-2",
+  },
+];
+---
+
+<Base lang={lang} path={path}>
+  {
+    lang === "en" && (
+      <script is:inline>
+        {`(function () {
+          try {
+            if (
+              !localStorage.getItem("lang") &&
+              (navigator.language || "").toLowerCase().startsWith("pt") &&
+              location.pathname === "/"
+            ) {
+              localStorage.setItem("lang", "pt");
+              location.replace("/pt/");
+            }
+          } catch (e) {}
+        })();`}
+      </script>
+    )
+  }
+
+  {/* The hero is always dusk: the 3D vale paints it, the poster stands in until then. */}
+  <section class="relative min-h-[100dvh] overflow-hidden bg-[#141c28] text-[#ece9dd]">
+    <div class="absolute inset-0 z-[1]">
+      <ValeIsland client:only="react" lang={lang} />
+    </div>
+    <div id="vale-poster" class="vale-poster absolute inset-0 z-[5]"></div>
+    <Nav lang={lang} path={path} variant="overlay" />
+    <div
+      id="hero-copy"
+      class="pointer-events-none absolute inset-x-0 bottom-0 z-[10] transition-opacity duration-500"
+    >
+      <div class="mx-auto max-w-6xl px-4 pb-10 sm:px-6 sm:pb-14">
+        <p class="text-sm font-semibold text-[#d99a3d] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+          {dict.hero.kicker}
+        </p>
+        <h1 class="mt-2 max-w-3xl text-4xl font-black leading-none tracking-tighter drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:text-5xl lg:text-6xl">
+          André Luiz Gonçalves
+        </h1>
+        <p class="mt-4 max-w-[42ch] text-base text-[#c9cdc2] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] sm:text-lg">
+          {dict.hero.sub}
+        </p>
+        <div class="pointer-events-auto mt-6 flex flex-wrap gap-3">
+          <button
+            id="explore-btn"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-full bg-accent-fill px-5 py-2.5 text-sm font-bold text-accent-fill-ink hover:opacity-90 active:scale-[0.98]"
+          >
+            {dict.hero.explore}
+          </button>
+          <a
+            href={localizePath(lang, "/projects")}
+            class="inline-flex items-center gap-2 rounded-full border border-white/30 px-5 py-2.5 text-sm font-bold text-[#ece9dd] hover:bg-white/10 active:scale-[0.98]"
+          >
+            {dict.hero.seeProjects}
+            <Icon name="arrowRight" class="h-4 w-4" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="places" class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+    <h2 class="text-3xl font-bold tracking-tight">{dict.home.placesTitle}</h2>
+    <p class="mt-2 max-w-[55ch] text-muted">{dict.home.placesSub}</p>
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      {
+        places.map((p) => (
+          <a
+            href={p.href}
+            class:list={[
+              "group rounded-xl border border-line bg-surface p-6 transition-colors hover:border-accent-fill/60",
+              p.span,
+            ]}
+          >
+            <div class="flex items-center gap-3">
+              <Icon name={p.icon} class="h-6 w-6 text-accent" />
+              <h3 class="text-lg font-bold">{p.place}</h3>
+              <span class="ml-auto text-sm text-muted">{p.label}</span>
+            </div>
+            <p class="mt-3 max-w-[52ch] text-sm text-muted">{p.desc}</p>
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+              <Icon name="arrowRight" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <Footer lang={lang} />
+
+  <style>
+    body.vale-panel-open #hero-copy,
+    body.vale-roam #hero-copy {
+      opacity: 0;
+      pointer-events: none !important;
+    }
+  </style>
+
+  <script>
+    const btn = document.getElementById("explore-btn");
+    let valeReady = false;
+    window.addEventListener("vale:ready", () => {
+      valeReady = true;
+    });
+    btn?.addEventListener("click", () => {
+      if (valeReady) {
+        window.dispatchEvent(new CustomEvent("vale:roam"));
+      } else {
+        document.getElementById("places")?.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  </script>
+</Base>

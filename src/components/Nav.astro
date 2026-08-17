@@ -1,0 +1,90 @@
+---
+import { t, localizePath, switchLangPath, type Lang } from "../i18n/ui";
+import Icon from "./Icon.astro";
+
+interface Props {
+  lang: Lang;
+  path: string;
+  /** "overlay" floats over the hero scene, "solid" is the normal page header. */
+  variant?: "overlay" | "solid";
+}
+
+const { lang, path, variant = "solid" } = Astro.props;
+const dict = t(lang);
+const links = [
+  { href: localizePath(lang, "/about"), label: dict.nav.about },
+  { href: localizePath(lang, "/projects"), label: dict.nav.projects },
+  { href: localizePath(lang, "/experience"), label: dict.nav.experience },
+  { href: localizePath(lang, "/writing"), label: dict.nav.writing },
+];
+const otherLang = lang === "en" ? "pt" : "en";
+const langHref = switchLangPath(lang, path);
+const isOverlay = variant === "overlay";
+---
+
+<header
+  class:list={[
+    "z-20 w-full",
+    isOverlay
+      ? "absolute inset-x-0 top-0 text-[#ece9dd]"
+      : "border-b border-line bg-bg",
+  ]}
+>
+  <nav
+    class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6"
+    aria-label="Main"
+  >
+    <a
+      href={localizePath(lang, "/")}
+      class:list={[
+        "shrink-0 font-bold tracking-tight",
+        isOverlay ? "drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]" : "",
+      ]}
+    >
+      <span class="hidden sm:inline">André Luiz</span>
+      <span class="sm:hidden">AL</span>
+    </a>
+    <div class="flex min-w-0 items-center gap-1 sm:gap-2">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            class:list={[
+              "rounded-full px-2 py-1.5 text-[13px] font-medium sm:px-3 sm:text-sm",
+              isOverlay
+                ? "drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] hover:bg-white/10"
+                : "text-muted hover:bg-surface hover:text-ink",
+              !isOverlay && path === link.href ? "text-ink" : "",
+            ]}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href={langHref}
+        data-lang-switch={otherLang}
+        class:list={[
+          "rounded-full border px-2 py-1 text-[11px] font-bold uppercase",
+          isOverlay
+            ? "border-white/30 hover:bg-white/10"
+            : "border-line text-muted hover:text-ink",
+        ]}
+        aria-label={otherLang === "pt" ? "Mudar para português" : "Switch to English"}
+      >
+        {otherLang}
+      </a>
+      <button
+        type="button"
+        data-theme-toggle
+        class:list={[
+          "flex h-8 w-8 items-center justify-center rounded-full",
+          isOverlay ? "hover:bg-white/10" : "text-muted hover:bg-surface hover:text-ink",
+        ]}
+        aria-label={lang === "pt" ? "Alternar tema" : "Toggle theme"}
+      >
+        <Icon name="circleHalf" class="h-4.5 w-4.5" />
+      </button>
+    </div>
+  </nav>
+</header>

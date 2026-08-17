@@ -1,0 +1,66 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import Icon from "../components/Icon.astro";
+import { t, type Lang } from "../i18n/ui";
+import { posts, postUrl } from "../data/writing";
+
+interface Props {
+  lang: Lang;
+  path: string;
+}
+const { lang, path } = Astro.props;
+const dict = t(lang);
+const [latest, ...rest] = posts;
+---
+
+<Base
+  lang={lang}
+  path={path}
+  title={`${dict.nav.writing} · ${dict.site.name}`}
+  description={dict.writing.sub}
+>
+  <Nav lang={lang} path={path} />
+  <main class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <p class="text-sm font-semibold text-accent">{dict.world.places.writing}</p>
+    <h1 class="mt-2 text-4xl font-black tracking-tighter sm:text-5xl">
+      {dict.writing.title}
+    </h1>
+    <p class="mt-4 max-w-[58ch] text-muted">{dict.writing.sub}</p>
+
+    <a
+      href={postUrl(lang, latest.key)}
+      rel="noopener"
+      class="group mt-10 block rounded-xl border border-accent-fill/50 bg-surface p-6 sm:p-8"
+    >
+      <p class="text-sm font-semibold text-accent">{dict.writing.latest}</p>
+      <h2 class="mt-2 max-w-[38ch] text-2xl font-bold tracking-tight sm:text-3xl">
+        {latest.title[lang]}
+      </h2>
+      <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+        {dict.writing.readPost}
+        <Icon name="arrowUpRight" class="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+      </span>
+    </a>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      {
+        rest.map((post) => (
+          <a
+            href={postUrl(lang, post.key)}
+            rel="noopener"
+            class="group flex flex-col rounded-xl border border-line bg-surface p-6 transition-colors hover:border-accent-fill/60"
+          >
+            <h2 class="max-w-[40ch] text-lg font-bold leading-snug">{post.title[lang]}</h2>
+            <span class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
+              {dict.writing.readPost}
+              <Icon name="arrowUpRight" class="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </main>
+  <Footer lang={lang} />
+</Base>

@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-VariableItalic.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/*
+  Theme tokens. Single accent (lantern amber), locked across the whole site.
+  Shape system: containers 12px (rounded-xl), interactive elements are pills.
+  Light = morning in the vale, dark = dusk. Dark follows system unless toggled.
+*/
+:root {
+  --bg: #edefe8;
+  --surface: #f6f7f2;
+  --ink: #1d2420;
+  --muted: #566058;
+  --line: #d6dccf;
+  --accent: #a86a1c;
+  --accent-fill: #d99a3d;
+  --accent-fill-ink: #221a0d;
+  --poster-a: #cdd8e8;
+  --poster-b: #e8dfc8;
+}
+
+:root[data-theme="dark"] {
+  --bg: #121a17;
+  --surface: #1a2621;
+  --ink: #ece9dd;
+  --muted: #9cab9f;
+  --line: #2b382f;
+  --accent: #e0a44e;
+  --accent-fill: #d99a3d;
+  --accent-fill-ink: #221a0d;
+  --poster-a: #141c28;
+  --poster-b: #2c2c3f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121a17;
+    --surface: #1a2621;
+    --ink: #ece9dd;
+    --muted: #9cab9f;
+    --line: #2b382f;
+    --accent: #e0a44e;
+    --accent-fill: #d99a3d;
+    --accent-fill-ink: #221a0d;
+    --poster-a: #141c28;
+    --poster-b: #2c2c3f;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-ink: var(--accent-fill-ink);
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html {
+  background-color: var(--bg);
+  color: var(--ink);
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-fill);
+  color: var(--accent-fill-ink);
+}
+
+/* The hero is always the dusk scene regardless of page theme; the canvas paints it.
+   The poster is a real render of the vale, with a dusk gradient behind it while it loads. */
+.vale-poster {
+  background:
+    url("/poster.jpg") center / cover no-repeat,
+    linear-gradient(180deg, #141c28 0%, #2c2c3f 100%);
+  transition: opacity 900ms ease;
+}
+.vale-poster.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .vale-poster {
+    transition: none;
+  }
+}

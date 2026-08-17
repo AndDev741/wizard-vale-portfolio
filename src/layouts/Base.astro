@@ -1,0 +1,78 @@
+---
+import "../styles/global.css";
+import { t, switchLangPath, type Lang } from "../i18n/ui";
+
+interface Props {
+  lang: Lang;
+  path: string;
+  title?: string;
+  description?: string;
+}
+
+const { lang, path, title, description } = Astro.props;
+const dict = t(lang);
+const site = (Astro.site?.href ?? "").replace(/\/$/, "");
+const altPath = switchLangPath(lang, path);
+const enPath = lang === "en" ? path : altPath;
+const ptPath = lang === "pt" ? path : altPath;
+const pageTitle = title ?? dict.site.title;
+const pageDescription = description ?? dict.site.description;
+---
+
+<!doctype html>
+<html lang={lang === "pt" ? "pt-BR" : "en"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={site + path} />
+    <link rel="alternate" hreflang="en" href={site + enPath} />
+    <link rel="alternate" hreflang="pt-BR" href={site + ptPath} />
+    <link rel="alternate" hreflang="x-default" href={site + enPath} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={site + path} />
+    <meta property="og:image" content={site + "/og.png"} />
+    <meta property="og:locale" content={lang === "pt" ? "pt_BR" : "en_US"} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t === "dark" || t === "light") {
+            document.documentElement.setAttribute("data-theme", t);
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="min-h-[100dvh] bg-bg text-ink">
+    <slot />
+    <script>
+      document.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        const toggle = target.closest("[data-theme-toggle]");
+        if (toggle) {
+          const root = document.documentElement;
+          const current =
+            root.getAttribute("data-theme") ??
+            (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          const next = current === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          try {
+            localStorage.setItem("theme", next);
+          } catch (err) {}
+        }
+        const langSwitch = target.closest<HTMLElement>("[data-lang-switch]");
+        if (langSwitch) {
+          try {
+            localStorage.setItem("lang", langSwitch.dataset.langSwitch ?? "en");
+          } catch (err) {}
+        }
+      });
+    </script>
+  </body>
+</html>
