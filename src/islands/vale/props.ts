@@ -20,6 +20,14 @@ export interface Obstacle {
   x: number;
   z: number;
   r: number;
+  /**
+   * Present on walls. The obstacle is then the segment from (x, z) to
+   * (x2, z2) with radius r, rather than a circle: a fence panel is nearly
+   * four units long, and a circle wide enough to cover it would stop the
+   * wizard well short of the timber.
+   */
+  x2?: number;
+  z2?: number;
 }
 
 /** Radii that define the rings of the world. */
@@ -131,6 +139,43 @@ const PIVOT: Record<string, [number, number]> = {
   flag_yellow: [0, -0.11],
 };
 
+/**
+ * Fence panels block as walls. The gates deliberately do not: their arch is an
+ * opening, so a run of fence with a gate in it has a way through.
+ */
+const WALL: Record<string, { span: number; r: number }> = {
+  fence_wood_straight: { span: 1.15, r: 0.55 },
+  fence_stone_straight: { span: 1.15, r: 0.65 },
+};
+
+/**
+ * Props solid enough to walk around, as half their widest local extent. The
+ * radius is that half-extent at the placement scale, plus room for the wizard's
+ * own body. Anything absent from here is flat or small enough to walk over.
+ */
+const PROP_HALF: Record<string, number> = {
+  barrel: 0.1,
+  crate_A_big: 0.105,
+  crate_A_small: 0.07,
+  crate_B_small: 0.07,
+  crate_open: 0.165,
+  crate_long_A: 0.2,
+  resource_lumber: 0.345,
+  resource_stone: 0.21,
+  pallet: 0.15,
+  wheelbarrow: 0.255,
+  ladder: 0.125,
+  tree_single_A_cut: 0.085,
+  flag_red: 0.13,
+  flag_blue: 0.13,
+  flag_green: 0.13,
+  flag_yellow: 0.13,
+};
+const BODY_ROOM = 0.35;
+
+/** Filled by place() as the village is laid out, so it can never drift. */
+const placedObstacles: Obstacle[] = [];
+
 function place(
   model: string,
   x: number,
@@ -146,6 +191,25 @@ function place(
   const sin = Math.sin(rotY);
   const dx = (ox * cos + oz * sin) * scale;
   const dz = (-ox * sin + oz * cos) * scale;
+
+  const wall = WALL[model];
+  if (wall) {
+    // The panel runs along its local z axis, which turns to (sin, cos).
+    const half = (wall.span / 2) * scale;
+    placedObstacles.push({
+      x: x - sin * half,
+      z: z - cos * half,
+      x2: x + sin * half,
+      z2: z + cos * half,
+      r: wall.r,
+    });
+  } else {
+    const half = PROP_HALF[model];
+    if (half !== undefined) {
+      placedObstacles.push({ x, z, r: half * scale + BODY_ROOM });
+    }
+  }
+
   return [model, { x: x - dx, z: z - dz, rotY, scale, y }];
 }
 
@@ -240,8 +304,8 @@ const villagePairs: Array<[string, Placement]> = [
 
   // Fences: the Cottage's garden, the Library's low stone wall, the farm edge
   place("fence_wood_straight", 16.6, 6.9, 0, B),
-  place("fence_wood_straight_gate", 16.6, 10.47, 0, B),
-  place("fence_wood_straight", 16.6, 13, 0, B),
+  place("fence_wood_straight_gate", 18.1, 10.47, 0, B),
+  place("fence_wood_straight", 16.6, 13.8, 0, B),
   place("fence_stone_straight", -18.5, 5.6, 0, B),
   place("fence_stone_straight_gate", -18.5, 9.17, 0, B),
   place("fence_stone_straight", -18.5, 12.74, 0, B),
@@ -270,7 +334,7 @@ const villagePairs: Array<[string, Placement]> = [
 export const villageProps = fromPairs(villagePairs);
 
 /** Solid things the wizard should walk around, on top of the interactive places. */
-export const obstacles: Obstacle[] = [
+const landmarkObstacles: Obstacle[] = [
   // Radii come from each model's own bounding box at the scale it renders,
   // plus a little margin so the wizard never clips a wall.
   { x: 20, z: -12, r: 4.4 },      // market row
@@ -451,6 +515,18 @@ export const lanterns: Array<[number, number]> = [
   [1.6, 14.2],
   [-9.2, -14.6],
   [17.4, 8.8],
+];
+
+/**
+ * Everything the wizard has to walk around: the hand-placed landmarks, the
+ * fences and props derived while the village was laid out, and the lamp posts.
+ * Circles unless they carry a second point, in which case they are wall
+ * segments. Assembled here so nothing needs listing twice.
+ */
+export const obstacles: Obstacle[] = [
+  ...landmarkObstacles,
+  ...placedObstacles,
+  ...lanterns.map(([x, z]) => ({ x, z, r: 0.45 })),
 ];
 
 /** Thin a scatter group down for small screens, keeping the layout stable. */

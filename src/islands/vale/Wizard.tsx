@@ -140,13 +140,42 @@ export function Wizard({
         g.position.x *= PLAZA_LIMIT / dist;
         g.position.z *= PLAZA_LIMIT / dist;
       }
+      // Push out of anything solid. A collider with a second point is a wall,
+      // so the push comes from the nearest point along its length; without one
+      // it is a circle and the nearest point is simply its centre. Resolving
+      // against every collider each frame lets the wizard slide along a fence
+      // rather than stick to it.
+      //
+      // Several passes, because colliders overlap: being pushed clear of the
+      // pond can land him inside the tent on its bank, and one pass would leave
+      // him there. Three settles every overlap in the village.
+      for (let pass = 0; pass < 3; pass++)
       for (const c of colliders) {
-        const dx = g.position.x - c.x;
-        const dz = g.position.z - c.z;
+        let nearX = c.x;
+        let nearZ = c.z;
+        if (c.x2 !== undefined && c.z2 !== undefined) {
+          const vx = c.x2 - c.x;
+          const vz = c.z2 - c.z;
+          const lenSq = vx * vx + vz * vz;
+          const t =
+            lenSq > 0
+              ? Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    ((g.position.x - c.x) * vx + (g.position.z - c.z) * vz) / lenSq,
+                  ),
+                )
+              : 0;
+          nearX = c.x + vx * t;
+          nearZ = c.z + vz * t;
+        }
+        const dx = g.position.x - nearX;
+        const dz = g.position.z - nearZ;
         const d = Math.hypot(dx, dz);
         if (d < c.r && d > 0.0001) {
-          g.position.x = c.x + (dx / d) * c.r;
-          g.position.z = c.z + (dz / d) * c.r;
+          g.position.x = nearX + (dx / d) * c.r;
+          g.position.z = nearZ + (dz / d) * c.r;
         }
       }
 
