@@ -110,6 +110,62 @@ export const projectDetail: ProjectDetail[] = [
     links: [{ label: source, url: "https://github.com/AndDev741/rinha-de-backend-2026-java" }],
   },
   {
+    key: "eshop",
+    name: "Duda Morais eShop",
+    tagline: {
+      en: "A storefront built for someone to put their things up for sale",
+      pt: "Uma loja feita para alguém colocar as coisas dela à venda",
+    },
+    blurb: {
+      en: "A small ecommerce built end to end for a real catalogue: a React storefront on one side, a Spring Boot API behind JWT auth on the other, and the product photos kept in S3 instead of the database.",
+      pt: "Um ecommerce pequeno construído de ponta a ponta para um catálogo real: uma loja em React de um lado, uma API Spring Boot atrás de autenticação JWT do outro, e as fotos dos produtos guardadas no S3 em vez do banco.",
+    },
+    facts: [
+      {
+        en: "Photos go to S3, not into a column. The catalogue stays small and the images are served straight from storage.",
+        pt: "As fotos vão para o S3, não para uma coluna. O catálogo fica pequeno e as imagens são servidas direto do armazenamento.",
+      },
+      {
+        en: "Spring Security with JWT keeps the shopper and whoever manages the catalogue on separate sides of the API.",
+        pt: "Spring Security com JWT mantém quem compra e quem administra o catálogo em lados separados da API.",
+      },
+    ],
+    tech: ["React", "Tailwind CSS", "Spring Boot", "Java", "PostgreSQL", "AWS S3", "JWT"],
+    years: "2024 - 2025",
+    links: [
+      { label: { en: "Storefront", pt: "Loja" }, url: "https://github.com/AndDev741/dudamorais-eshop" },
+      { label: { en: "Backend", pt: "Backend" }, url: "https://github.com/AndDev741/dudamorais-eshop-backend" },
+    ],
+  },
+  {
+    key: "dreamsboard",
+    name: "DreamsBoard",
+    tagline: {
+      en: "A board for the things you are working towards",
+      pt: "Um quadro para as coisas que você está buscando",
+    },
+    blurb: {
+      en: "An app for keeping what you want in one place. Looking at it now, it is where the recipe I still use was rehearsed: Spring Boot with JWT and Postgres on one side, React with Redux and Tailwind on the other, and i18next so it spoke two languages from the first commit.",
+      pt: "Um app para manter o que você quer em um só lugar. Olhando hoje, é onde a receita que ainda uso foi ensaiada: Spring Boot com JWT e Postgres de um lado, React com Redux e Tailwind do outro, e i18next para falar duas línguas desde o primeiro commit.",
+    },
+    facts: [
+      {
+        en: "The same stack Beyou runs on today, a year earlier and much smaller, which is the reason it is worth keeping around.",
+        pt: "A mesma stack em que o Beyou roda hoje, um ano antes e bem menor, que é a razão de valer a pena guardar.",
+      },
+      {
+        en: "Spring's mail starter sends the account email, which was the first time I had a backend of mine send anything.",
+        pt: "O starter de mail do Spring envia o email de conta, que foi a primeira vez que um backend meu enviou alguma coisa.",
+      },
+    ],
+    tech: ["React", "Redux Toolkit", "Tailwind CSS", "i18next", "Spring Boot", "PostgreSQL", "JWT"],
+    years: "2024",
+    links: [
+      { label: { en: "Frontend", pt: "Frontend" }, url: "https://github.com/AndDev741/DreamsBoard-Frontend" },
+      { label: { en: "Backend", pt: "Backend" }, url: "https://github.com/AndDev741/DreamsBoard-backend" },
+    ],
+  },
+  {
     key: "babel",
     name: "Library of Babel",
     tagline: {

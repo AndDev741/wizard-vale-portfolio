@@ -259,25 +259,34 @@ export const towerInterior: InteriorConfig = {
       // The top of the tower: everything visible at once.
       key: "observatory",
       accent: "#a9c7ff",
-      boards: [{ project: "all", angle: 0 }],
+      // The overview straight ahead, with the two full-stack apps flanking it.
+      // The pillars and the bookcase moved off these angles so nothing on the
+      // wall stands in front of a board.
+      boards: [
+        { project: "all", angle: 0 },
+        { project: "eshop", angle: 310 },
+        { project: "dreamsboard", angle: 50 },
+      ],
       torches: [30, 330, 126, 234],
-      banners: [334, 50],
+      banners: [342, 22],
       props: [
         { model: "rug_oval_A", x: 0, z: 2.4, scale: 1.6, rotY: 0 },
         // the planning table, pushed to the flank so the board stays in view
         floor("dg_table_long_decorated_A", 312, 5, 20, 1),
         { model: "book_set", x: -3.4, z: 3.2, y: 1.02, rotY: -0.3, scale: 0.9 },
         { model: "dg_plate_food_A", x: -4.4, z: 2.2, y: 0.98, rotY: 0.4, scale: 0.8 },
-        floor("dg_pillar_decorated", 62, 7, 0, 1),
-        floor("dg_pillar_decorated", 298, 7, 0, 1),
-        floor("dg_column", 130, 6.9, 0, 1),
-        floor("dg_column", 230, 6.9, 0, 1),
-        wall("dg_wall_shelves", 44, RADIUS - 0.1, 0, 1),
+        // Kept on the near flanks. Anywhere between the camera and a board and
+        // a four-unit pillar simply stands in front of it.
+        floor("dg_pillar_decorated", 130, 7, 0, 1),
+        floor("dg_pillar_decorated", 230, 7, 0, 1),
+        floor("dg_column", 160, 7.2, 0, 1),
+        floor("dg_column", 200, 7.2, 0, 1),
+        wall("dg_wall_shelves", 92, RADIUS - 0.1, 0, 1),
         floor("dg_stool", 338, 4.4, 0, 1),
         floor("dg_stool", 24, 4.6, 0, 1),
         floor("dg_candle_triple", 210, 6.2, 0, 1),
-        floor("dg_candle_lit", 150, 6.4, 0, 1),
-        floor("dg_bottle_C_green", 142, 6.8, 0, 1),
+        floor("dg_candle_lit", 156, 6.4, 0, 1),
+        floor("dg_bottle_C_green", 146, 6.8, 0, 1),
         floor("dg_trunk_medium_A", 244, 6.4, 0, 1),
       ],
     },
