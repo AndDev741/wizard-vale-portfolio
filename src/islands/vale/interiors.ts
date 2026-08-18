@@ -21,14 +21,24 @@ export interface InteriorProp {
 }
 
 export interface InteriorBoard {
-  /** Key into projectDetail, or "all" for the overview board. */
-  project: string;
+  /**
+   * What the board shows, namespaced so one dialog can serve every building:
+   * "project:<key>", "projects:all", "topic:<key>", "topics:all".
+   */
+  subject: string;
   /** Degrees around the room, 0 being straight ahead of the entrance. */
   angle: number;
 }
 
 export interface InteriorFloor {
-  key: "grimoire" | "ledger" | "warding" | "attic" | "observatory";
+  key:
+    | "grimoire"
+    | "ledger"
+    | "warding"
+    | "attic"
+    | "observatory"
+    | "readingRoom"
+    | "gallery";
   boards: InteriorBoard[];
   props: InteriorProp[];
   /** Wall angles, in degrees, for mounted torches. */
@@ -115,6 +125,9 @@ export const INTERIOR_BLOCK: Record<string, number> = {
   dg_barrel_small_stack: 0.93,
   dg_box_large: 0.75,
   dg_table_long_decorated_A: 1.9,
+  dg_table_long: 1.9,
+  dg_table_medium: 1.0,
+  dg_table_small: 0.5,
   dg_trunk_large_B: 0.75,
   dg_column: 0.35,
   dg_bed_decorated: 1.5,
@@ -146,7 +159,7 @@ export const towerInterior: InteriorConfig = {
       // Beyou. The floor still being written, so it is the working study.
       key: "grimoire",
       accent: "#ffb15e",
-      boards: [{ project: "beyou", angle: 0 }],
+      boards: [{ subject: "project:beyou", angle: 0 }],
       torches: [28, 332, 132, 216],
       banners: [334, 26],
       props: [
@@ -176,7 +189,7 @@ export const towerInterior: InteriorConfig = {
       // BitData. A blockchain is a ledger, so this floor is coin and record.
       key: "ledger",
       accent: "#e0c060",
-      boards: [{ project: "bitdata", angle: 0 }],
+      boards: [{ subject: "project:bitdata", angle: 0 }],
       torches: [40, 320, 136, 224],
       banners: [26, 334],
       props: [
@@ -202,7 +215,7 @@ export const towerInterior: InteriorConfig = {
       // Rinha de Backend. Wards decide what gets through, same as fraud checks.
       key: "warding",
       accent: "#8fb3ff",
-      boards: [{ project: "rinha", angle: 0 }],
+      boards: [{ subject: "project:rinha", angle: 0 }],
       torches: [44, 316, 130, 228],
       banners: [334, 26],
       props: [
@@ -229,10 +242,10 @@ export const towerInterior: InteriorConfig = {
       key: "attic",
       accent: "#c08a5e",
       boards: [
-        { project: "babel", angle: 340 },
-        { project: "markdown", angle: 12 },
-        { project: "pomodoro", angle: 48 },
-        { project: "habittracker", angle: 312 },
+        { subject: "project:babel", angle: 340 },
+        { subject: "project:markdown", angle: 12 },
+        { subject: "project:pomodoro", angle: 48 },
+        { subject: "project:habittracker", angle: 312 },
       ],
       torches: [0, 122, 234, 300 ],
       banners: [],
@@ -263,9 +276,9 @@ export const towerInterior: InteriorConfig = {
       // The pillars and the bookcase moved off these angles so nothing on the
       // wall stands in front of a board.
       boards: [
-        { project: "all", angle: 0 },
-        { project: "eshop", angle: 310 },
-        { project: "dreamsboard", angle: 50 },
+        { subject: "projects:all", angle: 0 },
+        { subject: "project:eshop", angle: 310 },
+        { subject: "project:dreamsboard", angle: 50 },
       ],
       torches: [30, 330, 126, 234],
       banners: [342, 22],
@@ -293,8 +306,95 @@ export const towerInterior: InteriorConfig = {
   ],
 };
 
+
+const LIB_RADIUS = 9;
+
+/**
+ * The Library. Columns of shelves around the walls, and a framed board for each
+ * subject, which opens the texts as a book. Every text is the real thing, pulled
+ * from the Beyou docs API at build time; personal writing can join the same
+ * shelves later without touching this file's shape.
+ *
+ * Floor props stay off the middle: the entrance corridor runs straight to the
+ * boards, so anything on the floor sits at 40 degrees or more off the door line.
+ */
+export const libraryInterior: InteriorConfig = {
+  place: "writing",
+  radius: LIB_RADIUS,
+  wallHeight: 6.4,
+  stairsAngle: STAIRS_ANGLE,
+  hatchAngle: HATCH_ANGLE,
+  exitAngle: EXIT_ANGLE,
+  floors: [
+    {
+      key: "readingRoom",
+      accent: "#e8c98a",
+      boards: [
+        { subject: "topic:infra", angle: 328 },
+        { subject: "topic:ai", angle: 352 },
+        { subject: "topic:mobile", angle: 16 },
+        { subject: "topic:speed", angle: 40 },
+      ],
+      torches: [340, 4, 28, 200],
+      banners: [310, 58],
+      props: [
+        { model: "rug_rectangle_stripes_A", x: 0, z: 3.4, scale: 1.4, rotY: 0 },
+        // four columns of books, on the flanks where they hide no board
+        wall("dg_wall_shelves", 70, LIB_RADIUS - 0.1, 0, 1),
+        wall("dg_wall_shelves", 125, LIB_RADIUS - 0.1, 0, 1),
+        wall("dg_wall_shelves", 230, LIB_RADIUS - 0.1, 0, 1),
+        wall("dg_wall_shelves", 300, LIB_RADIUS - 0.1, 0, 1),
+        // two reading desks, flanking the way in
+        floor("dg_table_long", 138, 5.9, 15, 1),
+        floor("dg_table_long", 222, 5.9, -15, 1),
+        floor("dg_stool", 128, 4.6, 0, 1),
+        floor("dg_stool", 232, 4.6, 0, 1),
+        // books left open on the desks
+        { model: "book_set", x: 4.2, z: -3.9, y: 1.02, rotY: 0.5, scale: 0.9 },
+        { model: "book_single", x: 3.3, z: -4.8, y: 1.02, rotY: -0.2, scale: 0.9 },
+        { model: "book_set", x: -4.3, z: -3.8, y: 1.02, rotY: -0.5, scale: 0.9 },
+        { model: "dg_candle_lit", x: -3.4, z: -4.9, y: 1.02, rotY: 0, scale: 0.85 },
+        floor("dg_candle_lit", 148, 6.6, 0, 1),
+        floor("dg_candle_triple", 240, 6.4, 0, 1),
+        floor("dg_trunk_large_B", 246, 6.8, 20, 1),
+        floor("dg_trunk_medium_A", 116, 6.9, -20, 1),
+        floor("dg_bottle_C_green", 254, 6.4, 0, 1),
+      ],
+    },
+    {
+      key: "gallery",
+      accent: "#bfa77a",
+      boards: [
+        { subject: "topics:all", angle: 0 },
+        { subject: "topic:security", angle: 332 },
+      ],
+      torches: [348, 20, 96, 208],
+      banners: [312, 44],
+      props: [
+        { model: "rug_oval_A", x: 0, z: 3, scale: 1.5, rotY: 0 },
+        wall("dg_wall_shelves", 62, LIB_RADIUS - 0.1, 0, 1),
+        wall("dg_wall_shelves", 125, LIB_RADIUS - 0.1, 0, 1),
+        wall("dg_wall_shelves", 230, LIB_RADIUS - 0.1, 0, 1),
+        wall("dg_wall_shelves", 300, LIB_RADIUS - 0.1, 0, 1),
+        floor("dg_table_long", 220, 5.9, -15, 1),
+        floor("dg_table_medium", 140, 5.6, 0, 1),
+        floor("dg_stool", 230, 4.6, 0, 1),
+        floor("dg_stool", 132, 4.4, 0, 1),
+        { model: "book_set", x: -4.2, z: -3.8, y: 1.02, rotY: -0.5, scale: 0.9 },
+        { model: "book_single", x: 3.9, z: -4.1, y: 1.02, rotY: 0.6, scale: 0.9 },
+        floor("dg_candle_melted", 152, 6.6, 0, 1),
+        floor("dg_candle_lit", 244, 6.5, 0, 1),
+        floor("dg_trunk_medium_A", 250, 6.9, 0, 1),
+        floor("dg_box_large", 118, 6.8, 10, 1),
+        floor("dg_column", 205, 7.2, 0, 1),
+      ],
+    },
+  ],
+};
+
 export const interiors: Partial<Record<SectionKey, InteriorConfig>> = {
   projects: towerInterior,
+  writing: libraryInterior,
 };
 
 export function interiorFor(place: SectionKey): InteriorConfig | undefined {

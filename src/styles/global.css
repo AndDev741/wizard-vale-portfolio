@@ -110,3 +110,179 @@ body {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   The Library's book. A leaf of parchment with the docs markdown set on it, so
+   the styling here dresses HTML this file does not author: it arrives from the
+   Beyou docs API and is turned into pages at build time.
+   Serif on purpose, and only here. It is the one place in this site where the
+   thing being imitated is a manuscript.
+   --------------------------------------------------------------------------- */
+.book-leaf {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 2rem 1.6rem 2.4rem;
+  background:
+    radial-gradient(120% 90% at 30% 10%, #f2e7ca 0%, #e6d8b4 55%, #dcca9f 100%);
+  box-shadow: inset 0 0 60px rgba(120, 92, 46, 0.22);
+}
+.book-leaf--left {
+  border-right: 1px solid rgba(97, 74, 38, 0.35);
+  box-shadow:
+    inset -22px 0 34px -22px rgba(60, 42, 18, 0.55),
+    inset 0 0 60px rgba(120, 92, 46, 0.22);
+}
+.book-leaf--right {
+  box-shadow:
+    inset 22px 0 34px -22px rgba(60, 42, 18, 0.55),
+    inset 0 0 60px rgba(120, 92, 46, 0.22);
+}
+
+.book-folio {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.7rem;
+  color: rgba(84, 62, 30, 0.65);
+}
+
+.book-page {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.92rem;
+  line-height: 1.62;
+  color: #3d2f1e;
+  text-align: justify;
+  hyphens: auto;
+}
+.book-page > :first-child {
+  margin-top: 0;
+}
+.book-page p {
+  margin: 0 0 0.72em;
+}
+.book-page h1,
+.book-page h2,
+.book-page h3 {
+  margin: 1.1em 0 0.5em;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+  color: #4a3316;
+}
+.book-page h1 {
+  font-size: 1.35rem;
+}
+.book-page h2 {
+  font-size: 1.15rem;
+}
+.book-page h3 {
+  font-size: 1rem;
+  font-style: italic;
+}
+.book-page a {
+  color: #7a4a12;
+}
+.book-page strong {
+  color: #33260f;
+}
+.book-page ul,
+.book-page ol {
+  margin: 0 0 0.72em;
+  padding-left: 1.25em;
+  text-align: left;
+}
+.book-page li {
+  margin-bottom: 0.32em;
+}
+.book-page blockquote {
+  margin: 0 0 0.8em;
+  padding-left: 0.8em;
+  border-left: 3px solid rgba(150, 112, 52, 0.6);
+  font-style: italic;
+}
+.book-page code {
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+  background: rgba(94, 71, 34, 0.13);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.82em;
+}
+.book-page pre {
+  margin: 0 0 0.8em;
+  padding: 0.6em 0.7em;
+  overflow-x: auto;
+  border: 1px solid rgba(120, 92, 46, 0.3);
+  border-radius: 4px;
+  background: rgba(94, 71, 34, 0.1);
+  text-align: left;
+}
+.book-page pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.74em;
+  line-height: 1.5;
+}
+.book-page table {
+  width: 100%;
+  margin: 0 0 0.8em;
+  border-collapse: collapse;
+  font-size: 0.8em;
+  text-align: left;
+}
+.book-page th,
+.book-page td {
+  padding: 0.3em 0.45em;
+  border: 1px solid rgba(120, 92, 46, 0.32);
+  vertical-align: top;
+}
+.book-page th {
+  background: rgba(120, 92, 46, 0.12);
+}
+.book-page hr {
+  margin: 1.1em auto;
+  width: 40%;
+  border: 0;
+  border-top: 1px solid rgba(120, 92, 46, 0.45);
+}
+/* A diagram in the original becomes an illustration plate here. */
+.book-page .book-plate {
+  margin: 0 0 0.9em;
+  padding: 1.5em 1em;
+  border: 1px solid rgba(120, 92, 46, 0.45);
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(120, 92, 46, 0.06) 0 6px,
+      transparent 6px 12px
+    );
+  text-align: center;
+  font-style: italic;
+  font-size: 0.82em;
+  color: rgba(74, 51, 22, 0.85);
+}
+/* The very first leaf of a text opens with a large initial. */
+.book-page--opening > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.05em 0.1em 0 0;
+  font-size: 3.1em;
+  line-height: 0.82;
+  font-weight: 700;
+  color: #7a4a12;
+}
+
+@media (max-width: 640px) {
+  .book-leaf {
+    padding: 1.4rem 1.1rem 2rem;
+  }
+  .book-page {
+    font-size: 0.88rem;
+  }
+}

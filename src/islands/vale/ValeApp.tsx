@@ -6,7 +6,8 @@ import { Scene } from "./Scene";
 import { Interior } from "./Interior";
 import { CameraRig } from "./CameraRig";
 import { Panel } from "./Panels";
-import { ProjectDialog } from "./ProjectDialog";
+import { BoardDialog } from "./BoardDialog";
+import { BookReader } from "./BookReader";
 import { Joystick } from "./Joystick";
 import { useKeyboardInput, type InputVec } from "./useInput";
 import { places } from "./world";
@@ -30,7 +31,10 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const [panel, setPanel] = useState<SectionKey | null>(null);
   const [view, setView] = useState<View>({ kind: "vale" });
   const [dialog, setDialog] = useState<string | null>(null);
+  // What to go back to when a book is closed: the shelf it came off.
+  const [dialogBack, setDialogBack] = useState<string | null>(null);
   const [nearTrigger, setNearTrigger] = useState<string | null>(null);
+  const [exitedFrom, setExitedFrom] = useState<SectionKey | null>(null);
   const [fading, setFading] = useState(false);
   // Read synchronously: this island is client:only, and the Canvas reads
   // `detail` for its shadow setting on the very first render.
@@ -65,6 +69,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const startRoam = useCallback(() => {
     setPanel(null);
     setFocus("overview");
+    setExitedFrom(null);
     setMode("roam");
   }, []);
 
@@ -94,12 +99,15 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     inputRef.current.x = 0;
     inputRef.current.z = 0;
     setDialog(null);
+    setDialogBack(null);
+    const place = view.kind === "interior" ? view.place : null;
     wipe(() => {
       setNearTrigger(null);
+      setExitedFrom(place);
       setView({ kind: "vale" });
       setMode("roam");
     });
-  }, [wipe]);
+  }, [wipe, view]);
 
   const changeFloor = useCallback(
     (delta: number) => {
@@ -130,7 +138,10 @@ export default function ValeApp({ lang }: { lang: Lang }) {
       if (id === "up") changeFloor(1);
       else if (id === "down") changeFloor(-1);
       else if (id === "exit") leaveBuilding();
-      else if (id.startsWith("board:")) setDialog(id.slice(6));
+      else if (id.startsWith("board:")) {
+        setDialogBack(null);
+        setDialog(id.slice(6));
+      }
     },
     [view, enterBuilding, openPlace, changeFloor, leaveBuilding],
   );
@@ -210,7 +221,10 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               wizardRef={wizardRef}
               camYawRef={camYawRef}
               onNearTrigger={setNearTrigger}
-              onOpenBoard={setDialog}
+              onOpenBoard={(subject: string) => {
+                setDialogBack(null);
+                setDialog(subject);
+              }}
             />
           ) : (
             <Scene
@@ -222,6 +236,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               onPlaceClick={openPlace}
               onNearTrigger={setNearTrigger}
               camYawRef={camYawRef}
+              exitedFrom={exitedFrom}
               detail={detail}
             />
           )}
@@ -343,13 +358,35 @@ export default function ValeApp({ lang }: { lang: Lang }) {
         />
       )}
 
-      {dialog && (
-        <ProjectDialog
+      {dialog?.startsWith("text:") ? (
+        <BookReader
           lang={lang}
-          project={dialog}
-          onClose={() => setDialog(null)}
-          onPick={(key) => setDialog(key)}
+          textKey={dialog.slice(5)}
+          onClose={() => {
+            setDialog(null);
+            setDialogBack(null);
+          }}
+          onBack={
+            dialogBack
+              ? () => {
+                  setDialog(dialogBack);
+                  setDialogBack(null);
+                }
+              : undefined
+          }
         />
+      ) : (
+        dialog && (
+          <BoardDialog
+            lang={lang}
+            subject={dialog}
+            onClose={() => setDialog(null)}
+            onPick={(next: string) => {
+              setDialogBack(dialog);
+              setDialog(next);
+            }}
+          />
+        )
       )}
 
       {/* The wipe between floors */}

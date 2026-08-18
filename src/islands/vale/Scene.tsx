@@ -258,6 +258,8 @@ interface SceneProps {
   onPlaceClick: (key: SectionKey) => void;
   onNearTrigger: (id: string | null) => void;
   camYawRef: MutableRefObject<number>;
+  /** Set when he has just come back out of a building: spawn him at its door. */
+  exitedFrom?: SectionKey | null;
   /** 1 on desktop, lower on small screens: thins the scattered rings. */
   detail: number;
 }
@@ -271,15 +273,29 @@ function ValeScene({
   onPlaceClick,
   onNearTrigger,
   camYawRef,
+  exitedFrom,
   detail,
 }: SceneProps) {
   const dict = t(lang);
   const scattered = useMemo(() => thinGroups(scatter, detail), [detail]);
 
   /** The vale as somewhere to walk: its edge, what blocks, and the five doors. */
-  const stage = useMemo<WizardStage>(
-    () => ({
-      id: "vale",
+  const stage = useMemo<WizardStage>(() => {
+    // Stepping out of a building should leave you on its doorstep, not back in
+    // the middle of the plaza.
+    const from = exitedFrom ? places.find((p) => p.key === exitedFrom) : undefined;
+    let spawn: [number, number, number] = IDLE_SPOT;
+    let spawnRotY = Math.PI;
+    if (from) {
+      const [dx, dz] = doorPoint(from);
+      const len = Math.hypot(dx, dz) || 1;
+      // A pace further out than the door itself, facing back into the village,
+      // with the door still inside its trigger so you can turn round and re-enter.
+      spawn = [dx - (dx / len) * 1.6, 0, dz - (dz / len) * 1.6];
+      spawnRotY = facingCenter([spawn[0], 0, spawn[2]]);
+    }
+    return {
+      id: exitedFrom ? `vale:door-${exitedFrom}` : "vale",
       bounds: PLAZA_LIMIT,
       colliders: [
         { x: 0, z: 0, r: WELL_RADIUS },
@@ -292,11 +308,10 @@ function ValeScene({
       }),
       idle: { spot: IDLE_SPOT, rotY: IDLE_ROT_Y },
       // Facing into the village, so the first thing you see is his back.
-      spawn: IDLE_SPOT,
-      spawnRotY: Math.PI,
-    }),
-    [],
-  );
+      spawn,
+      spawnRotY,
+    };
+  }, [exitedFrom]);
   // Labels are for the tour only, and on a phone they collide with the dock,
   // which already lists every place. `detail` is 1 only on wide screens.
   const showLabels = mode === "tour" && detail === 1;

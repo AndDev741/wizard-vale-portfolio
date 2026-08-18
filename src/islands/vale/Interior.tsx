@@ -2,7 +2,7 @@ import { memo, Suspense, useMemo, type MutableRefObject, type RefObject } from "
 import { Html, useGLTF } from "@react-three/drei";
 import { BackSide, DoubleSide, type Group } from "three";
 import { t, type Lang } from "../../i18n/ui";
-import { findProject } from "../../data/projectDetail";
+import { boardLabel } from "./boardSubject";
 import { Model } from "./Instanced";
 import { Wizard, type WizardStage, type WizardTrigger } from "./Wizard";
 import type { InputVec } from "./useInput";
@@ -14,7 +14,7 @@ import {
   INTERIOR_PIVOT,
   type InteriorConfig,
   type InteriorFloor,
-  towerInterior,
+  interiors,
   type InteriorProp,
 } from "./interiors";
 
@@ -23,9 +23,12 @@ const TORCH_MODEL = "/models/dg_torch_mounted.glb";
 const BANNER_MODEL = "/models/dg_banner_patternA_blue.glb";
 const FRAME_MODEL = "/models/pictureframe_large_B.gltf";
 
-// Every model the tower can ask for, warmed before anyone walks in.
-for (const m of interiorModels(towerInterior)) {
-  useGLTF.preload(m.startsWith("dg_") ? `/models/${m}.glb` : `/models/${m}.gltf`);
+// Every model any interior can ask for, warmed before anyone walks in.
+for (const config of Object.values(interiors)) {
+  if (!config) continue;
+  for (const m of interiorModels(config)) {
+    useGLTF.preload(m.startsWith("dg_") ? `/models/${m}.glb` : `/models/${m}.gltf`);
+  }
 }
 useGLTF.preload(FRAME_MODEL);
 
@@ -196,7 +199,7 @@ function InteriorScene({
     }
     for (const b of floor.boards) {
       const [bx, bz] = ring(b.angle, config.radius - 2.2);
-      triggers.push({ id: `board:${b.project}`, x: bx, z: bz, r: 2 });
+      triggers.push({ id: `board:${b.subject}`, x: bx, z: bz, r: 2 });
     }
     // Arriving from below you step out of the hatch; on the ground floor you
     // come in through the door.
@@ -239,6 +242,21 @@ function InteriorScene({
         distance={16}
         decay={2}
       />
+      {/* And one on each flank: anything against the side walls sits outside the
+          reach of the middle light and reads as a black slab without these. */}
+      {[90, 270].map((a) => {
+        const [fx, fz] = ring(a, config.radius * 0.62);
+        return (
+          <pointLight
+            key={`fill-${a}`}
+            position={[fx, 3.6, fz]}
+            color="#ffdcb0"
+            intensity={13}
+            distance={14}
+            decay={2}
+          />
+        );
+      })}
 
       {/* Floor, wall and ceiling. The wall is a cylinder seen from the inside. */}
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
@@ -359,19 +377,15 @@ function InteriorScene({
         <Prop key={`prop-${i}`} prop={p} />
       ))}
 
-      {floor.boards.map((b) => {
-        const project = findProject(b.project);
-        const label = b.project === "all" ? dict.interior.allTitle : (project?.name ?? b.project);
-        return (
-          <Board
-            key={b.project}
-            angle={b.angle}
-            radius={config.radius - 0.1}
-            label={label}
-            onOpen={() => onOpenBoard(b.project)}
-          />
-        );
-      })}
+      {floor.boards.map((b) => (
+        <Board
+          key={b.subject}
+          angle={b.angle}
+          radius={config.radius - 0.1}
+          label={boardLabel(b.subject, lang)}
+          onOpen={() => onOpenBoard(b.subject)}
+        />
+      ))}
 
       <Suspense fallback={null}>
         <Wizard
