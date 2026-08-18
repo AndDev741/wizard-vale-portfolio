@@ -24,7 +24,7 @@ import type { InputVec } from "./useInput";
 const PLACE_MODELS = [
   "/models/building_tavern_red.gltf",
   "/models/building_tower_A_blue.gltf",
-  "/models/building_church_yellow.gltf",
+  "/models/building_castle_yellow.gltf",
   "/models/building_home_A_green.gltf",
   "/models/building_well_blue.gltf",
   "/models/crate_A_small.gltf",

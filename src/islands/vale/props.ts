@@ -163,13 +163,13 @@ const villagePairs: Array<[string, Placement]> = [
   place("building_home_B_yellow", -17.5, 15, 2.2, 5),
 
   // Working west: a lumber yard and the windmill on open ground
-  place("building_lumbermill_red", -21, 3, 1.5, 5.5, 0.24 * 5.5),
+  place("building_lumbermill_red", -21, 3, 1.5, 5.5),
   place("resource_lumber", -18.6, 5.4, 0.5, B),
   place("resource_lumber", -18.9, 4.2, 2.4, B),
   place("pallet", -19.6, 6.6, 0.3, B),
   place("tree_single_A_cut", -23.5, 7.5, 0, 3.2),
   place("tree_single_A_cut", -22.2, 9.4, 1.1, 3.0),
-  place("building_windmill_green", -20, -12.5, 2.6, 6, 0.5 * 6),
+  place("building_windmill_green", -20, -12.5, 2.6, 6),
 
   // North: the sleeping side of the village, plus the site where v2 gets built
   place("building_home_A_red", 6, -20, 3.0, 6.5),
@@ -179,7 +179,7 @@ const villagePairs: Array<[string, Placement]> = [
   place("ladder", -9.6, -16.4, 1.9, B),
 
   // The pond east, with the watermill dipping its wheel in
-  place("building_watermill_blue", 24.2, -2.6, 1.9, 5, 2),
+  place("building_watermill_blue", 24.2, -2.6, 1.9, 5),
   place("bucket_water", 17.6, 6.4, 0.5, B * 1.6),
   place("bucket_empty", 16.9, 7.2, 1.4, B * 1.6),
 

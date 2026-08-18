@@ -42,11 +42,11 @@ export const places: PlaceConfig[] = [
   },
   {
     key: "writing",
-    model: "/models/building_church_yellow.gltf",
+    model: "/models/building_castle_yellow.gltf",
     position: [-12, 0, 9],
-    scale: 7,
-    labelHeight: 12.8,
-    colliderRadius: 4.2,
+    scale: 3,
+    labelHeight: 13.1,
+    colliderRadius: 3.6,
   },
   {
     key: "about",
