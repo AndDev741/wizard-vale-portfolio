@@ -108,6 +108,29 @@ function mergeGroups(...groups: Array<Record<string, Placement[]>>): Record<stri
   return out;
 }
 
+/**
+ * Not every model is centred on its own origin. The straight fence panels are
+ * authored a whole unit to -x (they were made to line up along a hex tile edge)
+ * and the gates half a unit, so a fence run placed at one x was drawn 3.1 units
+ * to the side, through whatever stood there, with the gate jogged 1.5 out of
+ * line with its own panels. These are each model's local offset, measured from
+ * the gltf position accessors, and place() cancels them out. So a coordinate in
+ * this file means where the thing actually appears.
+ */
+const PIVOT: Record<string, [number, number]> = {
+  fence_wood_straight: [-1, 0],
+  fence_stone_straight: [-1, 0],
+  fence_wood_straight_gate: [-0.504, 0],
+  fence_stone_straight_gate: [-0.519, 0],
+  building_watermill_blue: [0, 0.248],
+  building_lumbermill_red: [-0.003, 0.205],
+  building_stage_A: [0.043, 0.095],
+  flag_red: [0, -0.11],
+  flag_blue: [0, -0.11],
+  flag_green: [0, -0.11],
+  flag_yellow: [0, -0.11],
+};
+
 function place(
   model: string,
   x: number,
@@ -116,7 +139,14 @@ function place(
   scale = B,
   y?: number,
 ): [string, Placement] {
-  return [model, { x, z, rotY, scale, y }];
+  const [ox, oz] = PIVOT[model] ?? [0, 0];
+  // Where the local offset lands once the model is turned: three rotates
+  // (ox, oz) about Y to (ox·cos + oz·sin, -ox·sin + oz·cos).
+  const cos = Math.cos(rotY);
+  const sin = Math.sin(rotY);
+  const dx = (ox * cos + oz * sin) * scale;
+  const dz = (-ox * sin + oz * cos) * scale;
+  return [model, { x: x - dx, z: z - dz, rotY, scale, y }];
 }
 
 function fromPairs(pairs: Array<[string, Placement]>): Record<string, Placement[]> {
@@ -179,7 +209,7 @@ const villagePairs: Array<[string, Placement]> = [
   place("ladder", -9.6, -16.4, 1.9, B),
 
   // The pond east, with the watermill dipping its wheel in
-  place("building_watermill_blue", 24.2, -2.6, 1.9, 5),
+  place("building_watermill_blue", 25.4, -3, 1.9, 5),
   place("bucket_water", 17.6, 6.4, 0.5, B * 1.6),
   place("bucket_empty", 16.9, 7.2, 1.4, B * 1.6),
 
@@ -212,9 +242,9 @@ const villagePairs: Array<[string, Placement]> = [
   place("fence_wood_straight", 16.6, 6.9, 0, B),
   place("fence_wood_straight_gate", 16.6, 10.47, 0, B),
   place("fence_wood_straight", 16.6, 13, 0, B),
-  place("fence_stone_straight", -16.4, 5.6, 0, B),
-  place("fence_stone_straight_gate", -16.4, 9.17, 0, B),
-  place("fence_stone_straight", -16.4, 12.74, 0, B),
+  place("fence_stone_straight", -18.5, 5.6, 0, B),
+  place("fence_stone_straight_gate", -18.5, 9.17, 0, B),
+  place("fence_stone_straight", -18.5, 12.74, 0, B),
 
   // Water plants around the pond rim
   place("waterplant_C", 15.2, 1.6, 0.4, 5.6),
@@ -253,7 +283,7 @@ export const obstacles: Obstacle[] = [
   { x: 6, z: -20, r: 2.8 },       // house, north
   { x: -7.5, z: -18.5, r: 2.8 },  // house, north west
   { x: -2, z: -22.5, r: 4.3 },    // the site where v2 gets built
-  { x: 24.2, z: -2.6, r: 3.1 },   // watermill
+  { x: 25.4, z: -3, r: 3.1 },     // watermill
   { x: POND.x, z: POND.z, r: POND.r },
   { x: 2.5, z: 6.2, r: 2.6 },     // the plaza stage
   // village trees
@@ -303,7 +333,7 @@ const treeline = scatterRing({
   // steer around them or a trunk grows through a roof.
   avoid: [
     { x: POND.x, z: POND.z, r: 12 },
-    { x: 24.2, z: -2.6, r: 10 },
+    { x: 25.4, z: -3, r: 10 },
     { x: -2, z: -22.5, r: 11 },
     { x: 2, z: 20, r: 10 },
     { x: 20, z: -12, r: 11 },
