@@ -9,73 +9,63 @@ import {
 import { useFrame } from "@react-three/fiber";
 import { useAnimations, useGLTF } from "@react-three/drei";
 import type { Group, Mesh } from "three";
-import type { SectionKey } from "../../i18n/ui";
-import { obstacles } from "./props";
-import {
-  places,
-  doorPoint,
-  WALK_SPEED,
-  PLAZA_LIMIT,
-  WELL_RADIUS,
-  DOOR_TRIGGER,
-  IDLE_SPOT,
-  IDLE_ROT_Y,
-} from "./world";
+import type { Obstacle } from "./props";
+import { WALK_SPEED } from "./world";
 import type { InputVec } from "./useInput";
 
 /** Loadout options in the source model that must not render together. */
 const HIDDEN_PROPS = new Set(["Spellbook", "Spellbook_open", "2H_Staff"]);
 
+export interface WizardTrigger {
+  id: string;
+  x: number;
+  z: number;
+  r: number;
+}
+
+/**
+ * Where the wizard is allowed to be. The vale passes one of these, and so does
+ * each floor of a building interior, which is the whole reason it is a
+ * parameter: the movement, collision and trigger code is the same indoors.
+ */
+export interface WizardStage {
+  /** Identity, so arriving somewhere new repositions him. */
+  id: string;
+  /** He cannot walk further than this from the origin. */
+  bounds: number;
+  colliders: Obstacle[];
+  triggers: WizardTrigger[];
+  /** Where he waits while not walking. Interiors leave this out. */
+  idle?: { spot: [number, number, number]; rotY: number };
+  spawn: [number, number, number];
+  spawnRotY: number;
+}
+
 interface WizardProps {
-  mode: "tour" | "roam";
+  stage: WizardStage;
+  /** False in the vale's click-tour, where he only stands and idles. */
+  walking: boolean;
   paused: boolean;
   inputRef: MutableRefObject<InputVec>;
   wizardRef: RefObject<Group | null>;
   /** Damped camera yaw, written by CameraRig. Input is relative to it. */
   camYawRef: MutableRefObject<number>;
-  onNearDoor: (key: SectionKey | null) => void;
+  onNearTrigger: (id: string | null) => void;
 }
 
 export function Wizard({
-  mode,
+  stage,
+  walking,
   paused,
   inputRef,
   wizardRef,
   camYawRef,
-  onNearDoor,
+  onNearTrigger,
 }: WizardProps) {
   const { scene, animations } = useGLTF("/models/Mage.glb");
   const { actions } = useAnimations(animations, wizardRef as RefObject<Group>);
   const current = useRef("Idle");
-  const lastDoor = useRef<SectionKey | null>(null);
-
-  const doors = useMemo(
-    () =>
-      places.map((p) => {
-        const [x, z] = doorPoint(p);
-        return { key: p.key, x, z };
-      }),
-    [],
-  );
-  const colliders = useMemo(
-    () => [
-      { x: 0, z: 0, r: WELL_RADIUS },
-      ...places.map((p) => ({ x: p.position[0], z: p.position[2], r: p.colliderRadius })),
-      ...obstacles,
-    ],
-    [],
-  );
-
-  useLayoutEffect(() => {
-    scene.traverse((o) => {
-      if ((o as Mesh).isMesh) (o as Mesh).castShadow = true;
-      // The pack ships every loadout option attached at once: both spellbooks
-      // share handslot.l and both the wand and the staff share handslot.r, so
-      // each hand held two intersecting objects. Keep the wand alone; in the
-      // idle pose the raised left hand tucks a book under the hat brim.
-      if (HIDDEN_PROPS.has(o.name)) o.visible = false;
-    });
-  }, [scene]);
+  const lastTrigger = useRef<string | null>(null);
 
   const setAction = (name: string) => {
     if (current.current === name) return;
@@ -94,27 +84,42 @@ export function Wizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useLayoutEffect(() => {
+    scene.traverse((o) => {
+      if ((o as Mesh).isMesh) (o as Mesh).castShadow = true;
+      // The pack ships every loadout option attached at once: both spellbooks
+      // share handslot.l and both the wand and the staff share handslot.r, so
+      // each hand held two intersecting objects. Keep the wand alone; in the
+      // idle pose the raised left hand tucks a book under the hat brim.
+      if (HIDDEN_PROPS.has(o.name)) o.visible = false;
+    });
+  }, [scene]);
+
+  // Put him where this stage wants him, on arrival and when walking starts.
   useEffect(() => {
     const g = wizardRef.current;
     if (!g) return;
-    if (mode === "tour") {
-      g.position.set(...IDLE_SPOT);
-      g.rotation.y = IDLE_ROT_Y;
+    if (!walking && stage.idle) {
+      g.position.set(...stage.idle.spot);
+      g.rotation.y = stage.idle.rotY;
       setAction("Idle");
-      lastDoor.current = null;
-      onNearDoor(null);
     } else {
-      // Start walk mode facing into the village, so the first thing the visitor
-      // sees is his back and the road ahead.
-      g.rotation.y = Math.PI;
+      g.position.set(...stage.spawn);
+      g.rotation.y = stage.spawnRotY;
     }
+    lastTrigger.current = null;
+    onNearTrigger(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [walking, stage.id]);
+
+  const colliders = stage.colliders;
+  const triggers = stage.triggers;
+  const bounds = stage.bounds;
 
   useFrame((_, dt) => {
     const g = wizardRef.current;
     if (!g) return;
-    if (mode !== "roam" || paused) {
+    if (!walking || paused) {
       setAction("Idle");
       return;
     }
@@ -136,10 +141,11 @@ export function Wizard({
       g.position.z += nz * speed * dt;
 
       const dist = Math.hypot(g.position.x, g.position.z);
-      if (dist > PLAZA_LIMIT) {
-        g.position.x *= PLAZA_LIMIT / dist;
-        g.position.z *= PLAZA_LIMIT / dist;
+      if (dist > bounds) {
+        g.position.x *= bounds / dist;
+        g.position.z *= bounds / dist;
       }
+
       // Push out of anything solid. A collider with a second point is a wall,
       // so the push comes from the nearest point along its length; without one
       // it is a circle and the nearest point is simply its centre. Resolving
@@ -150,34 +156,34 @@ export function Wizard({
       // pond can land him inside the tent on its bank, and one pass would leave
       // him there. Three settles every overlap in the village.
       for (let pass = 0; pass < 3; pass++)
-      for (const c of colliders) {
-        let nearX = c.x;
-        let nearZ = c.z;
-        if (c.x2 !== undefined && c.z2 !== undefined) {
-          const vx = c.x2 - c.x;
-          const vz = c.z2 - c.z;
-          const lenSq = vx * vx + vz * vz;
-          const t =
-            lenSq > 0
-              ? Math.max(
-                  0,
-                  Math.min(
-                    1,
-                    ((g.position.x - c.x) * vx + (g.position.z - c.z) * vz) / lenSq,
-                  ),
-                )
-              : 0;
-          nearX = c.x + vx * t;
-          nearZ = c.z + vz * t;
+        for (const c of colliders) {
+          let nearX = c.x;
+          let nearZ = c.z;
+          if (c.x2 !== undefined && c.z2 !== undefined) {
+            const vx = c.x2 - c.x;
+            const vz = c.z2 - c.z;
+            const lenSq = vx * vx + vz * vz;
+            const t =
+              lenSq > 0
+                ? Math.max(
+                    0,
+                    Math.min(
+                      1,
+                      ((g.position.x - c.x) * vx + (g.position.z - c.z) * vz) / lenSq,
+                    ),
+                  )
+                : 0;
+            nearX = c.x + vx * t;
+            nearZ = c.z + vz * t;
+          }
+          const dx = g.position.x - nearX;
+          const dz = g.position.z - nearZ;
+          const d = Math.hypot(dx, dz);
+          if (d < c.r && d > 0.0001) {
+            g.position.x = nearX + (dx / d) * c.r;
+            g.position.z = nearZ + (dz / d) * c.r;
+          }
         }
-        const dx = g.position.x - nearX;
-        const dz = g.position.z - nearZ;
-        const d = Math.hypot(dx, dz);
-        if (d < c.r && d > 0.0001) {
-          g.position.x = nearX + (dx / d) * c.r;
-          g.position.z = nearZ + (dz / d) * c.r;
-        }
-      }
 
       const target = Math.atan2(nx, nz);
       let diff = target - g.rotation.y;
@@ -188,21 +194,29 @@ export function Wizard({
       setAction("Idle");
     }
 
-    let near: SectionKey | null = null;
-    for (const d of doors) {
-      if (Math.hypot(g.position.x - d.x, g.position.z - d.z) < DOOR_TRIGGER) {
-        near = d.key;
-        break;
+    let near: string | null = null;
+    let bestDist = Infinity;
+    for (const t of triggers) {
+      const d = Math.hypot(g.position.x - t.x, g.position.z - t.z);
+      if (d < t.r && d < bestDist) {
+        bestDist = d;
+        near = t.id;
       }
     }
-    if (near !== lastDoor.current) {
-      lastDoor.current = near;
-      onNearDoor(near);
+    if (near !== lastTrigger.current) {
+      lastTrigger.current = near;
+      onNearTrigger(near);
     }
   });
 
+  const initial = useMemo(
+    () => (walking || !stage.idle ? stage.spawn : stage.idle.spot),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   return (
-    <group ref={wizardRef} position={IDLE_SPOT} rotation-y={IDLE_ROT_Y} scale={1}>
+    <group ref={wizardRef} position={initial} rotation-y={stage.spawnRotY} scale={1}>
       <primitive object={scene} />
     </group>
   );

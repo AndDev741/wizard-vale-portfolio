@@ -3,13 +3,24 @@ import { useFrame } from "@react-three/fiber";
 import { Html, Stars, useGLTF } from "@react-three/drei";
 import type { Group, Points } from "three";
 import { t, type Lang, type SectionKey } from "../../i18n/ui";
-import { places, facingCenter, type PlaceConfig } from "./world";
+import {
+  places,
+  facingCenter,
+  doorPoint,
+  PLAZA_LIMIT,
+  WELL_RADIUS,
+  DOOR_TRIGGER,
+  IDLE_SPOT,
+  IDLE_ROT_Y,
+  type PlaceConfig,
+} from "./world";
 import {
   clouds,
   cloudModels,
   grassPatches,
   lanterns,
   propModels,
+  obstacles,
   ridge,
   scatter,
   thinGroups,
@@ -18,7 +29,7 @@ import {
   POND,
 } from "./props";
 import { Instanced, InstancedGroups, Model } from "./Instanced";
-import { Wizard } from "./Wizard";
+import { Wizard, type WizardStage } from "./Wizard";
 import type { InputVec } from "./useInput";
 
 const PLACE_MODELS = [
@@ -243,7 +254,7 @@ interface SceneProps {
   inputRef: MutableRefObject<InputVec>;
   wizardRef: RefObject<Group | null>;
   onPlaceClick: (key: SectionKey) => void;
-  onNearDoor: (key: SectionKey | null) => void;
+  onNearTrigger: (id: string | null) => void;
   camYawRef: MutableRefObject<number>;
   /** 1 on desktop, lower on small screens: thins the scattered rings. */
   detail: number;
@@ -256,12 +267,34 @@ export function Scene({
   inputRef,
   wizardRef,
   onPlaceClick,
-  onNearDoor,
+  onNearTrigger,
   camYawRef,
   detail,
 }: SceneProps) {
   const dict = t(lang);
   const scattered = useMemo(() => thinGroups(scatter, detail), [detail]);
+
+  /** The vale as somewhere to walk: its edge, what blocks, and the five doors. */
+  const stage = useMemo<WizardStage>(
+    () => ({
+      id: "vale",
+      bounds: PLAZA_LIMIT,
+      colliders: [
+        { x: 0, z: 0, r: WELL_RADIUS },
+        ...places.map((p) => ({ x: p.position[0], z: p.position[2], r: p.colliderRadius })),
+        ...obstacles,
+      ],
+      triggers: places.map((p) => {
+        const [x, z] = doorPoint(p);
+        return { id: p.key, x, z, r: DOOR_TRIGGER };
+      }),
+      idle: { spot: IDLE_SPOT, rotY: IDLE_ROT_Y },
+      // Facing into the village, so the first thing you see is his back.
+      spawn: IDLE_SPOT,
+      spawnRotY: Math.PI,
+    }),
+    [],
+  );
   // Labels are for the tour only, and on a phone they collide with the dock,
   // which already lists every place. `detail` is 1 only on wide screens.
   const showLabels = mode === "tour" && detail === 1;
@@ -382,12 +415,13 @@ export function Scene({
           appear before he walks on. */}
       <Suspense fallback={null}>
         <Wizard
-          mode={mode}
+          stage={stage}
+          walking={mode === "roam"}
           paused={paused}
           inputRef={inputRef}
           wizardRef={wizardRef}
           camYawRef={camYawRef}
-          onNearDoor={onNearDoor}
+          onNearTrigger={onNearTrigger}
         />
       </Suspense>
     </>

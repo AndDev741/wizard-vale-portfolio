@@ -8,6 +8,8 @@ interface PanelProps {
   lang: Lang;
   section: SectionKey;
   onClose: () => void;
+  /** Given when this place has an interior, so it can be walked into. */
+  onEnter?: () => void;
 }
 
 const linkClass =
@@ -139,7 +141,7 @@ function PanelContent({ lang, section }: { lang: Lang; section: SectionKey }) {
   );
 }
 
-export function Panel({ lang, section, onClose }: PanelProps) {
+export function Panel({ lang, section, onClose, onEnter }: PanelProps) {
   const dict = t(lang);
   const pageHref = section === "contact" ? null : localizePath(lang, `/${section}`);
 
@@ -161,6 +163,15 @@ export function Panel({ lang, section, onClose }: PanelProps) {
           {dict.world.close}
         </button>
       </div>
+      {onEnter && (
+        <button
+          type="button"
+          onClick={onEnter}
+          className="mt-4 w-full rounded-full bg-[#d99a3d] px-4 py-2.5 text-sm font-bold text-[#221a0d] hover:opacity-90 active:scale-[0.99]"
+        >
+          {dict.interior.goInside}
+        </button>
+      )}
       <div className="mt-4">
         <PanelContent lang={lang} section={section} />
       </div>
