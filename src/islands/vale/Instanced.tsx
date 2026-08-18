@@ -55,6 +55,19 @@ export function Instanced({
     return copy;
   }, [source, tint]);
 
+  // Held stable: a fresh args array asks R3F to construct a new InstancedMesh.
+  const meshArgs = useMemo(
+    () =>
+      source && material
+        ? ([source.geometry, material, items.length] as [
+            typeof source.geometry,
+            typeof material,
+            number,
+          ])
+        : undefined,
+    [source, material, items.length],
+  );
+
   const ref = useRef<InstancedMesh>(null);
 
   useLayoutEffect(() => {
@@ -81,7 +94,7 @@ export function Instanced({
 
   // A handful of models (the mills, the gate fences) are multi-mesh with node
   // transforms, which instancing would flatten. Those fall back to clones.
-  if (!source || !material) {
+  if (!source || !material || !meshArgs) {
     return (
       <>
         {items.map((item, i) => (
@@ -101,7 +114,7 @@ export function Instanced({
   return (
     <instancedMesh
       ref={ref}
-      args={[source.geometry, material, items.length]}
+      args={meshArgs}
       castShadow={castShadow}
       receiveShadow={receiveShadow}
     />

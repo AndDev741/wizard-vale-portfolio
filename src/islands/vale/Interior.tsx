@@ -1,4 +1,4 @@
-import { Suspense, useMemo, type MutableRefObject, type RefObject } from "react";
+import { memo, Suspense, useMemo, type MutableRefObject, type RefObject } from "react";
 import { Html, useGLTF } from "@react-three/drei";
 import { BackSide, DoubleSide, type Group } from "three";
 import { t, type Lang } from "../../i18n/ui";
@@ -18,7 +18,7 @@ import {
   type InteriorProp,
 } from "./interiors";
 
-const STEP_MODEL = "/models/dg_floor_wood_small.glb";
+const LADDER_RUNG_GAP = 0.46;
 const TORCH_MODEL = "/models/dg_torch_mounted.glb";
 const BANNER_MODEL = "/models/dg_banner_patternA_blue.glb";
 const FRAME_MODEL = "/models/pictureframe_large_B.gltf";
@@ -29,10 +29,8 @@ for (const m of interiorModels(towerInterior)) {
 }
 useGLTF.preload(FRAME_MODEL);
 
-/** How far up the spiral climbs, and how far round the wall it wraps. */
-const STAIR_STEPS = 16;
-const STAIR_ARC = 120;
-const STAIR_RADIUS_INSET = 1.7;
+/** How far the ladder stands off the wall, and how wide the hatch opening is. */
+const LADDER_INSET = 0.75;
 const HATCH_RADIUS = 1.6;
 
 /** A prop, with its own off-origin geometry cancelled out. */
@@ -61,84 +59,46 @@ function Prop({ prop }: { prop: InteriorProp }) {
 }
 
 /**
- * The spiral. Each step is a wood tile turned to follow the wall, so it reads as
- * a staircase winding up the inside of the tower even though climbing it is a
- * trigger rather than real height.
+ * The way up: a ladder standing against the wall, reaching an opening in the
+ * ceiling. Climbing is still a trigger rather than real height, so the wizard
+ * stays on one plane, but a vertical ladder reads as a single obvious "up"
+ * where a spiral of treads invited walking that the movement cannot do.
  */
-function Spiral({
-  startAngle,
+function Ladder({
+  angle,
   radius,
   top,
 }: {
-  startAngle: number;
+  angle: number;
   radius: number;
   top: number;
 }) {
-  const steps = useMemo(() => {
-    const out: Array<{ x: number; z: number; y: number; rotY: number; angle: number }> = [];
-    for (let i = 0; i < STAIR_STEPS; i++) {
-      const f = i / (STAIR_STEPS - 1);
-      const angle = startAngle + f * STAIR_ARC;
-      const [x, z] = ring(angle, radius);
-      out.push({ x, z, y: 0.24 + f * (top - 0.9), rotY: rad(angle), angle });
-    }
+  const [x, z] = ring(angle, radius);
+  const rungs = useMemo(() => {
+    const out: number[] = [];
+    for (let y = 0.42; y < top - 0.1; y += LADDER_RUNG_GAP) out.push(y);
     return out;
-  }, [startAngle, radius, top]);
-
-  // A handrail on the inner edge: a post every other tread, with a short beam
-  // bridging each pair, which is what stops the treads reading as loose planks.
-  const rail = useMemo(() => {
-    const posts = steps.filter((_, i) => i % 2 === 0);
-    const beams: Array<{ x: number; z: number; y: number; rotY: number; len: number }> = [];
-    for (let i = 0; i < posts.length - 1; i++) {
-      const a = posts[i];
-      const b = posts[i + 1];
-      beams.push({
-        x: (a.x + b.x) / 2,
-        z: (a.z + b.z) / 2,
-        y: (a.y + b.y) / 2 + 0.86,
-        rotY: Math.atan2(b.x - a.x, b.z - a.z),
-        len: Math.hypot(b.x - a.x, b.z - a.z) + 0.08,
-      });
-    }
-    return { posts, beams };
-  }, [steps]);
-
-  const inner = radius - 0.72;
+  }, [top]);
 
   return (
-    <group>
-      {steps.map((s, i) => (
-        <group key={i} position={[s.x, s.y, s.z]} rotation-y={s.rotY} scale={0.85}>
-          <Model path={STEP_MODEL} />
-        </group>
+    <group position={[x, 0, z]} rotation-y={rad(angle) + Math.PI}>
+      {[-0.52, 0.52].map((side) => (
+        <mesh key={side} position={[side, (top + 0.5) / 2, 0]} castShadow>
+          <boxGeometry args={[0.15, top + 0.5, 0.15]} />
+          <meshStandardMaterial color="#5b4229" />
+        </mesh>
       ))}
-      {rail.posts.map((s, i) => {
-        const [px, pz] = ring(s.angle, inner);
-        return (
-          <mesh key={`post-${i}`} position={[px, s.y + 0.48, pz]} castShadow>
-            <cylinderGeometry args={[0.07, 0.07, 0.9, 6]} />
-            <meshStandardMaterial color="#4a3524" />
-          </mesh>
-        );
-      })}
-      {rail.beams.map((b, i) => {
-        const [bx, bz] = ring(
-          (Math.atan2(b.x, b.z) * 180) / Math.PI,
-          inner,
-        );
-        return (
-          <mesh
-            key={`beam-${i}`}
-            position={[bx, b.y, bz]}
-            rotation-y={b.rotY}
-            castShadow
-          >
-            <boxGeometry args={[0.09, 0.11, b.len]} />
-            <meshStandardMaterial color="#573f29" />
-          </mesh>
-        );
-      })}
+      {rungs.map((y) => (
+        <mesh key={y} position={[0, y, 0.02]} castShadow>
+          <boxGeometry args={[1.04, 0.1, 0.13]} />
+          <meshStandardMaterial color="#6d5133" />
+        </mesh>
+      ))}
+      {/* A short landing board at the top, so the ladder meets the opening. */}
+      <mesh position={[0, top + 0.06, 0.7]} castShadow>
+        <boxGeometry args={[1.6, 0.12, 1.4]} />
+        <meshStandardMaterial color="#5b4229" />
+      </mesh>
     </group>
   );
 }
@@ -204,7 +164,7 @@ interface InteriorProps {
   onOpenBoard: (project: string) => void;
 }
 
-export function Interior({
+function InteriorScene({
   lang,
   config,
   floorIndex,
@@ -221,15 +181,14 @@ export function Interior({
   const isTop = floorIndex === config.floors.length - 1;
   const wallTop = config.wallHeight;
 
-  const stairBase = ring(config.stairsAngle, config.radius - STAIR_RADIUS_INSET);
-  const stairTopAngle = config.stairsAngle + STAIR_ARC;
-  const stairTop = ring(stairTopAngle, config.radius - STAIR_RADIUS_INSET);
+  const ladderAt = ring(config.stairsAngle, config.radius - LADDER_INSET);
+  const ladderStand = ring(config.stairsAngle, config.radius - 2.1);
   const hatch = ring(config.hatchAngle, config.radius - 2.4);
   const exit = ring(config.exitAngle, config.radius - 1.4);
 
   const stage = useMemo<WizardStage>(() => {
     const triggers: WizardTrigger[] = [];
-    if (!isTop) triggers.push({ id: "up", x: stairBase[0], z: stairBase[1], r: 1.7 });
+    if (!isTop) triggers.push({ id: "up", x: ladderStand[0], z: ladderStand[1], r: 1.8 });
     if (isGround) {
       triggers.push({ id: "exit", x: exit[0], z: exit[1], r: 1.7 });
     } else {
@@ -266,7 +225,7 @@ export function Interior({
         decay={2}
       />
       <pointLight
-        position={[stairTop[0] * 0.7, wallTop - 0.6, stairTop[1] * 0.7]}
+        position={[ladderAt[0] * 0.7, wallTop - 0.6, ladderAt[1] * 0.7]}
         color="#ffd9a0"
         intensity={12}
         distance={14}
@@ -294,10 +253,13 @@ export function Interior({
         <circleGeometry args={[config.radius, 48]} />
         <meshStandardMaterial color="#3b414c" />
       </mesh>
-      {/* The way up, as an opening cut in the ceiling above the last step. */}
+      {/* The way up, as an opening cut in the ceiling above the ladder. */}
       {!isTop && (
-        <mesh rotation-x={Math.PI / 2} position={[stairTop[0], wallTop - 0.02, stairTop[1]]}>
-          <circleGeometry args={[1.5, 24]} />
+        <mesh
+          rotation-x={Math.PI / 2}
+          position={[ladderAt[0] * 0.82, wallTop - 0.02, ladderAt[1] * 0.82]}
+        >
+          <circleGeometry args={[1.6, 24]} />
           <meshBasicMaterial color="#08090b" />
         </mesh>
       )}
@@ -321,13 +283,9 @@ export function Interior({
         );
       })}
 
-      {/* No spiral on the top floor: there is nothing above it to reach. */}
+      {/* No ladder on the top floor: there is nothing above it to reach. */}
       {!isTop && (
-        <Spiral
-          startAngle={config.stairsAngle}
-          radius={config.radius - STAIR_RADIUS_INSET}
-          top={wallTop}
-        />
+        <Ladder angle={config.stairsAngle} radius={config.radius - LADDER_INSET} top={wallTop} />
       )}
 
       {/* Where you came up, or the door out. */}
@@ -429,4 +387,11 @@ export function Interior({
     </>
   );
 }
+
+/**
+ * Memoised on purpose. Walking in and out of a trigger radius sets state up in
+ * ValeApp, and without this every prop in the room would be cloned again on each
+ * of those renders, which showed up as a stutter while walking.
+ */
+export const Interior = memo(InteriorScene);
 

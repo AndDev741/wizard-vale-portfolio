@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
+import { memo, Suspense, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html, Stars, useGLTF } from "@react-three/drei";
 import type { Group, Points } from "three";
@@ -202,12 +202,14 @@ function Fireflies({ count = 64 }: { count?: number }) {
     const time = clock.elapsedTime;
     const attr = pts.geometry.attributes.position;
     const arr = attr.array as Float32Array;
-    seeds.forEach((s, i) => {
+    // Indexed rather than forEach: the callback was a fresh closure every frame.
+    for (let i = 0; i < seeds.length; i++) {
+      const s = seeds[i];
       const a = s.angle + time * s.speed;
       arr[i * 3] = Math.cos(a) * s.radius;
       arr[i * 3 + 1] = s.height + Math.sin(time * 0.8 + s.phase) * 0.5;
       arr[i * 3 + 2] = Math.sin(a) * s.radius;
-    });
+    }
     attr.needsUpdate = true;
   });
 
@@ -260,7 +262,7 @@ interface SceneProps {
   detail: number;
 }
 
-export function Scene({
+function ValeScene({
   lang,
   mode,
   paused,
@@ -311,7 +313,7 @@ export function Scene({
         intensity={1.65}
         position={[-34, 28, 14]}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-40}
         shadow-camera-right={40}
         shadow-camera-top={40}
@@ -427,3 +429,9 @@ export function Scene({
     </>
   );
 }
+
+/**
+ * Memoised: walking past a door sets state up in ValeApp, and every one of those
+ * renders would otherwise clone the buildings and rebuild the instanced batches.
+ */
+export const Scene = memo(ValeScene);

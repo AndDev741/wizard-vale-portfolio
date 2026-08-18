@@ -155,8 +155,12 @@ export function Wizard({
       // Several passes, because colliders overlap: being pushed clear of the
       // pond can land him inside the tent on its bank, and one pass would leave
       // him there. Three settles every overlap in the village.
+      // Indexed loops: for-of builds an iterator, and this runs 3 x colliders
+      // times a frame, which is exactly the kind of steady garbage that shows up
+      // as an occasional hitch.
       for (let pass = 0; pass < 3; pass++)
-        for (const c of colliders) {
+        for (let ci = 0; ci < colliders.length; ci++) {
+          const c = colliders[ci];
           let nearX = c.x;
           let nearZ = c.z;
           if (c.x2 !== undefined && c.z2 !== undefined) {
@@ -196,7 +200,8 @@ export function Wizard({
 
     let near: string | null = null;
     let bestDist = Infinity;
-    for (const t of triggers) {
+    for (let ti = 0; ti < triggers.length; ti++) {
+      const t = triggers[ti];
       const d = Math.hypot(g.position.x - t.x, g.position.z - t.z);
       if (d < t.r && d < bestDist) {
         bestDist = d;
