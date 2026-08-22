@@ -13,6 +13,7 @@ import { BackSide, DoubleSide, type Group, type Mesh } from "three";
 import { t, type Lang } from "../../i18n/ui";
 import { boardLabel } from "./boardSubject";
 import { findNpc } from "../../data/experienceNpcs";
+import { findTopic, libraryLeaf } from "../../data/writingTopics";
 import { Model } from "./Instanced";
 import { Wizard, type WizardStage, type WizardTrigger } from "./Wizard";
 import type { InputVec } from "./useInput";
@@ -21,6 +22,7 @@ import {
   interiorModels,
   rad,
   ring,
+  shelfBookAngles,
   INTERIOR_PIVOT,
   type InteriorConfig,
   type InteriorFloor,
@@ -194,6 +196,166 @@ function Npc({
   );
 }
 
+/**
+ * A bookcase holding one subject: a wooden case against the wall, and on its
+ * shelf the subject's texts standing as real books, each one openable. The case
+ * is built from primitives so the shelf height is known exactly, which is what
+ * lets the books sit on the board instead of hovering near it.
+ */
+function Bookcase({
+  angle,
+  radius,
+  topicKey,
+  lang,
+  onOpenText,
+}: {
+  angle: number;
+  radius: number;
+  topicKey: string;
+  lang: Lang;
+  onOpenText: (key: string) => void;
+}) {
+  const topic = findTopic(topicKey);
+  const [x, z] = ring(angle, radius - 0.42);
+  const texts = topic?.texts ?? [];
+  const wood = "#4a3524";
+  const boardWood = "#5b4229";
+  const W = 2.3;
+  const H = 2.7;
+  const D = 0.5;
+  const SHELF_Y = 1.18;
+
+  return (
+    <group position={[x, 0, z]} rotation-y={rad(angle) + Math.PI}>
+      {/* back panel, sides, top, base, and the shelf board the books stand on */}
+      <mesh position={[0, H / 2, -D / 2 + 0.03]} castShadow>
+        <boxGeometry args={[W, H, 0.06]} />
+        <meshStandardMaterial color={wood} />
+      </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[(side * W) / 2, H / 2, 0]} castShadow>
+          <boxGeometry args={[0.1, H, D]} />
+          <meshStandardMaterial color={boardWood} />
+        </mesh>
+      ))}
+      <mesh position={[0, H, 0]} castShadow>
+        <boxGeometry args={[W + 0.16, 0.12, D + 0.1]} />
+        <meshStandardMaterial color={boardWood} />
+      </mesh>
+      <mesh position={[0, 0.08, 0]} castShadow>
+        <boxGeometry args={[W + 0.16, 0.16, D + 0.1]} />
+        <meshStandardMaterial color={boardWood} />
+      </mesh>
+      <mesh position={[0, SHELF_Y - 0.06, 0]} castShadow>
+        <boxGeometry args={[W - 0.1, 0.08, D - 0.08]} />
+        <meshStandardMaterial color={boardWood} />
+      </mesh>
+      {/* a little decoration on top, so the case reads lived-in */}
+      <group position={[-0.55, H + 0.06, 0]} rotation-y={0.4} scale={0.85}>
+        <Model path="/models/book_set.gltf" />
+      </group>
+      {/* the subject, above the case. Books carry only their emoji: seven full
+          titles side by side turned into a pile of labels, and the walk-up
+          prompt already names the book. */}
+      <Html position={[0, H + 0.75, 0.2]} center zIndexRange={[5, 0]}>
+        <p className="pointer-events-none whitespace-nowrap rounded-full border border-[#d99a3d]/50 bg-black/60 px-3 py-1 text-xs font-bold text-[#e8dcc0] backdrop-blur-sm">
+          {topic?.title[lang] ?? topicKey}
+        </p>
+      </Html>
+
+      {/* the books themselves: one per text, standing on the shelf */}
+      {texts.map((key, i) => {
+        const leaf = libraryLeaf(key, lang);
+        if (!leaf) return null;
+        const count = texts.length;
+        const spacing = Math.min(1.05, (W - 0.5) / Math.max(count, 1));
+        const bx = (i - (count - 1) / 2) * spacing;
+        return (
+          <group key={key} position={[bx, SHELF_Y, 0.06]}>
+            <group
+              rotation-y={-0.25 + i * 0.5}
+              scale={1.15}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenText(key);
+              }}
+              onPointerOver={() => (document.body.style.cursor = "pointer")}
+              onPointerOut={() => (document.body.style.cursor = "auto")}
+            >
+              <Model path="/models/book_set.gltf" />
+            </group>
+            <Html position={[0, 0.82, 0.3]} center zIndexRange={[5, 0]}>
+              <button
+                type="button"
+                onClick={() => onOpenText(key)}
+                aria-label={leaf.title}
+                title={leaf.title}
+                className="pointer-events-auto cursor-pointer rounded-full border border-white/25 bg-black/55 px-2 py-0.5 text-sm backdrop-blur-sm transition-colors hover:bg-black/80"
+              >
+                {leaf.coverEmoji}
+              </button>
+            </Html>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+/** A reading stand with an open book on it, presenting a whole board subject. */
+function Lectern({
+  angle,
+  radius,
+  subject,
+  lang,
+  onOpen,
+}: {
+  angle: number;
+  radius: number;
+  subject: string;
+  lang: Lang;
+  onOpen: () => void;
+}) {
+  const [x, z] = ring(angle, radius);
+  return (
+    <group
+      position={[x, 0, z]}
+      rotation-y={rad(angle)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen();
+      }}
+      onPointerOver={() => (document.body.style.cursor = "pointer")}
+      onPointerOut={() => (document.body.style.cursor = "auto")}
+    >
+      <mesh position={[0, 0.55, 0]} castShadow>
+        <boxGeometry args={[0.22, 1.1, 0.22]} />
+        <meshStandardMaterial color="#4a3524" />
+      </mesh>
+      <mesh position={[0, 0.06, 0]} castShadow>
+        <boxGeometry args={[0.7, 0.12, 0.7]} />
+        <meshStandardMaterial color="#5b4229" />
+      </mesh>
+      <mesh position={[0, 1.16, 0]} rotation-x={-0.35} castShadow>
+        <boxGeometry args={[0.85, 0.06, 0.6]} />
+        <meshStandardMaterial color="#5b4229" />
+      </mesh>
+      <group position={[0, 1.26, 0]} rotation-x={-0.35} scale={1.1}>
+        <Model path="/models/book_set.gltf" />
+      </group>
+      <Html position={[0, 1.95, 0]} center zIndexRange={[5, 0]}>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border border-white/25 bg-black/55 px-3 py-1 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm transition-colors hover:bg-black/80"
+        >
+          {boardLabel(subject, lang)}
+        </button>
+      </Html>
+    </group>
+  );
+}
+
 /** A framed board on the wall, with the project's name under it. */
 function Board({
   angle,
@@ -292,6 +454,18 @@ function InteriorScene({
     for (const npc of floor.npcs ?? []) {
       const [nx, nz] = ring(npc.angle, npc.radius);
       triggers.push({ id: `board:npc:${npc.key}`, x: nx, z: nz, r: 2.1 });
+    }
+    for (const shelf of floor.bookshelves ?? []) {
+      const texts = findTopic(shelf.topic)?.texts ?? [];
+      const angles = shelfBookAngles(shelf.angle, texts.length);
+      texts.forEach((key, i) => {
+        const [bx, bz] = ring(angles[i], config.radius - 2.1);
+        triggers.push({ id: `board:text:${key}`, x: bx, z: bz, r: 1.6 });
+      });
+    }
+    for (const lectern of floor.lecterns ?? []) {
+      const [lx, lz] = ring(lectern.angle, lectern.radius);
+      triggers.push({ id: `board:${lectern.subject}`, x: lx, z: lz, r: 2 });
     }
     // Arriving from below you step out of the hatch; on the ground floor you
     // come in through the door.
@@ -476,6 +650,28 @@ function InteriorScene({
           radius={config.radius - 0.1}
           label={boardLabel(b.subject, lang)}
           onOpen={() => onOpenBoard(b.subject)}
+        />
+      ))}
+
+      {(floor.bookshelves ?? []).map((shelf) => (
+        <Bookcase
+          key={shelf.topic}
+          angle={shelf.angle}
+          radius={config.radius}
+          topicKey={shelf.topic}
+          lang={lang}
+          onOpenText={(key) => onOpenBoard(`text:${key}`)}
+        />
+      ))}
+
+      {(floor.lecterns ?? []).map((lectern) => (
+        <Lectern
+          key={lectern.subject}
+          angle={lectern.angle}
+          radius={lectern.radius}
+          subject={lectern.subject}
+          lang={lang}
+          onOpen={() => onOpenBoard(lectern.subject)}
         />
       ))}
 

@@ -1,6 +1,6 @@
 import { t, type Lang } from "../../i18n/ui";
 import { findProject } from "../../data/projectDetail";
-import { findTopic } from "../../data/writingTopics";
+import { findTopic, libraryLeaf } from "../../data/writingTopics";
 import { findNpc } from "../../data/experienceNpcs";
 
 /**
@@ -31,6 +31,8 @@ export function boardLabel(subject: string, lang: Lang): string {
       return findTopic(key)?.title[lang] ?? key;
     case "npc":
       return findNpc(key)?.name[lang] ?? key;
+    case "text":
+      return libraryLeaf(key, lang)?.title ?? key;
     default:
       return findProject(key)?.name ?? key;
   }

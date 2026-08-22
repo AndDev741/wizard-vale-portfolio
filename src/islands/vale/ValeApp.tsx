@@ -199,6 +199,9 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     if (nearTrigger.startsWith("board:npc:")) {
       return `${dict.interior.talk}: ${boardLabel(nearTrigger.slice(6), lang)}`;
     }
+    if (nearTrigger.startsWith("board:text:")) {
+      return `${dict.interior.read}: ${boardLabel(nearTrigger.slice(6), lang)}`;
+    }
     if (nearTrigger.startsWith("board:")) return dict.interior.read;
     return null;
   })();

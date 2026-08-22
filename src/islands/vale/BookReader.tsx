@@ -1,6 +1,63 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { t, type Lang } from "../../i18n/ui";
 import { docsUrl, libraryLeaf } from "../../data/writingTopics";
+
+/**
+ * The diagrams. A leaf can carry an illustration plate whose data attribute
+ * holds a mermaid source (put there at build time), and this inks it: mermaid is
+ * imported only when a plate is actually on screen, themed to the parchment, and
+ * the drawn SVG replaces the plate's caption. A plate that fails to draw keeps
+ * its caption, which is what the plate said anyway.
+ */
+let mermaidReady: Promise<typeof import("mermaid")["default"]> | null = null;
+
+function loadMermaid() {
+  mermaidReady ??= import("mermaid").then((mod) => {
+    mod.default.initialize({
+      startOnLoad: false,
+      theme: "base",
+      themeVariables: {
+        background: "transparent",
+        primaryColor: "#e9dbb6",
+        primaryBorderColor: "#7a5a2a",
+        primaryTextColor: "#3d2f1e",
+        secondaryColor: "#dfcfa4",
+        tertiaryColor: "#e4d5ae",
+        lineColor: "#6b4e22",
+        textColor: "#3d2f1e",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        fontSize: "14px",
+      },
+    });
+    return mod.default;
+  });
+  return mermaidReady;
+}
+
+let inkCounter = 0;
+
+function inkDiagrams(root: HTMLElement | null) {
+  if (!root) return;
+  const plates = root.querySelectorAll<HTMLElement>(
+    "figure[data-diagram]:not([data-inked])",
+  );
+  plates.forEach(async (plate) => {
+    plate.dataset.inked = "1";
+    try {
+      const bytes = Uint8Array.from(atob(plate.dataset.diagram ?? ""), (c) =>
+        c.charCodeAt(0),
+      );
+      const source = new TextDecoder().decode(bytes);
+      const mermaid = await loadMermaid();
+      inkCounter += 1;
+      const { svg } = await mermaid.render(`book-diagram-${inkCounter}`, source);
+      plate.innerHTML = svg;
+      plate.classList.add("book-plate--inked");
+    } catch {
+      // The caption stays: "an illustration is being inked here".
+    }
+  });
+}
 
 /**
  * A text from the Beyou docs, read as a book rather than a web page. The content
@@ -22,6 +79,7 @@ export function BookReader({
   const leaf = libraryLeaf(textKey, lang);
   const [spread, setSpread] = useState(0);
   const [twoUp, setTwoUp] = useState(true);
+  const bookRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const check = () => setTwoUp(window.innerWidth >= 900);
@@ -52,6 +110,11 @@ export function BookReader({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, spreads]);
+
+  // Ink whatever plates the current leaves carry, each time a page turns.
+  useEffect(() => {
+    inkDiagrams(bookRef.current);
+  }, [shown]);
 
   if (!leaf) return null;
 
@@ -95,7 +158,10 @@ export function BookReader({
       </div>
 
       {/* The open book: two leaves on a wide screen, one on a narrow one. */}
-      <div className="relative flex w-full max-w-5xl flex-1 gap-0 overflow-hidden rounded-lg shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+      <div
+        ref={bookRef}
+        className="relative flex w-full max-w-5xl flex-1 gap-0 overflow-hidden rounded-lg shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+      >
         {shown.map((page, i) => (
           <div
             key={page.index}

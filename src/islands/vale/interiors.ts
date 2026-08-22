@@ -41,6 +41,19 @@ export interface InteriorNpc {
   faceOffset?: number;
 }
 
+export interface InteriorBookshelf {
+  /** Key into writingTopics: its texts become the books standing on this case. */
+  topic: string;
+  angle: number;
+}
+
+export interface InteriorLectern {
+  /** Board subject the open book presents, e.g. "topics:all". */
+  subject: string;
+  angle: number;
+  radius: number;
+}
+
 export interface InteriorFloor {
   key:
     | "grimoire"
@@ -52,6 +65,8 @@ export interface InteriorFloor {
     | "gallery"
     | "tavern";
   boards: InteriorBoard[];
+  bookshelves?: InteriorBookshelf[];
+  lecterns?: InteriorLectern[];
   npcs?: InteriorNpc[];
   props: InteriorProp[];
   /** Wall angles, in degrees, for mounted torches. */
@@ -342,21 +357,21 @@ export const libraryInterior: InteriorConfig = {
     {
       key: "readingRoom",
       accent: "#e8c98a",
-      boards: [
-        { subject: "topic:infra", angle: 328 },
-        { subject: "topic:ai", angle: 352 },
-        { subject: "topic:mobile", angle: 16 },
-        { subject: "topic:speed", angle: 40 },
+      boards: [],
+      // One case per subject, its texts standing on the shelf as real books.
+      bookshelves: [
+        { topic: "infra", angle: 328 },
+        { topic: "ai", angle: 355 },
+        { topic: "mobile", angle: 19 },
+        { topic: "speed", angle: 46 },
       ],
-      torches: [340, 4, 28, 200],
-      banners: [310, 58],
+      torches: [341, 7, 32, 200],
+      banners: [305, 64],
       props: [
         { model: "rug_rectangle_stripes_A", x: 0, z: 3.4, scale: 1.4, rotY: 0 },
-        // four columns of books, on the flanks where they hide no board
-        wall("dg_wall_shelves", 70, LIB_RADIUS - 0.1, 0, 1),
+        // filled bookcases stay on the flanks, dressing rather than content
         wall("dg_wall_shelves", 125, LIB_RADIUS - 0.1, 0, 1),
         wall("dg_wall_shelves", 230, LIB_RADIUS - 0.1, 0, 1),
-        wall("dg_wall_shelves", 300, LIB_RADIUS - 0.1, 0, 1),
         // two reading desks, flanking the way in
         floor("dg_table_long", 138, 5.9, 15, 1),
         floor("dg_table_long", 222, 5.9, -15, 1),
@@ -377,10 +392,10 @@ export const libraryInterior: InteriorConfig = {
     {
       key: "gallery",
       accent: "#bfa77a",
-      boards: [
-        { subject: "topics:all", angle: 0 },
-        { subject: "topic:security", angle: 332 },
-      ],
+      boards: [],
+      bookshelves: [{ topic: "security", angle: 332 }],
+      // The whole index, as an open book on a stand in the middle of the floor.
+      lecterns: [{ subject: "topics:all", angle: 8, radius: 4.6 }],
       torches: [348, 20, 96, 208],
       banners: [312, 44],
       props: [
@@ -490,11 +505,27 @@ export function interiorModels(config: InteriorConfig): string[] {
  * plus a circle for each prop worth walking around. Derived from the same
  * placements the renderer uses, so they cannot drift.
  */
+/**
+ * Where each book of a topic stands: spread along its case, as small angle
+ * offsets. Shared by the renderer (to place the book models) and the stage (to
+ * place their triggers), so the prompt always lines up with the book.
+ */
+export function shelfBookAngles(shelfAngle: number, count: number): number[] {
+  if (count <= 1) return [shelfAngle];
+  const spreadDeg = 7.5;
+  const step = spreadDeg / (count - 1);
+  return Array.from({ length: count }, (_, i) => shelfAngle - spreadDeg / 2 + i * step);
+}
+
 export function floorColliders(config: InteriorConfig, floor: InteriorFloor): Obstacle[] {
   const out: Obstacle[] = [];
   for (const npc of floor.npcs ?? []) {
     const [x, z] = ring(npc.angle, npc.radius);
     out.push({ x, z, r: 0.85 });
+  }
+  for (const lectern of floor.lecterns ?? []) {
+    const [x, z] = ring(lectern.angle, lectern.radius);
+    out.push({ x, z, r: 0.75 });
   }
   for (const p of floor.props) {
     const half = INTERIOR_BLOCK[p.model];

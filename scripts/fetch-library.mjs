@@ -35,12 +35,14 @@ async function getJson(path) {
 
 /**
  * A mermaid fence is a diagram, and its source rendered as text on a book page
- * is gibberish. In a hand-made book that would be an illustration, so it becomes
- * one: a plate holding a line that says what is missing and where to see it.
+ * is gibberish. It becomes an illustration plate that carries the diagram's
+ * source with it (base64, in a data attribute), so the reader can draw the real
+ * diagram in the browser. Until that happens, or if it fails, the plate shows
+ * this caption instead.
  */
 const PLATE_LABEL = {
-  en: "An illustration sits here in the original leaf.",
-  pt: "Aqui, na folha original, há uma ilustração.",
+  en: "An illustration is being inked here.",
+  pt: "Uma ilustração está sendo desenhada aqui.",
 };
 
 /** Split rendered markdown into pages, breaking only between blocks. */
@@ -60,10 +62,14 @@ function paginate(markdown, locale) {
     if (token.type === "space") continue;
     const isDiagram = token.type === "code" && /^mermaid$/i.test(token.lang ?? "");
     const html = isDiagram
-      ? `<figure class="book-plate"><span>${PLATE_LABEL[locale] ?? PLATE_LABEL.en}</span></figure>`
+      ? `<figure class="book-plate book-plate--diagram" data-diagram="${Buffer.from(
+          token.text ?? "",
+          "utf8",
+        ).toString("base64")}"><span>${PLATE_LABEL[locale] ?? PLATE_LABEL.en}</span></figure>`
       : marked.parser([token]);
     const text = isDiagram ? "" : (token.raw ?? "").replace(/\s+/g, " ").trim();
-    const cost = isDiagram ? 260 : Math.max(text.length, 40);
+    // A drawn diagram takes real page height, so it pays more than its caption.
+    const cost = isDiagram ? 700 : Math.max(text.length, 40);
 
     // Do not leave a heading stranded at the foot of a page.
     const isHeading = token.type === "heading";
