@@ -7,6 +7,7 @@ import {
   textsFetchedAt,
   writingTopics,
 } from "../../data/writingTopics";
+import { findNpc } from "../../data/experienceNpcs";
 import { subjectKey, subjectKind } from "./boardSubject";
 
 /**
@@ -44,14 +45,17 @@ export function BoardDialog({
 
   const project = kind === "project" ? findProject(key) : undefined;
   const topic = kind === "topic" ? findTopic(key) : undefined;
+  const npc = kind === "npc" ? findNpc(key) : undefined;
 
   const title =
     project?.name ??
     topic?.title[lang] ??
+    npc?.name[lang] ??
     (kind === "topics" ? dict.interior.indexTitle : dict.interior.allTitle);
   const subtitle =
     project?.tagline[lang] ??
     topic?.blurb[lang] ??
+    npc?.role[lang] ??
     (kind === "topics" ? dict.interior.indexSub : dict.interior.allSub);
 
   return (
@@ -73,6 +77,7 @@ export function BoardDialog({
             <h2 className="text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
             <p className="mt-1 text-sm text-[#e0a44e]">{subtitle}</p>
             {project && <p className="mt-1 text-xs text-[#9aa69d]">{project.years}</p>}
+            {npc && <p className="mt-1 text-xs text-[#9aa69d]">{npc.years}</p>}
           </div>
           <button
             type="button"
@@ -133,6 +138,40 @@ export function BoardDialog({
                   {l.label[lang]}
                 </a>
               ))}
+            </div>
+          </>
+        )}
+
+        {npc && (
+          <>
+            {/* Their words, set as speech. */}
+            <p className="mt-5 border-l-2 border-[#d99a3d]/60 pl-4 text-sm italic leading-relaxed text-[#e5e0d2]">
+              &ldquo;{npc.speech[lang]}&rdquo;
+            </p>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#9aa69d]">
+              {dict.interior.deedsLabel}
+            </p>
+            <div className="mt-3 space-y-3">
+              {npc.deeds.map((d, i) => (
+                <p key={i} className="text-sm leading-relaxed text-[#c9cdc2]">
+                  {d[lang]}
+                </p>
+              ))}
+            </div>
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#9aa69d]">
+                {dict.interior.techLabel}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {npc.tech.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-white/15 px-2.5 py-1 text-xs text-[#c9cdc2]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           </>
         )}

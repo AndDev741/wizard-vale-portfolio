@@ -12,6 +12,7 @@ import { Joystick } from "./Joystick";
 import { useKeyboardInput, type InputVec } from "./useInput";
 import { places } from "./world";
 import { interiorFor } from "./interiors";
+import { boardLabel } from "./boardSubject";
 
 type Mode = "tour" | "roam";
 type Focus = SectionKey | "overview";
@@ -195,6 +196,9 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     if (nearTrigger === "up") return dict.interior.climb;
     if (nearTrigger === "down") return dict.interior.descend;
     if (nearTrigger === "exit") return dict.interior.leaveBuilding;
+    if (nearTrigger.startsWith("board:npc:")) {
+      return `${dict.interior.talk}: ${boardLabel(nearTrigger.slice(6), lang)}`;
+    }
     if (nearTrigger.startsWith("board:")) return dict.interior.read;
     return null;
   })();
@@ -290,11 +294,13 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           <p className="rounded-full bg-black/45 px-3 py-1.5 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm">
             {floorKey ? dict.interior.floors[floorKey] : ""}
           </p>
-          <p className="rounded-full bg-black/30 px-3 py-1 text-[11px] text-[#9aa69d] backdrop-blur-sm">
-            {dict.interior.floorOf
-              .replace("{n}", String(view.floor + 1))
-              .replace("{total}", String(interior.floors.length))}
-          </p>
+          {interior.floors.length > 1 && (
+            <p className="rounded-full bg-black/30 px-3 py-1 text-[11px] text-[#9aa69d] backdrop-blur-sm">
+              {dict.interior.floorOf
+                .replace("{n}", String(view.floor + 1))
+                .replace("{total}", String(interior.floors.length))}
+            </p>
+          )}
           {view.floor < interior.floors.length - 1 && (
             <button
               type="button"

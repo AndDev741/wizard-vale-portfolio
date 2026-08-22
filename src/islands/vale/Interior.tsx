@@ -1,8 +1,18 @@
-import { memo, Suspense, useMemo, type MutableRefObject, type RefObject } from "react";
-import { Html, useGLTF } from "@react-three/drei";
-import { BackSide, DoubleSide, type Group } from "three";
+import {
+  memo,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type MutableRefObject,
+  type RefObject,
+} from "react";
+import { Html, useAnimations, useGLTF } from "@react-three/drei";
+import { BackSide, DoubleSide, type Group, type Mesh } from "three";
 import { t, type Lang } from "../../i18n/ui";
 import { boardLabel } from "./boardSubject";
+import { findNpc } from "../../data/experienceNpcs";
 import { Model } from "./Instanced";
 import { Wizard, type WizardStage, type WizardTrigger } from "./Wizard";
 import type { InputVec } from "./useInput";
@@ -15,6 +25,7 @@ import {
   type InteriorConfig,
   type InteriorFloor,
   interiors,
+  type InteriorNpc,
   type InteriorProp,
 } from "./interiors";
 
@@ -31,6 +42,9 @@ for (const config of Object.values(interiors)) {
   }
 }
 useGLTF.preload(FRAME_MODEL);
+for (const model of ["Knight", "Barbarian", "Rogue"]) {
+  useGLTF.preload(`/models/${model}.glb`);
+}
 
 /** How far the ladder stands off the wall, and how wide the hatch opening is. */
 const LADDER_INSET = 0.75;
@@ -102,6 +116,80 @@ function Ladder({
         <boxGeometry args={[1.6, 0.12, 1.4]} />
         <meshStandardMaterial color="#5b4229" />
       </mesh>
+    </group>
+  );
+}
+
+/**
+ * Like the wizard's mage, each adventurer model ships every loadout attached at
+ * once. One thing per hand: the knight keeps sword and round shield, the warrior
+ * keeps his mug (it is a pub), and the apprentice keeps empty hands.
+ */
+const NPC_HIDDEN: Record<string, string[]> = {
+  Knight: ["1H_Sword_Offhand", "Badge_Shield", "Rectangle_Shield", "Spike_Shield", "2H_Sword"],
+  Barbarian: ["1H_Axe_Offhand", "Barbarian_Round_Shield", "1H_Axe", "2H_Axe"],
+  Rogue: ["Knife_Offhand", "1H_Crossbow", "2H_Crossbow", "Knife", "Throwable"],
+};
+
+/** A patron of the hall: stands at their spot, idling, and talks when asked. */
+function Npc({
+  npc,
+  lang,
+  onTalk,
+}: {
+  npc: InteriorNpc;
+  lang: Lang;
+  onTalk: () => void;
+}) {
+  const group = useRef<Group>(null);
+  const { scene, animations } = useGLTF(`/models/${npc.model}.glb`);
+  const { actions } = useAnimations(animations, group);
+  const detail = findNpc(npc.key);
+  const [x, z] = ring(npc.angle, npc.radius);
+
+  useLayoutEffect(() => {
+    const hidden = new Set(NPC_HIDDEN[npc.model] ?? []);
+    scene.traverse((o) => {
+      if ((o as Mesh).isMesh) (o as Mesh).castShadow = true;
+      if (hidden.has(o.name)) o.visible = false;
+    });
+  }, [scene, npc.model]);
+
+  useEffect(() => {
+    const idle = actions["Idle"];
+    // Offset each patron's loop so the room does not idle in unison.
+    if (idle) {
+      idle.reset().play();
+      idle.time = (npc.angle % 7) / 7;
+    }
+    return () => {
+      Object.values(actions).forEach((a) => a?.stop());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actions]);
+
+  return (
+    <group
+      ref={group}
+      position={[x, 0, z]}
+      rotation-y={rad(npc.angle) + Math.PI + (npc.faceOffset ?? 0)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onTalk();
+      }}
+      onPointerOver={() => (document.body.style.cursor = "pointer")}
+      onPointerOut={() => (document.body.style.cursor = "auto")}
+    >
+      <primitive object={scene} />
+      <Html position={[0, 2.6, 0]} center zIndexRange={[5, 0]}>
+        <button
+          type="button"
+          onClick={onTalk}
+          className="pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border border-white/25 bg-black/55 px-3 py-1 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm transition-colors hover:bg-black/80"
+        >
+          {detail?.name[lang] ?? npc.key}
+        </button>
+      </Html>
     </group>
   );
 }
@@ -200,6 +288,10 @@ function InteriorScene({
     for (const b of floor.boards) {
       const [bx, bz] = ring(b.angle, config.radius - 2.2);
       triggers.push({ id: `board:${b.subject}`, x: bx, z: bz, r: 2 });
+    }
+    for (const npc of floor.npcs ?? []) {
+      const [nx, nz] = ring(npc.angle, npc.radius);
+      triggers.push({ id: `board:npc:${npc.key}`, x: nx, z: nz, r: 2.1 });
     }
     // Arriving from below you step out of the hatch; on the ground floor you
     // come in through the door.
@@ -384,6 +476,15 @@ function InteriorScene({
           radius={config.radius - 0.1}
           label={boardLabel(b.subject, lang)}
           onOpen={() => onOpenBoard(b.subject)}
+        />
+      ))}
+
+      {(floor.npcs ?? []).map((npc) => (
+        <Npc
+          key={npc.key}
+          npc={npc}
+          lang={lang}
+          onTalk={() => onOpenBoard(`npc:${npc.key}`)}
         />
       ))}
 

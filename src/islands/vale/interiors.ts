@@ -30,6 +30,17 @@ export interface InteriorBoard {
   angle: number;
 }
 
+export interface InteriorNpc {
+  /** Key into experienceNpcs. */
+  key: string;
+  /** Character model file in public/models, without extension. */
+  model: string;
+  angle: number;
+  radius: number;
+  /** Extra turn on top of facing the room's centre. */
+  faceOffset?: number;
+}
+
 export interface InteriorFloor {
   key:
     | "grimoire"
@@ -38,8 +49,10 @@ export interface InteriorFloor {
     | "attic"
     | "observatory"
     | "readingRoom"
-    | "gallery";
+    | "gallery"
+    | "tavern";
   boards: InteriorBoard[];
+  npcs?: InteriorNpc[];
   props: InteriorProp[];
   /** Wall angles, in degrees, for mounted torches. */
   torches: number[];
@@ -392,9 +405,69 @@ export const libraryInterior: InteriorConfig = {
   ],
 };
 
+
+/**
+ * The Guild Hall: a pub. No boards on the walls here, because the experience is
+ * told by the patrons: three figures, each an age of the same career, and
+ * talking to them opens their tale. The middle stays clear, as everywhere.
+ */
+export const guildInterior: InteriorConfig = {
+  place: "experience",
+  radius: 9,
+  wallHeight: 6.2,
+  stairsAngle: STAIRS_ANGLE,
+  hatchAngle: HATCH_ANGLE,
+  exitAngle: EXIT_ANGLE,
+  floors: [
+    {
+      key: "tavern",
+      accent: "#ff9d5c",
+      boards: [],
+      npcs: [
+        { key: "warrior", model: "Barbarian", angle: 352, radius: 4.6 },
+        { key: "soldier", model: "Knight", angle: 45, radius: 5 },
+        { key: "apprentice", model: "Rogue", angle: 305, radius: 5.2 },
+      ],
+      torches: [330, 22, 128, 232],
+      banners: [8],
+      props: [
+        { model: "rug_oval_A", x: 0, z: 2.6, scale: 1.5, rotY: 0 },
+        // the bar: a long counter with kegs and a barrel stack behind it
+        floor("dg_table_long", 282, 5.9, 90, 1),
+        floor("dg_keg", 285, 7.6, 0, 0.9),
+        floor("dg_barrel_small_stack", 297, 7.4, 10, 1),
+        floor("dg_barrel_large", 271, 7.5, 0, 0.9),
+        { model: "adv_mug_full", x: -6.1, z: -2.1, y: 1.02, rotY: 0.6, scale: 0.9 },
+        { model: "adv_mug_empty", x: -5.7, z: -3, y: 1.02, rotY: -0.4, scale: 0.9 },
+        // the warrior's table, right of the middle
+        floor("dg_table_medium", 355, 5.8, 0, 1),
+        floor("dg_chair", 348, 4.9, 160, 1),
+        { model: "adv_mug_full", x: -0.4, z: 5.7, y: 1.02, rotY: 0.3, scale: 0.9 },
+        { model: "dg_plate_food_A", x: 0.4, z: 5.9, y: 0.98, rotY: -0.2, scale: 0.8 },
+        // the soldier's table
+        floor("dg_table_medium", 52, 6.2, 20, 1),
+        floor("dg_stool", 58, 5, 0, 1),
+        { model: "adv_mug_empty", x: 4.9, z: 3.9, y: 1.02, rotY: 1.1, scale: 0.9 },
+        // decoration: the hall keeps its trophies
+        wall("dg_sword_shield", 0, 8.9, 2.6, 1),
+        wall("dg_sword_shield_gold", 28, 8.85, 2.5, 1),
+        wall("dg_shelf_small_candles", 318, 8.8, 2.1, 1),
+        wall("dg_wall_shelves", 120, 8.9, 0, 1),
+        floor("dg_crates_stacked", 138, 6.9, 15, 1),
+        floor("dg_trunk_medium_A", 222, 6.8, -10, 1),
+        floor("dg_candle_lit", 152, 6, 0, 1),
+        floor("dg_candle_triple", 240, 6.2, 0, 1),
+        floor("dg_bottle_B_brown", 260, 6.4, 0, 1),
+        floor("dg_bottle_A_labeled_green", 300, 6.6, 0, 1),
+      ],
+    },
+  ],
+};
+
 export const interiors: Partial<Record<SectionKey, InteriorConfig>> = {
   projects: towerInterior,
   writing: libraryInterior,
+  experience: guildInterior,
 };
 
 export function interiorFor(place: SectionKey): InteriorConfig | undefined {
@@ -419,6 +492,10 @@ export function interiorModels(config: InteriorConfig): string[] {
  */
 export function floorColliders(config: InteriorConfig, floor: InteriorFloor): Obstacle[] {
   const out: Obstacle[] = [];
+  for (const npc of floor.npcs ?? []) {
+    const [x, z] = ring(npc.angle, npc.radius);
+    out.push({ x, z, r: 0.85 });
+  }
   for (const p of floor.props) {
     const half = INTERIOR_BLOCK[p.model];
     if (half === undefined) continue;
