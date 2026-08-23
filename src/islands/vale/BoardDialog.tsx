@@ -7,8 +7,8 @@ import {
   textsFetchedAt,
   writingTopics,
 } from "../../data/writingTopics";
-import { findNpc } from "../../data/experienceNpcs";
-import { subjectKey, subjectKind } from "./boardSubject";
+import { findNpc, experienceNpcs } from "../../data/experienceNpcs";
+import { localizeYears, subjectKey, subjectKind } from "./boardSubject";
 
 /**
  * Whatever a board holds, read as a dialog in the middle of the screen rather
@@ -23,11 +23,14 @@ export function BoardDialog({
   subject,
   onClose,
   onPick,
+  onBack,
 }: {
   lang: Lang;
   subject: string;
   onClose: () => void;
   onPick: (subject: string) => void;
+  /** Set when this dialog was opened from a list, to offer the way back. */
+  onBack?: () => void;
 }) {
   const dict = t(lang);
   const kind = subjectKind(subject);
@@ -51,12 +54,20 @@ export function BoardDialog({
     project?.name ??
     topic?.title[lang] ??
     npc?.name[lang] ??
-    (kind === "topics" ? dict.interior.indexTitle : dict.interior.allTitle);
+    (kind === "npcs"
+      ? dict.interior.rosterTitle
+      : kind === "topics"
+        ? dict.interior.indexTitle
+        : dict.interior.allTitle);
   const subtitle =
     project?.tagline[lang] ??
     topic?.blurb[lang] ??
     npc?.role[lang] ??
-    (kind === "topics" ? dict.interior.indexSub : dict.interior.allSub);
+    (kind === "npcs"
+      ? dict.interior.rosterSub
+      : kind === "topics"
+        ? dict.interior.indexSub
+        : dict.interior.allSub);
 
   return (
     <div
@@ -76,16 +87,35 @@ export function BoardDialog({
           <div>
             <h2 className="text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
             <p className="mt-1 text-sm text-[#e0a44e]">{subtitle}</p>
-            {project && <p className="mt-1 text-xs text-[#9aa69d]">{project.years}</p>}
-            {npc && <p className="mt-1 text-xs text-[#9aa69d]">{npc.years}</p>}
+            {project && (
+              <p className="mt-1 text-xs text-[#9aa69d]">
+                {localizeYears(project.years, lang)}
+              </p>
+            )}
+            {npc && (
+              <p className="mt-1 text-xs text-[#9aa69d]">
+                {localizeYears(npc.years, lang)}
+              </p>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-full border border-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/10"
-          >
-            {dict.interior.dialogClose}
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/10"
+              >
+                {dict.interior.backToList}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/10"
+            >
+              {dict.interior.dialogClose}
+            </button>
+          </div>
         </div>
 
         {project && (
@@ -174,6 +204,31 @@ export function BoardDialog({
               </div>
             </div>
           </>
+        )}
+
+        {kind === "npcs" && (
+          // The hall's catalogue: who is standing where, and why.
+          <div className="mt-5 space-y-3">
+            {experienceNpcs.map((patron) => (
+              <button
+                key={patron.key}
+                type="button"
+                onClick={() => onPick(`npc:${patron.key}`)}
+                className="block w-full rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left transition-colors hover:border-[#d99a3d]/50 hover:bg-white/[0.06]"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-sm font-semibold text-[#ece9dd]">{patron.name[lang]}</p>
+                  <p className="shrink-0 text-xs text-[#9aa69d]">
+                    {localizeYears(patron.years, lang)}
+                  </p>
+                </div>
+                <p className="mt-1 text-xs text-[#d99a3d]">{patron.role[lang]}</p>
+                <p className="mt-2 text-sm leading-relaxed text-[#c9cdc2]">
+                  {patron.tagline[lang]}
+                </p>
+              </button>
+            ))}
+          </div>
         )}
 
         {kind === "projects" && (

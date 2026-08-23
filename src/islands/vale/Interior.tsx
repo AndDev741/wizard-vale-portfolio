@@ -9,7 +9,14 @@ import {
   type RefObject,
 } from "react";
 import { Html, useAnimations, useGLTF } from "@react-three/drei";
-import { BackSide, DoubleSide, type Group, type Mesh } from "three";
+import {
+  BackSide,
+  Color,
+  DoubleSide,
+  type Group,
+  type Mesh,
+  type MeshStandardMaterial,
+} from "three";
 import { t, type Lang } from "../../i18n/ui";
 import { boardLabel } from "./boardSubject";
 import { findNpc } from "../../data/experienceNpcs";
@@ -44,6 +51,7 @@ for (const config of Object.values(interiors)) {
   }
 }
 useGLTF.preload(FRAME_MODEL);
+useGLTF.preload("/models/dg_sword_shield.glb");
 for (const model of ["Knight", "Barbarian", "Rogue"]) {
   useGLTF.preload(`/models/${model}.glb`);
 }
@@ -134,6 +142,42 @@ const NPC_HIDDEN: Record<string, string[]> = {
 };
 
 /** A patron of the hall: stands at their spot, idling, and talks when asked. */
+/**
+ * The trophy above each patron: the pack's shield-and-crossed-swords, tinted to
+ * the metal of their rank. One geometry for all three, so the tiers differ in
+ * metal and nothing else.
+ */
+const TIER_METAL: Record<InteriorNpc["tier"], string> = {
+  copper: "#b06a2c",
+  silver: "#e4edf7",
+  gold: "#f3c536",
+};
+
+function Trophy({ angle, radius, tier }: { angle: number; radius: number; tier: InteriorNpc["tier"] }) {
+  const { scene } = useGLTF("/models/dg_sword_shield.glb");
+  const [x, z] = ring(angle, radius);
+  // Cloned per trophy: three of these hang in one room, each its own colour.
+  const trophy = useMemo(() => {
+    const copy = scene.clone(true);
+    copy.traverse((o) => {
+      const mesh = o as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      const source = mesh.material as MeshStandardMaterial;
+      const mat = source.clone();
+      mat.color = new Color(TIER_METAL[tier]);
+      mesh.material = mat;
+    });
+    return copy;
+  }, [scene, tier]);
+
+  return (
+    <group position={[x, 3.95, z]} rotation-y={rad(angle) + Math.PI} scale={1.2}>
+      <primitive object={trophy} />
+    </group>
+  );
+}
+
 function Npc({
   npc,
   lang,
@@ -183,13 +227,20 @@ function Npc({
       onPointerOut={() => (document.body.style.cursor = "auto")}
     >
       <primitive object={scene} />
-      <Html position={[0, 2.6, 0]} center zIndexRange={[5, 0]}>
+      <Html position={[0, npc.plateY ?? 2.6, 0]} center zIndexRange={[5, 0]}>
         <button
           type="button"
           onClick={onTalk}
-          className="pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border border-white/25 bg-black/55 px-3 py-1 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm transition-colors hover:bg-black/80"
+          className="pointer-events-auto block w-[11.5rem] cursor-pointer rounded-2xl border border-white/25 bg-black/60 px-3 py-1.5 text-center backdrop-blur-sm transition-colors hover:bg-black/80"
         >
-          {detail?.name[lang] ?? npc.key}
+          <span className="block whitespace-nowrap text-xs font-bold text-[#ece9dd]">
+            {detail?.name[lang] ?? npc.key}
+          </span>
+          {detail && (
+            <span className="mt-0.5 block text-[11px] leading-snug text-[#c9cdc2]">
+              {detail.tagline[lang]}
+            </span>
+          )}
         </button>
       </Html>
     </group>
@@ -375,7 +426,7 @@ function Lectern({
       <group position={[0, 1.16 + 0.03 + 0.25 * 1.1, 0]} rotation-x={-0.35} scale={1.1}>
         <Model path="/models/book_set.gltf" />
       </group>
-      <Html position={[0, 1.95, 0]} center zIndexRange={[5, 0]}>
+      <Html position={[0, 2.55, 0]} center zIndexRange={[5, 0]}>
         <button
           type="button"
           onClick={onOpen}
@@ -704,6 +755,15 @@ function InteriorScene({
           subject={lectern.subject}
           lang={lang}
           onOpen={() => onOpenBoard(lectern.subject)}
+        />
+      ))}
+
+      {(floor.npcs ?? []).map((npc) => (
+        <Trophy
+          key={`trophy-${npc.key}`}
+          angle={npc.angle}
+          radius={config.radius - 0.15}
+          tier={npc.tier}
         />
       ))}
 

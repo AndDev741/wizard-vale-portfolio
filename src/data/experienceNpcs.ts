@@ -12,6 +12,8 @@ export interface ExperienceNpc {
   model: string;
   name: Record<Lang, string>;
   role: Record<Lang, string>;
+  /** One line under the name: what this age of the career actually was. */
+  tagline: Record<Lang, string>;
   years: string;
   /** What they say when you sit down with them. */
   speech: Record<Lang, string>;
@@ -27,6 +29,10 @@ export const experienceNpcs: ExperienceNpc[] = [
     role: {
       en: "Front-End Developer, internship at Telcomanager",
       pt: "Desenvolvedor Front-End, estágio na Telcomanager",
+    },
+    tagline: {
+      en: "My first job: an internship where my code met real users",
+      pt: "Meu primeiro emprego: um estágio onde meu código encontrou usuários reais",
     },
     years: "2023 - 2024",
     speech: {
@@ -56,6 +62,10 @@ export const experienceNpcs: ExperienceNpc[] = [
     role: {
       en: "Full-Stack Developer, freelance and own products",
       pt: "Desenvolvedor Full-Stack, freelance e produtos próprios",
+    },
+    tagline: {
+      en: "Sharpening the craft on freelance work and products of my own",
+      pt: "Afiando o ofício em freelances e em produtos meus",
     },
     years: "2024 - 2025",
     speech: {
@@ -98,6 +108,10 @@ export const experienceNpcs: ExperienceNpc[] = [
     role: {
       en: "Software Engineer at Gentek.ai, Lisbon",
       pt: "Engenheiro de Software na Gentek.ai, Lisboa",
+    },
+    tagline: {
+      en: "Day to day on a financial AI SaaS, on a stack with real weight",
+      pt: "O dia a dia num SaaS de IA financeira, com uma stack de peso",
     },
     years: "2025 - now",
     speech: {

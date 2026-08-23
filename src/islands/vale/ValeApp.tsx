@@ -389,11 +389,22 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           <BoardDialog
             lang={lang}
             subject={dialog}
-            onClose={() => setDialog(null)}
+            onClose={() => {
+              setDialog(null);
+              setDialogBack(null);
+            }}
             onPick={(next: string) => {
               setDialogBack(dialog);
               setDialog(next);
             }}
+            onBack={
+              dialogBack
+                ? () => {
+                    setDialog(dialogBack);
+                    setDialogBack(null);
+                  }
+                : undefined
+            }
           />
         )
       )}

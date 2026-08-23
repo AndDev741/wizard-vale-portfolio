@@ -31,6 +31,8 @@ export interface InteriorBoard {
 }
 
 export interface InteriorNpc {
+  /** The metal of the trophy on the wall behind them: their rank, in short. */
+  tier: "copper" | "silver" | "gold";
   /** Key into experienceNpcs. */
   key: string;
   /** Character model file in public/models, without extension. */
@@ -39,6 +41,8 @@ export interface InteriorNpc {
   radius: number;
   /** Extra turn on top of facing the room's centre. */
   faceOffset?: number;
+  /** Height of the name plate, to keep neighbouring plates from colliding. */
+  plateY?: number;
 }
 
 export interface InteriorBookshelf {
@@ -483,42 +487,68 @@ export const guildInterior: InteriorConfig = {
       key: "tavern",
       accent: "#ff9d5c",
       boards: [],
+      // Left to right as the room is seen: apprentice, soldier, warrior. Larger
+      // angles fall to the left of the frame, so the order reads backwards here.
       npcs: [
-        { key: "warrior", model: "Barbarian", angle: 352, radius: 4.6 },
-        { key: "soldier", model: "Knight", angle: 45, radius: 5 },
-        { key: "apprentice", model: "Rogue", angle: 305, radius: 5.2 },
+        { key: "apprentice", model: "Rogue", angle: 54, radius: 5.1, tier: "copper" },
+        { key: "soldier", model: "Knight", angle: 0, radius: 5.2, tier: "silver", plateY: 3.15 },
+        { key: "warrior", model: "Barbarian", angle: 306, radius: 5.1, tier: "gold" },
       ],
-      torches: [330, 22, 128, 232],
-      banners: [8],
+      // The hall's own catalogue, on a stand in the middle of the floor.
+      lecterns: [{ subject: "npcs:all", angle: 150, radius: 3.1 }],
+      torches: [30, 336, 126, 246],
+      banners: [78, 286],
       props: [
-        { model: "rug_oval_A", x: 0, z: 2.6, scale: 1.5, rotY: 0 },
-        // the bar: a long counter with kegs and a barrel stack behind it
-        floor("dg_table_long", 282, 5.9, 90, 1),
-        floor("dg_keg", 285, 7.6, 0, 0.9),
-        floor("dg_barrel_small_stack", 297, 7.4, 10, 1),
-        floor("dg_barrel_large", 271, 7.5, 0, 0.9),
-        onTopRing("adv_mug_full", 282, 5.4, TABLE_TOP, 0.6, 0.9),
-        onTopRing("adv_mug_empty", 292, 5.6, TABLE_TOP, -0.4, 0.9),
-        // the warrior's table, right of the middle
-        floor("dg_table_medium", 355, 5.8, 0, 1),
-        floor("dg_chair", 348, 4.9, 160, 1),
-        onTop("adv_mug_full", -0.4, 5.7, TABLE_TOP, 0.3, 0.9),
-        onTop("dg_plate_food_A", 0.4, 5.9, TABLE_TOP, -0.2, 0.8),
-        // the soldier's table
-        floor("dg_table_medium", 52, 6.2, 20, 1),
-        floor("dg_stool", 58, 5, 0, 1),
-        onTop("adv_mug_empty", 4.9, 3.9, TABLE_TOP, 1.1, 0.9),
-        // decoration: the hall keeps its trophies
-        wall("dg_sword_shield", 0, 8.9, 2.6, 1),
-        wall("dg_sword_shield_gold", 28, 8.85, 2.5, 1),
-        wall("dg_shelf_small_candles", 318, 8.8, 2.1, 1),
-        wall("dg_wall_shelves", 120, 8.9, 0, 1),
-        floor("dg_crates_stacked", 138, 6.9, 15, 1),
-        floor("dg_trunk_medium_A", 222, 6.8, -10, 1),
-        floor("dg_candle_lit", 152, 6, 0, 1),
-        floor("dg_candle_triple", 240, 6.2, 0, 1),
-        floor("dg_bottle_B_brown", 260, 6.4, 0, 1),
-        floor("dg_bottle_A_labeled_green", 300, 6.6, 0, 1),
+        { model: "rug_oval_A", x: 0, z: 2.2, scale: 1.5, rotY: 0 },
+
+        // the bar, along the left wall as you look in
+        floor("dg_table_long", 98, 6.4, 90, 1),
+        floor("dg_keg_decorated", 104, 8, 0, 0.9),
+        floor("dg_barrel_small_stack", 80, 8.2, 10, 1),
+        floor("dg_barrel_large_decorated", 114, 7.9, 0, 0.9),
+        onTopRing("adv_mug_full", 94, 6, TABLE_TOP, 0.6, 0.9),
+        onTopRing("adv_mug_empty", 103, 6.2, TABLE_TOP, -0.4, 0.9),
+        onTopRing("dg_plate_stack", 108, 6.4, TABLE_TOP, 0.2, 0.9),
+        onTopRing("dg_bottle_A_brown", 90, 6.5, TABLE_TOP, 0, 0.9),
+        wall("dg_shelf_large", 98, 8.85, 0, 1),
+        wall("dg_shelf_small_candles", 84, 8.8, 2.2, 1),
+
+        // the apprentice's corner: a small table, barely used
+        floor("dg_table_small", 68, 6.7, 20, 1),
+        floor("dg_stool", 75, 5.8, 0, 1),
+        onTopRing("adv_mug_full", 68, 6.6, TABLE_TOP, 0.4, 0.85),
+        onTopRing("dg_plate_small", 70, 6.9, TABLE_TOP, -0.3, 0.8),
+
+        // the soldier's table, squarely in the middle of the back wall
+        floor("dg_table_medium", 348, 7.1, 0, 1),
+        floor("dg_chair", 342, 6, 170, 1),
+        floor("dg_stool", 12, 6.2, 0, 1),
+        onTopRing("adv_mug_empty", 346, 6.9, TABLE_TOP, 0.8, 0.9),
+        onTopRing("dg_plate_food_A", 351, 7.3, TABLE_TOP, -0.2, 0.8),
+        onTopRing("dg_bottle_C_brown", 344, 7.4, TABLE_TOP, 0, 0.9),
+
+        // the warrior's table, the loud end of the room
+        floor("dg_table_long", 322, 7.4, 28, 1),
+        floor("dg_chair", 326, 6, 150, 1),
+        floor("dg_stool", 293, 6.1, 0, 1),
+        onTopRing("adv_mug_full", 320, 7.1, TABLE_TOP, 0.3, 0.95),
+        onTopRing("dg_plate_food_B", 325, 7.5, TABLE_TOP, -0.2, 0.8),
+        onTopRing("dg_bottle_A_green", 316, 7.6, TABLE_TOP, 0, 0.9),
+
+        // the rest of the hall: storage, spare drink, and light
+        floor("dg_crates_stacked", 146, 7.2, 15, 1),
+        floor("dg_barrel_small", 158, 7.4, 0, 1),
+        floor("dg_trunk_medium_A", 214, 7.2, -10, 1),
+        floor("dg_trunk_large_B", 228, 7.3, 12, 1),
+        floor("dg_barrel_large", 244, 7.5, 0, 0.9),
+        floor("dg_candle_triple", 200, 7, 0, 1),
+        floor("dg_candle_lit", 166, 6.6, 0, 1),
+        floor("dg_bottle_B_brown", 252, 7.2, 0, 1),
+        floor("dg_bottle_A_labeled_green", 262, 7.4, 0, 1),
+        floor("dg_column", 270, 8, 0, 1),
+        floor("dg_column", 134, 8.2, 0, 1),
+        wall("dg_wall_shelves", 250, 8.9, 0, 1),
+        wall("dg_shelf_small_candles", 210, 8.8, 2.2, 1),
       ],
     },
   ],

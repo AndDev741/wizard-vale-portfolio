@@ -7,7 +7,7 @@ import { findNpc } from "../../data/experienceNpcs";
  * A board's subject is a namespaced string, so the same board, trigger and dialog
  * serve every building: a project in the tower, a shelf of writing in the library.
  */
-export type SubjectKind = "project" | "projects" | "topic" | "topics" | "text" | "npc";
+export type SubjectKind = "project" | "projects" | "topic" | "topics" | "text" | "npc" | "npcs";
 
 export function subjectKind(subject: string): SubjectKind {
   const [kind] = subject.split(":");
@@ -16,6 +16,14 @@ export function subjectKind(subject: string): SubjectKind {
 
 export function subjectKey(subject: string): string {
   return subject.slice(subject.indexOf(":") + 1);
+}
+
+/**
+ * Year ranges are authored once, in English, because only the open end of one
+ * carries a word. This swaps that word rather than duplicating every range.
+ */
+export function localizeYears(years: string, lang: Lang): string {
+  return years.replace(/\bnow\b/, t(lang).interior.yearNow);
 }
 
 /** What the plaque under a frame reads. */
@@ -29,6 +37,8 @@ export function boardLabel(subject: string, lang: Lang): string {
       return dict.interior.indexTitle;
     case "topic":
       return findTopic(key)?.title[lang] ?? key;
+    case "npcs":
+      return dict.interior.rosterTitle;
     case "npc":
       return findNpc(key)?.name[lang] ?? key;
     case "text":
