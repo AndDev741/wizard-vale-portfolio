@@ -36,6 +36,19 @@ function loadMermaid() {
 
 let inkCounter = 0;
 
+/** Draws one diagram source into a container, at its own id. */
+async function drawInto(host: HTMLElement | null, source: string) {
+  if (!host) return;
+  try {
+    const mermaid = await loadMermaid();
+    inkCounter += 1;
+    const { svg } = await mermaid.render(`book-zoom-${inkCounter}`, source);
+    host.innerHTML = svg;
+  } catch {
+    host.textContent = "";
+  }
+}
+
 function inkDiagrams(root: HTMLElement | null) {
   if (!root) return;
   const plates = root.querySelectorAll<HTMLElement>(
@@ -53,6 +66,9 @@ function inkDiagrams(root: HTMLElement | null) {
       const { svg } = await mermaid.render(`book-diagram-${inkCounter}`, source);
       plate.innerHTML = svg;
       plate.classList.add("book-plate--inked");
+      // Small diagrams are unreadable at leaf width, so the plate opens.
+      plate.setAttribute("role", "button");
+      plate.setAttribute("tabindex", "0");
     } catch {
       // The caption stays: "an illustration is being inked here".
     }
@@ -79,7 +95,9 @@ export function BookReader({
   const leaf = libraryLeaf(textKey, lang);
   const [spread, setSpread] = useState(0);
   const [twoUp, setTwoUp] = useState(true);
+  const [zoomed, setZoomed] = useState<string | null>(null);
   const bookRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const check = () => setTwoUp(window.innerWidth >= 900);
@@ -103,13 +121,39 @@ export function BookReader({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        // An open diagram closes first: the book stays where it was.
+        if (zoomed) setZoomed(null);
+        else onClose();
+        return;
+      }
+      if (zoomed) return;
       if (e.key === "ArrowRight") setSpread((s) => Math.min(spreads - 1, s + 1));
       if (e.key === "ArrowLeft") setSpread((s) => Math.max(0, s - 1));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, spreads]);
+  }, [onClose, spreads, zoomed]);
+
+  // Drawn large, from the source rather than by copying the leaf's SVG: mermaid
+  // wires its arrowheads to ids inside the document, and two copies would fight.
+  useEffect(() => {
+    if (zoomed) drawInto(zoomRef.current, zoomed);
+  }, [zoomed]);
+
+  /** A plate anywhere in the open book opens it full size. */
+  const onBookClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const plate = (e.target as HTMLElement).closest<HTMLElement>("figure[data-diagram]");
+    if (!plate?.classList.contains("book-plate--inked")) return;
+    try {
+      const bytes = Uint8Array.from(atob(plate.dataset.diagram ?? ""), (c) =>
+        c.charCodeAt(0),
+      );
+      setZoomed(new TextDecoder().decode(bytes));
+    } catch {
+      // Nothing to open: the plate keeps its caption.
+    }
+  };
 
   // Ink whatever plates the current leaves carry, each time a page turns.
   useEffect(() => {
@@ -160,6 +204,7 @@ export function BookReader({
       {/* The open book: two leaves on a wide screen, one on a narrow one. */}
       <div
         ref={bookRef}
+        onClick={onBookClick}
         className="relative flex w-full max-w-5xl flex-1 gap-0 overflow-hidden rounded-lg shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
       >
         {shown.map((page, i) => (
@@ -211,6 +256,38 @@ export function BookReader({
           </button>
         </div>
       </div>
+
+      {/* One diagram, as large as the screen allows. Some of them are drawn with
+          a dozen boxes, and a leaf is not wide enough to read those. */}
+      {zoomed && (
+        <div
+          className="fixed inset-0 z-[40] flex flex-col items-center justify-center gap-3 px-3 pb-4 pt-[4.5rem] sm:px-6 sm:pb-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label={dict.interior.enlarge}
+        >
+          <button
+            type="button"
+            aria-label={dict.interior.dialogClose}
+            onClick={() => setZoomed(null)}
+            className="absolute inset-0 cursor-default bg-[#0b0f0d]"
+          />
+          <div className="relative flex w-full max-w-6xl items-center justify-between gap-3 text-[#e8dcc0]">
+            <p className="min-w-0 truncate text-sm font-semibold">{leaf.title}</p>
+            <button
+              type="button"
+              onClick={() => setZoomed(null)}
+              className="shrink-0 rounded-full border border-[#e8dcc0]/30 px-3 py-1 text-xs font-semibold hover:bg-white/10"
+            >
+              {dict.interior.dialogClose}
+            </button>
+          </div>
+          <div
+            ref={zoomRef}
+            className="book-zoom relative w-full max-w-6xl min-h-0 flex-1 overflow-hidden rounded-lg p-4"
+          />
+        </div>
+      )}
     </div>
   );
 }

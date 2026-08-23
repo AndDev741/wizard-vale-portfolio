@@ -175,6 +175,51 @@ const STAIRS_ANGLE = 270;
 const HATCH_ANGLE = 100;
 const EXIT_ANGLE = 180;
 
+/**
+ * How far a model's origin sits above its own bottom. Most of the dungeon pack
+ * is modelled with its origin on the floor, so it is absent here; the books and
+ * the mugs are modelled around their middle, and placing one at the height of a
+ * tabletop buries half of it in the wood.
+ */
+const MODEL_LIFT: Record<string, number> = {
+  book_set: 0.25,
+  book_single: 0.25,
+  adv_mug_full: 0.239,
+  adv_mug_empty: 0.239,
+};
+
+/** Tabletop height of dg_table_long / dg_table_medium at scale 1. */
+export const TABLE_TOP = 1;
+
+/**
+ * Same as onTop, but placed by the ring coordinates the furniture itself uses.
+ * Guessing x/z by eye for something meant to sit on a table put two mugs three
+ * units off the bar; sharing the angle and radius makes that mistake impossible.
+ */
+export function onTopRing(
+  model: string,
+  angleDeg: number,
+  radius: number,
+  surfaceY: number,
+  rotY: number,
+  scale: number,
+): InteriorProp {
+  const [x, z] = ring(angleDeg, radius);
+  return onTop(model, x, z, surfaceY, rotY, scale);
+}
+
+/** A prop standing ON a surface, rather than at a height guessed by eye. */
+export function onTop(
+  model: string,
+  x: number,
+  z: number,
+  surfaceY: number,
+  rotY: number,
+  scale: number,
+): InteriorProp {
+  return { model, x, z, y: surfaceY + (MODEL_LIFT[model] ?? 0) * scale, rotY, scale };
+}
+
 export const towerInterior: InteriorConfig = {
   place: "projects",
   radius: RADIUS,
@@ -194,8 +239,8 @@ export const towerInterior: InteriorConfig = {
         { model: "rug_oval_A", x: 0, z: 3.4, scale: 1.4, rotY: 0 },
         // the desk, off to one side so it never stands in front of the board
         floor("dg_table_medium_decorated_A", 322, 5.2, 0, 1),
-        { model: "book_set", x: -3.6, z: 3.4, y: 1.02, rotY: 0.5, scale: 0.9 },
-        { model: "book_single", x: -2.6, z: 4.4, y: 1.02, rotY: -0.6, scale: 0.9 },
+        onTop("book_set", -3.6, 3.4, TABLE_TOP, 0.5, 0.9),
+        onTop("book_single", -2.6, 4.4, TABLE_TOP, -0.6, 0.9),
         floor("dg_stool", 308, 4.4, 0, 1),
         floor("dg_candle_melted", 334, 6.6, 0, 1),
         floor("dg_bottle_A_labeled_green", 316, 6.9, 0, 1),
@@ -231,7 +276,7 @@ export const towerInterior: InteriorConfig = {
         floor("dg_coin_stack_medium", 66, 6.2, 0, 1),
         wall("dg_wall_shelves", 66, RADIUS - 0.1, 0, 1),
         floor("dg_table_medium_decorated_A", 142, 5.4, 0, 1),
-        { model: "dg_plate_food_A", x: 3.9, z: -3.6, y: 0.98, rotY: 0.3, scale: 0.8 },
+        onTop("dg_plate_food_A", 3.9, -3.6, TABLE_TOP, 0.3, 0.8),
         wall("dg_shelf_large", 120, RADIUS - 0.2, 2.4, 1),
         floor("dg_candle_lit", 156, 6.2, 0, 1),
         floor("dg_trunk_large_B", 212, 6.2, 20, 1),
@@ -291,8 +336,8 @@ export const towerInterior: InteriorConfig = {
         floor("dg_candle_lit", 156, 4.8, 0, 1),
         wall("dg_shelf_large", 116, RADIUS - 0.2, 2.4, 1),
         wall("dg_shelves", 68, RADIUS - 0.2, 1.6, 1),
-        { model: "book_single", x: -3.4, z: 3.2, y: 0, rotY: 0.8, scale: 0.9 },
-        { model: "book_set", x: 3.2, z: 2.8, y: 0, rotY: -0.5, scale: 0.9 },
+        onTop("book_single", -3.4, 3.2, 0, 0.8, 0.9),
+        onTop("book_set", 3.2, 2.8, 0, -0.5, 0.9),
         floor("dg_key", 60, 4.4, 0, 1),
       ],
     },
@@ -314,8 +359,8 @@ export const towerInterior: InteriorConfig = {
         { model: "rug_oval_A", x: 0, z: 2.4, scale: 1.6, rotY: 0 },
         // the planning table, pushed to the flank so the board stays in view
         floor("dg_table_long_decorated_A", 312, 5, 20, 1),
-        { model: "book_set", x: -3.4, z: 3.2, y: 1.02, rotY: -0.3, scale: 0.9 },
-        { model: "dg_plate_food_A", x: -4.4, z: 2.2, y: 0.98, rotY: 0.4, scale: 0.8 },
+        onTop("book_set", -3.4, 3.2, TABLE_TOP, -0.3, 0.9),
+        onTop("dg_plate_food_A", -4.4, 2.2, TABLE_TOP, 0.4, 0.8),
         // Kept on the near flanks. Anywhere between the camera and a board and
         // a four-unit pillar simply stands in front of it.
         floor("dg_pillar_decorated", 130, 7, 0, 1),
@@ -378,10 +423,10 @@ export const libraryInterior: InteriorConfig = {
         floor("dg_stool", 128, 4.6, 0, 1),
         floor("dg_stool", 232, 4.6, 0, 1),
         // books left open on the desks
-        { model: "book_set", x: 4.2, z: -3.9, y: 1.02, rotY: 0.5, scale: 0.9 },
-        { model: "book_single", x: 3.3, z: -4.8, y: 1.02, rotY: -0.2, scale: 0.9 },
-        { model: "book_set", x: -4.3, z: -3.8, y: 1.02, rotY: -0.5, scale: 0.9 },
-        { model: "dg_candle_lit", x: -3.4, z: -4.9, y: 1.02, rotY: 0, scale: 0.85 },
+        onTop("book_set", 4.2, -3.9, TABLE_TOP, 0.5, 0.9),
+        onTop("book_single", 3.3, -4.8, TABLE_TOP, -0.2, 0.9),
+        onTop("book_set", -4.3, -3.8, TABLE_TOP, -0.5, 0.9),
+        onTop("dg_candle_lit", -3.4, -4.9, TABLE_TOP, 0, 0.85),
         floor("dg_candle_lit", 148, 6.6, 0, 1),
         floor("dg_candle_triple", 240, 6.4, 0, 1),
         floor("dg_trunk_large_B", 246, 6.8, 20, 1),
@@ -408,8 +453,8 @@ export const libraryInterior: InteriorConfig = {
         floor("dg_table_medium", 140, 5.6, 0, 1),
         floor("dg_stool", 230, 4.6, 0, 1),
         floor("dg_stool", 132, 4.4, 0, 1),
-        { model: "book_set", x: -4.2, z: -3.8, y: 1.02, rotY: -0.5, scale: 0.9 },
-        { model: "book_single", x: 3.9, z: -4.1, y: 1.02, rotY: 0.6, scale: 0.9 },
+        onTop("book_set", -4.2, -3.8, TABLE_TOP, -0.5, 0.9),
+        onTop("book_single", 3.9, -4.1, TABLE_TOP, 0.6, 0.9),
         floor("dg_candle_melted", 152, 6.6, 0, 1),
         floor("dg_candle_lit", 244, 6.5, 0, 1),
         floor("dg_trunk_medium_A", 250, 6.9, 0, 1),
@@ -452,17 +497,17 @@ export const guildInterior: InteriorConfig = {
         floor("dg_keg", 285, 7.6, 0, 0.9),
         floor("dg_barrel_small_stack", 297, 7.4, 10, 1),
         floor("dg_barrel_large", 271, 7.5, 0, 0.9),
-        { model: "adv_mug_full", x: -6.1, z: -2.1, y: 1.02, rotY: 0.6, scale: 0.9 },
-        { model: "adv_mug_empty", x: -5.7, z: -3, y: 1.02, rotY: -0.4, scale: 0.9 },
+        onTopRing("adv_mug_full", 282, 5.4, TABLE_TOP, 0.6, 0.9),
+        onTopRing("adv_mug_empty", 292, 5.6, TABLE_TOP, -0.4, 0.9),
         // the warrior's table, right of the middle
         floor("dg_table_medium", 355, 5.8, 0, 1),
         floor("dg_chair", 348, 4.9, 160, 1),
-        { model: "adv_mug_full", x: -0.4, z: 5.7, y: 1.02, rotY: 0.3, scale: 0.9 },
-        { model: "dg_plate_food_A", x: 0.4, z: 5.9, y: 0.98, rotY: -0.2, scale: 0.8 },
+        onTop("adv_mug_full", -0.4, 5.7, TABLE_TOP, 0.3, 0.9),
+        onTop("dg_plate_food_A", 0.4, 5.9, TABLE_TOP, -0.2, 0.8),
         // the soldier's table
         floor("dg_table_medium", 52, 6.2, 20, 1),
         floor("dg_stool", 58, 5, 0, 1),
-        { model: "adv_mug_empty", x: 4.9, z: 3.9, y: 1.02, rotY: 1.1, scale: 0.9 },
+        onTop("adv_mug_empty", 4.9, 3.9, TABLE_TOP, 1.1, 0.9),
         // decoration: the hall keeps its trophies
         wall("dg_sword_shield", 0, 8.9, 2.6, 1),
         wall("dg_sword_shield_gold", 28, 8.85, 2.5, 1),

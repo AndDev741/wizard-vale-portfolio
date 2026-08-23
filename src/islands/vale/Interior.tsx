@@ -223,7 +223,20 @@ function Bookcase({
   const W = 2.3;
   const H = 2.7;
   const D = 0.5;
-  const SHELF_Y = 1.18;
+  // The book model's origin sits at its middle (min/max y = -0.25/0.25), so a
+  // book placed at the board's height is half buried in it. Every book height
+  // here is measured from the surface it stands on, plus that half.
+  const BOOK_SCALE = 1.15;
+  const BOOK_HALF = 0.25 * BOOK_SCALE;
+  const SHELF_BOARD_Y = 1.68;
+  const SHELF_TOP = SHELF_BOARD_Y + 0.04;
+  const BOOK_Y = SHELF_TOP + BOOK_HALF;
+  // A lower shelf, filled with books that are only books. With the readable
+  // ones raised, the bottom half of the case was an empty box.
+  const LOWER_BOARD_Y = 0.74;
+  const LOWER_BOOK_Y = LOWER_BOARD_Y + 0.04 + BOOK_HALF;
+  const CASE_TOP = H + 0.06;
+  const CROWN_SCALE = 0.85;
 
   return (
     <group position={[x, 0, z]} rotation-y={rad(angle) + Math.PI}>
@@ -246,12 +259,30 @@ function Bookcase({
         <boxGeometry args={[W + 0.16, 0.16, D + 0.1]} />
         <meshStandardMaterial color={boardWood} />
       </mesh>
-      <mesh position={[0, SHELF_Y - 0.06, 0]} castShadow>
-        <boxGeometry args={[W - 0.1, 0.08, D - 0.08]} />
-        <meshStandardMaterial color={boardWood} />
-      </mesh>
+      {[SHELF_BOARD_Y, LOWER_BOARD_Y].map((y) => (
+        <mesh key={y} position={[0, y, 0]} castShadow>
+          <boxGeometry args={[W - 0.1, 0.08, D - 0.08]} />
+          <meshStandardMaterial color={boardWood} />
+        </mesh>
+      ))}
+
+      {/* the lower shelf's filling: spines only, nothing to open */}
+      {[-0.72, 0, 0.72].map((bx, i) => (
+        <group
+          key={bx}
+          position={[bx, LOWER_BOOK_Y, 0.04]}
+          rotation-y={-0.2 + i * 0.22}
+          scale={BOOK_SCALE}
+        >
+          <Model path="/models/book_set.gltf" />
+        </group>
+      ))}
       {/* a little decoration on top, so the case reads lived-in */}
-      <group position={[-0.55, H + 0.06, 0]} rotation-y={0.4} scale={0.85}>
+      <group
+        position={[-0.55, CASE_TOP + 0.25 * CROWN_SCALE, 0]}
+        rotation-y={0.4}
+        scale={CROWN_SCALE}
+      >
         <Model path="/models/book_set.gltf" />
       </group>
       {/* the subject, above the case. Books carry only their emoji: seven full
@@ -271,10 +302,10 @@ function Bookcase({
         const spacing = Math.min(1.05, (W - 0.5) / Math.max(count, 1));
         const bx = (i - (count - 1) / 2) * spacing;
         return (
-          <group key={key} position={[bx, SHELF_Y, 0.06]}>
+          <group key={key} position={[bx, BOOK_Y, 0.06]}>
             <group
               rotation-y={-0.25 + i * 0.5}
-              scale={1.15}
+              scale={BOOK_SCALE}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpenText(key);
@@ -336,11 +367,12 @@ function Lectern({
         <boxGeometry args={[0.7, 0.12, 0.7]} />
         <meshStandardMaterial color="#5b4229" />
       </mesh>
+      {/* the slanted rest, and the book lying on it rather than sunk in it */}
       <mesh position={[0, 1.16, 0]} rotation-x={-0.35} castShadow>
         <boxGeometry args={[0.85, 0.06, 0.6]} />
         <meshStandardMaterial color="#5b4229" />
       </mesh>
-      <group position={[0, 1.26, 0]} rotation-x={-0.35} scale={1.1}>
+      <group position={[0, 1.16 + 0.03 + 0.25 * 1.1, 0]} rotation-x={-0.35} scale={1.1}>
         <Model path="/models/book_set.gltf" />
       </group>
       <Html position={[0, 1.95, 0]} center zIndexRange={[5, 0]}>
