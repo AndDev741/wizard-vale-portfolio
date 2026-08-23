@@ -122,17 +122,22 @@ export function BookReader({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        // An open diagram closes first: the book stays where it was.
-        if (zoomed) setZoomed(null);
-        else onClose();
+        if (zoomed) {
+          // The vale listens for Escape as well, and would shut the book behind
+          // this diagram. Capture phase plus this stops it at the diagram.
+          e.stopPropagation();
+          setZoomed(null);
+        } else {
+          onClose();
+        }
         return;
       }
       if (zoomed) return;
       if (e.key === "ArrowRight") setSpread((s) => Math.min(spreads - 1, s + 1));
       if (e.key === "ArrowLeft") setSpread((s) => Math.max(0, s - 1));
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose, spreads, zoomed]);
 
   // Drawn large, from the source rather than by copying the leaf's SVG: mermaid
@@ -142,8 +147,10 @@ export function BookReader({
   }, [zoomed]);
 
   /** A plate anywhere in the open book opens it full size. */
-  const onBookClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const plate = (e.target as HTMLElement).closest<HTMLElement>("figure[data-diagram]");
+  const openPlate = (target: EventTarget | null) => {
+    const plate = (target as HTMLElement | null)?.closest<HTMLElement>(
+      "figure[data-diagram]",
+    );
     if (!plate?.classList.contains("book-plate--inked")) return;
     try {
       const bytes = Uint8Array.from(atob(plate.dataset.diagram ?? ""), (c) =>
@@ -153,6 +160,10 @@ export function BookReader({
     } catch {
       // Nothing to open: the plate keeps its caption.
     }
+  };
+
+  const onBookKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") openPlate(e.target);
   };
 
   // Ink whatever plates the current leaves carry, each time a page turns.
@@ -204,7 +215,8 @@ export function BookReader({
       {/* The open book: two leaves on a wide screen, one on a narrow one. */}
       <div
         ref={bookRef}
-        onClick={onBookClick}
+        onClick={(e) => openPlate(e.target)}
+        onKeyDown={onBookKey}
         className="relative flex w-full max-w-5xl flex-1 gap-0 overflow-hidden rounded-lg shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
       >
         {shown.map((page, i) => (
@@ -260,31 +272,34 @@ export function BookReader({
       {/* One diagram, as large as the screen allows. Some of them are drawn with
           a dozen boxes, and a leaf is not wide enough to read those. */}
       {zoomed && (
+        // Anywhere on this closes it. The diagram covers nearly the whole
+        // screen, so a click on the parchment is the obvious way out and used
+        // to do nothing at all.
         <div
-          className="fixed inset-0 z-[40] flex flex-col items-center justify-center gap-3 px-3 pb-4 pt-[4.5rem] sm:px-6 sm:pb-6"
+          className="fixed inset-0 z-[40] flex cursor-zoom-out flex-col items-center justify-center gap-3 bg-[#0b0f0d] px-3 pb-4 pt-[4.5rem] sm:px-6 sm:pb-6"
           role="dialog"
           aria-modal="true"
           aria-label={dict.interior.enlarge}
+          onClick={() => setZoomed(null)}
         >
-          <button
-            type="button"
-            aria-label={dict.interior.dialogClose}
-            onClick={() => setZoomed(null)}
-            className="absolute inset-0 cursor-default bg-[#0b0f0d]"
-          />
-          <div className="relative flex w-full max-w-6xl items-center justify-between gap-3 text-[#e8dcc0]">
-            <p className="min-w-0 truncate text-sm font-semibold">{leaf.title}</p>
+          <div className="flex w-full max-w-6xl items-center justify-between gap-3 text-[#e8dcc0]">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{leaf.title}</p>
+              <p className="mt-0.5 truncate text-xs text-[#e8dcc0]/60">
+                {dict.interior.zoomHint}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setZoomed(null)}
-              className="shrink-0 rounded-full border border-[#e8dcc0]/30 px-3 py-1 text-xs font-semibold hover:bg-white/10"
+              className="shrink-0 rounded-full border border-[#e8dcc0]/40 bg-white/5 px-4 py-2 text-sm font-semibold hover:bg-white/15"
             >
-              {dict.interior.dialogClose}
+              ✕ {dict.interior.closeDiagram}
             </button>
           </div>
           <div
             ref={zoomRef}
-            className="book-zoom relative w-full max-w-6xl min-h-0 flex-1 overflow-hidden rounded-lg p-4"
+            className="book-zoom w-full max-w-6xl min-h-0 flex-1 overflow-hidden rounded-lg p-4"
           />
         </div>
       )}
