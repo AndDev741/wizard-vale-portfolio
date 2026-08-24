@@ -40,6 +40,14 @@ export const cottageObjects: CottageObject[] = [
         en: "None of it happened alone. My family backed a kid who wanted a computer and no clear plan, and the laptop on that desk is the proof.",
         pt: "Nada disso aconteceu sozinho. Minha família apostou num garoto que queria um computador e não tinha plano nenhum, e o laptop naquela mesa é a prova.",
       },
+      {
+        en: "Game development is the long goal. I never had the time to chase it properly, so I stopped waiting for the time and started here: this vale is the first thing I have built where the point is that it feels like somewhere.",
+        pt: "Desenvolvimento de jogos é o objetivo longo. Nunca tive tempo de correr atrás de verdade, então parei de esperar o tempo e comecei por aqui: este vale é a primeira coisa que construí onde o ponto é parecer um lugar.",
+      },
+      {
+        en: "It grows the way I do everything, at work too: ship the small honest version, then grow it piece by piece. Beyou started as one screen with a list of habits on it.",
+        pt: "Ele cresce do jeito que eu faço tudo, no trabalho também: entrega a versão pequena e honesta, depois faz crescer peça por peça. O Beyou começou como uma tela só, com uma lista de hábitos nela.",
+      },
     ],
   },
   {
@@ -67,26 +75,7 @@ export const cottageObjects: CottageObject[] = [
       { en: "Bought used in 2020, for school", pt: "Comprado usado em 2020, para a escola" },
       { en: "In production since 2026, uninterrupted", pt: "Em produção desde 2026, sem interrupção" },
       { en: "Cloudflare Tunnel, zero open ports", pt: "Cloudflare Tunnel, zero portas abertas" },
-      { en: "Hosting cost: nothing", pt: "Custo de hospedagem: nada" },
-    ],
-  },
-  {
-    key: "journal",
-    title: { en: "The journal", pt: "O diário" },
-    subtitle: { en: "Where this is going", pt: "Para onde isto vai" },
-    paragraphs: [
-      {
-        en: "Game development is the long goal. I never had the time to chase it properly, so I stopped waiting for the time and started here instead: this vale is the first thing I have built where the point is that it feels like somewhere.",
-        pt: "Desenvolvimento de jogos é o objetivo longo. Nunca tive tempo de correr atrás de verdade, então parei de esperar o tempo e comecei por aqui: este vale é a primeira coisa que construí onde o ponto é parecer um lugar.",
-      },
-      {
-        en: "It grows piece by piece. The tower came first, then the library, then the hall, then this room. Each one taught me something I did not know about lighting, or collision, or how a camera should behave when a wall gets in the way.",
-        pt: "Ele cresce peça por peça. A torre veio primeiro, depois a biblioteca, depois o salão, depois esta sala. Cada uma me ensinou algo que eu não sabia sobre luz, ou colisão, ou como uma câmera deve se comportar quando uma parede entra na frente.",
-      },
-      {
-        en: "That is how I do everything, at work too: ship the small honest version, then grow it. Beyou started as one screen with a list of habits on it.",
-        pt: "É assim que eu faço tudo, no trabalho também: entrega a versão pequena e honesta, depois faz crescer. O Beyou começou como uma tela só, com uma lista de hábitos nela.",
-      },
+      { en: "Hosting cost: electricity", pt: "Custo de hospedagem: eletricidade" },
     ],
   },
   {

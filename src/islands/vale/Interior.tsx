@@ -732,7 +732,7 @@ function Laptop({ angle, radius, y = 0 }: { angle: number; radius: number; y?: n
         <meshStandardMaterial color="#22262c" />
       </mesh>
       {/* the lid, open, with the screen alight */}
-      <group position={[0, 0.028, -0.15]} rotation-x={-1.16}>
+      <group position={[0, 0.028, -0.15]} rotation-x={-0.32}>
         <mesh position={[0, 0.15, 0]} castShadow>
           <boxGeometry args={[0.44, 0.3, 0.016]} />
           <meshStandardMaterial color={shell} />
