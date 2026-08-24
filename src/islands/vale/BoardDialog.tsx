@@ -181,11 +181,28 @@ export function BoardDialog({
             <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#9aa69d]">
               {dict.interior.deedsLabel}
             </p>
-            <div className="mt-3 space-y-3">
-              {npc.deeds.map((d, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[#c9cdc2]">
-                  {d[lang]}
-                </p>
+            <div className="mt-3 space-y-4">
+              {npc.deeds.map((deed, i) => (
+                <div key={i}>
+                  <p className="text-sm leading-relaxed text-[#c9cdc2]">
+                    {deed.lead[lang]}
+                  </p>
+                  {deed.points && (
+                    <ul className="mt-2 space-y-1.5 pl-1">
+                      {deed.points.map((point, j) => (
+                        <li
+                          key={j}
+                          className="flex gap-2 text-sm leading-relaxed text-[#9aa69d]"
+                        >
+                          <span aria-hidden className="mt-[0.1rem] text-[#d99a3d]">
+                            &bull;
+                          </span>
+                          <span>{point[lang]}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               ))}
             </div>
             <div className="mt-5">
