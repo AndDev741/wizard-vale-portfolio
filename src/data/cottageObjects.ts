@@ -29,16 +29,20 @@ export const cottageObjects: CottageObject[] = [
     subtitle: { en: "Who I am, out of working hours", pt: "Quem eu sou, fora do horário de trabalho" },
     paragraphs: [
       {
-        en: "I'm André, a software engineer living in Lisbon. At Gentek.ai I work on an AI platform that banks depend on: OLAP pipelines, reactive microservices, caching layers, the kind of system where being wrong is expensive.",
-        pt: "Sou o André, engenheiro de software morando em Lisboa. Na Gentek.ai trabalho numa plataforma de IA da qual bancos dependem: pipelines OLAP, microsserviços reativos, camadas de cache, o tipo de sistema onde estar errado custa caro.",
+        en: "Hello! I'm André: software engineer, Brazilian, father and husband. I live in Lisbon, Portugal, and I work for Gentek.ai, a London startup.",
+        pt: "Olá! Sou o André: engenheiro de software, brasileiro, pai e marido. Moro em Lisboa, Portugal, e trabalho para a Gentek.ai, uma startup de Londres.",
       },
       {
-        en: "I'm Brazilian, and I moved here to do this work. Most of what I know I taught myself, at hours nobody was paying me for, which is probably why I still build things at night.",
-        pt: "Sou brasileiro, e vim para cá para fazer este trabalho. A maior parte do que sei eu aprendi sozinho, em horas que ninguém me pagava, que é provavelmente por que ainda construo coisas de noite.",
+        en: "My career started in 2020, with a used laptop bought for high school. That is where building websites got hold of me, and I went after the trinity: HTML, CSS and JavaScript.",
+        pt: "Minha carreira começou em 2020, com um notebook usado comprado para estudar para o ensino médio. Foi ali que criação de sites me pegou, e fui atrás da trindade: HTML, CSS e JavaScript.",
       },
       {
-        en: "None of it happened alone. My family backed a kid who wanted a computer and no clear plan, and the laptop on that desk is the proof.",
-        pt: "Nada disso aconteceu sozinho. Minha família apostou num garoto que queria um computador e não tinha plano nenhum, e o laptop naquela mesa é a prova.",
+        en: "In 2021 I found out I was going to be a father. Instead of giving up, I doubled the studying. I finished high school, started a degree, landed an internship and saw it through, then moved on to freelance work and projects of my own. Somewhere on that road I found Java and Spring, and went all in on that stack.",
+        pt: "Em 2021 descobri que ia ser pai. Em vez de desistir, dobrei os estudos. Terminei o ensino médio, comecei uma faculdade, consegui um estágio e levei ele até o fim, e daí parti para freelances e projetos pessoais. Foi nessa estrada que descobri o Java e o Spring, e afundei de vez nessa stack.",
+      },
+      {
+        en: "I left the degree behind to immigrate to Portugal with my family. I earned my place at Gentek, and I get better every day: working hours go into building the future of big banks' financial systems, and the free hours go into new features for Beyou.",
+        pt: "Abandonei a faculdade para imigrar para Portugal com a família. Consegui meu lugar na Gentek, e melhoro a cada dia: o horário de trabalho vai para construir o futuro dos sistemas financeiros de grandes bancos, e a hora livre vai para features novas no Beyou.",
       },
       {
         en: "Game development is the long goal. I never had the time to chase it properly, so I stopped waiting for the time and started here: this vale is the first thing I have built where the point is that it feels like somewhere.",
@@ -67,8 +71,8 @@ export const cottageObjects: CottageObject[] = [
         pt: "Ele nunca foi para uma gaveta. Hoje é um servidor, e o Beyou é servido dele todo santo dia, atrás de um Cloudflare Tunnel sem portas abertas, com uma stack de monitoramento inteira olhando por ele.",
       },
       {
-        en: "Beyou is where I build end to end: a Spring Boot backend, a React web app, a native Android app sharing the same monorepo, and an AI agent running on a chain of free-tier models. Hosting it costs nothing, and it has taught me more than any course.",
-        pt: "O Beyou é onde eu construo de ponta a ponta: backend em Spring Boot, app web em React, app nativo Android dividindo o mesmo monorepo, e um agente de IA rodando numa cadeia de modelos de graça. Hospedar não custa nada, e me ensinou mais que qualquer curso.",
+        en: "Beyou is where I build end to end: a Spring Boot backend, a React web app, a native Android app sharing the same monorepo, and an AI agent running on a chain of free-tier models. Hosting it costs electricity, and it has taught me more than any course.",
+        pt: "O Beyou é onde eu construo de ponta a ponta: backend em Spring Boot, app web em React, app nativo Android dividindo o mesmo monorepo, e um agente de IA rodando numa cadeia de modelos de graça. Hospedar custa eletricidade, e me ensinou mais que qualquer curso.",
       },
     ],
     facts: [
@@ -100,17 +104,6 @@ export const cottageObjects: CottageObject[] = [
       { en: "Loki with Alloy for unified logs", pt: "Loki com Alloy para logs unificados" },
       { en: "GlitchTip for errors, web and mobile", pt: "GlitchTip para erros, web e mobile" },
       { en: "Watchtower rolls out new images on its own", pt: "Watchtower sobe imagens novas sozinho" },
-    ],
-  },
-  {
-    key: "frame",
-    title: { en: "The picture on the wall", pt: "O retrato na parede" },
-    subtitle: { en: "The people this is all for", pt: "As pessoas para quem isto tudo é" },
-    paragraphs: [
-      {
-        en: "A portfolio will tell you what someone can build. It rarely tells you who they went home to while they were learning how.",
-        pt: "Um portfólio conta o que alguém sabe construir. Raramente conta para quem essa pessoa voltava para casa enquanto aprendia como.",
-      },
     ],
   },
 ];

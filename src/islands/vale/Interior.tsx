@@ -9,11 +9,12 @@ import {
   type RefObject,
 } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html, useAnimations, useGLTF } from "@react-three/drei";
+import { Html, useAnimations, useGLTF, useTexture } from "@react-three/drei";
 import {
   BackSide,
   Color,
   DoubleSide,
+  SRGBColorSpace,
   type Group,
   type Mesh,
   type MeshStandardMaterial,
@@ -49,6 +50,12 @@ const BANNER_MODEL = "/models/dg_banner_patternA_blue.glb";
 const FRAME_MODEL = "/models/pictureframe_large_B.gltf";
 const COUCH_MODEL = "/models/couch.gltf";
 const COTTAGE_FRAME = "/models/pictureframe_large_A.gltf";
+/**
+ * The family photo inside the cottage's frame. Set to a path under public/
+ * (e.g. "/family.jpg") once the picture exists; null leaves the frame's own
+ * blank canvas. Drawn unlit and full-res so it stays sharp in a dim room.
+ */
+const FRAME_PHOTO: string | null = null;
 const JOURNAL_MODEL = "/models/book_single.gltf";
 
 // Every model any interior can ask for, warmed before anyone walks in.
@@ -804,6 +811,21 @@ function Orb({ angle, radius, y = 0 }: { angle: number; radius: number; y?: numb
   );
 }
 
+/** The picture inside the frame, unlit so the room's dimness cannot blur it. */
+function FramePhoto({ url }: { url: string }) {
+  const texture = useTexture(url, (tex) => {
+    tex.colorSpace = SRGBColorSpace;
+    tex.anisotropy = 8;
+  });
+  // pictureframe_large_A's opening is ~0.84 x 1.04 of its 1.0 x 1.2 face.
+  return (
+    <mesh position={[0, 0, 0.11]}>
+      <planeGeometry args={[0.84, 1.04]} />
+      <meshBasicMaterial map={texture} toneMapped={false} />
+    </mesh>
+  );
+}
+
 /**
  * One thing in the cottage: the seat, the laptop, the journal, the orb, the
  * frame, the hearth, a window, the cat. The ones with a subject carry a label
@@ -848,6 +870,7 @@ function Fixture({
         return (
           <group position={[x, fixture.y ?? 2.4, z]} rotation-y={facing} scale={1.5}>
             <Model path={COTTAGE_FRAME} />
+            {FRAME_PHOTO && <FramePhoto url={FRAME_PHOTO} />}
           </group>
         );
       case "journal":

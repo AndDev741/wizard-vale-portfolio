@@ -640,7 +640,7 @@ export const cottageInterior: InteriorConfig = {
         // The orb, on the cabinet on the right.
         { kind: "orb", angle: 248, radius: 5.2, subject: "story:orb", y: CABINET_TOP },
         // The frame hangs clear of the couch, on its own stretch of wall.
-        { kind: "frame", angle: 336, radius: 6.44, subject: "story:frame", y: 2.25 },
+        { kind: "frame", angle: 336, radius: 6.44, y: 2.25 },
         // Scenery that has to be built rather than dropped in.
         { kind: "hearth", angle: 300, radius: 6.3 },
         { kind: "cat", angle: 296, radius: 4.4, rotOffset: 40 },
