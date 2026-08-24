@@ -204,6 +204,13 @@ export const ui = {
         about: "A Cabana",
         contact: "Correio do Corvo",
       },
+      blurbs: {
+        experience: "Minha carreira, contada por três frequentadores",
+        projects: "Cinco andares de coisas que construí",
+        writing: "Histórias de engenharia, em forma de livros",
+        about: "Quem eu sou, ao pé da lareira",
+        contact: "Me mande um corvo",
+      },
     },
     home: {
       placesTitle: "Lugares do vale",
@@ -328,6 +335,21 @@ export const ui = {
 } as const;
 
 export type Dict = (typeof ui)["en"];
+
+/**
+ * Every language must carry every key: a missing one fails right here at
+ * compile time instead of throwing at render on the page that reads it. The
+ * dictionaries are literal-typed by `as const`, so the check compares shape
+ * rather than letters: every literal widens to plain string first.
+ */
+type Widen<T> = T extends string
+  ? string
+  : T extends readonly (infer U)[]
+    ? readonly Widen<U>[]
+    : { [K in keyof T]: Widen<T[K]> };
+
+const _ptIsComplete: Widen<Dict> = ui.pt;
+void _ptIsComplete;
 
 export function t(lang: Lang): Dict {
   return ui[lang] as Dict;
