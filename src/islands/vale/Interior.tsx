@@ -55,7 +55,7 @@ const COTTAGE_FRAME = "/models/pictureframe_large_A.gltf";
  * (e.g. "/family.jpg") once the picture exists; null leaves the frame's own
  * blank canvas. Drawn unlit and full-res so it stays sharp in a dim room.
  */
-const FRAME_PHOTO: string | null = null;
+const FRAME_PHOTO: string | null = "/family.jpg";
 const JOURNAL_MODEL = "/models/book_single.gltf";
 
 // Every model any interior can ask for, warmed before anyone walks in.
@@ -817,9 +817,11 @@ function FramePhoto({ url }: { url: string }) {
     tex.colorSpace = SRGBColorSpace;
     tex.anisotropy = 8;
   });
-  // pictureframe_large_A's opening is ~0.84 x 1.04 of its 1.0 x 1.2 face.
+  // pictureframe_large_A's opening is ~0.84 x 1.04 of its 1.0 x 1.2 face, and
+  // its own blank canvas sits deep in the box: the photo goes just in front of
+  // it, still behind the border's outer edge at 0.20.
   return (
-    <mesh position={[0, 0, 0.11]}>
+    <mesh position={[0, 0, 0.185]}>
       <planeGeometry args={[0.84, 1.04]} />
       <meshBasicMaterial map={texture} toneMapped={false} />
     </mesh>
@@ -892,8 +894,8 @@ function Fixture({
       ? (fixture.y ?? 2.4) + 1
       : fixture.kind === "sofa"
         ? 2.15
-        : fixture.kind === "journal"
-          ? (fixture.y ?? 0) + 0.42
+        : fixture.kind === "orb"
+          ? (fixture.y ?? 0) + 0.95
           : (fixture.y ?? 0) + 1.35;
 
   return (
