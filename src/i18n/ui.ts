@@ -54,15 +54,15 @@ export const ui = {
     about: {
       title: "About",
       paragraphs: [
-        "I'm André, a software engineer living in Lisbon. At Gentek.ai I work on an AI SaaS platform used by banks: OLAP pipelines, reactive microservices, caching layers, the kind of system where being wrong is expensive.",
-        "I learned to code on a used LG S460 my mom bought me in 2020, for high school. That same laptop now runs real production. Beyou, my habit app, is served from it every day, behind a Cloudflare Tunnel, with a full monitoring stack watching over it.",
-        "Beyou is where I build things end to end: a Spring Boot backend, a React web app, a native Android app sharing the same monorepo, and an AI agent running on a chain of free-tier LLMs. It costs nothing to host and it has taught me more than any course.",
-        "Game development is the long-term goal. I never had time to chase it properly, so I started here: this site is a small magic vale with a wizard in it, built with React Three Fiber. Piece by piece, it will grow. That is how I do everything.",
+        "Hello! I'm André: software engineer, Brazilian, father and husband. I live in Lisbon, Portugal, and I work for Gentek.ai, a London startup, building the future of big banks' financial systems.",
+        "My career started in 2020, with a used LG S460 my mom bought me for high school. That is where building websites got hold of me, and I went after the trinity: HTML, CSS and JavaScript. That same laptop now runs real production: Beyou, my habit app, is served from it every day, behind a Cloudflare Tunnel, with a full monitoring stack watching over it.",
+        "In 2021 I found out I was going to be a father. Instead of giving up, I doubled the studying: finished high school, started a degree, landed an internship and saw it through, then moved on to freelance work and projects of my own. Somewhere on that road I found Java and Spring, and went all in on that stack. Then I left the degree behind to immigrate to Portugal with my family, and earned my place at Gentek.",
+        "Game development is the long goal. I never had time to chase it properly, so I started here: this site is a small magic vale with a wizard in it, built with React Three Fiber. Piece by piece, it will grow. That is how I do everything, and the free hours go into new features for Beyou.",
       ],
     },
     experience: {
       title: "Quest board",
-      sub: "Completed quests at Gentek.ai, where I help build a financial-grade AI SaaS platform.",
+      sub: "Three ages of one career: the internship, the freelance years, and the day to day at Gentek.ai.",
       role: "Software Engineer · Gentek.ai · Lisbon",
       rewardLabel: "Reward",
     },
@@ -210,15 +210,15 @@ export const ui = {
     about: {
       title: "Sobre",
       paragraphs: [
-        "Sou o André, engenheiro de software vivendo em Lisboa. Na Gentek.ai trabalho em uma plataforma de AI SaaS usada por bancos: pipelines OLAP, microsserviços reativos, camadas de cache, o tipo de sistema em que errar custa caro.",
-        "Aprendi a programar em um LG S460 usado que minha mãe comprou para mim em 2020, para o ensino médio. Esse mesmo laptop hoje roda produção de verdade. O Beyou, meu app de hábitos, é servido dele todos os dias, atrás de um Cloudflare Tunnel, com uma stack completa de monitoramento vigiando.",
-        "O Beyou é onde construo as coisas de ponta a ponta: um backend Spring Boot, um app web em React, um app Android nativo no mesmo monorepo, e um agente de IA rodando em uma cadeia de LLMs de free tier. Custa zero para hospedar e me ensinou mais que qualquer curso.",
-        "Desenvolvimento de jogos é o objetivo de longo prazo. Nunca tive tempo de correr atrás direito, então comecei por aqui: este site é um pequeno vale mágico com um mago dentro, feito com React Three Fiber. Peça por peça, ele vai crescer. É assim que eu faço tudo.",
+        "Olá! Sou o André: engenheiro de software, brasileiro, pai e marido. Moro em Lisboa, Portugal, e trabalho para a Gentek.ai, uma startup de Londres, construindo o futuro dos sistemas financeiros de grandes bancos.",
+        "Minha carreira começou em 2020, com um LG S460 usado que minha mãe me comprou para o ensino médio. Foi ali que criação de sites me pegou, e fui atrás da trindade: HTML, CSS e JavaScript. Esse mesmo laptop hoje roda produção de verdade: o Beyou, meu app de hábitos, é servido dele todos os dias, atrás de um Cloudflare Tunnel, com uma stack de monitoramento inteira olhando por ele.",
+        "Em 2021 descobri que ia ser pai. Em vez de desistir, dobrei os estudos: terminei o ensino médio, comecei uma faculdade, consegui um estágio e levei ele até o fim, e daí parti para freelances e projetos pessoais. Foi nessa estrada que descobri o Java e o Spring, e afundei de vez nessa stack. Depois abandonei a faculdade para imigrar para Portugal com a família, e consegui meu lugar na Gentek.",
+        "Desenvolvimento de jogos é o objetivo longo. Nunca tive tempo de correr atrás de verdade, então comecei por aqui: este site é um pequeno vale mágico com um mago dentro, feito com React Three Fiber. Peça por peça, ele vai crescer. É assim que eu faço tudo, e a hora livre vai para features novas no Beyou.",
       ],
     },
     experience: {
       title: "Mural de missões",
-      sub: "Missões concluídas na Gentek.ai, onde ajudo a construir uma plataforma de AI SaaS para o setor financeiro.",
+      sub: "Três eras de uma mesma carreira: o estágio, os anos de freelance, e o dia a dia na Gentek.ai.",
       role: "Engenheiro de Software · Gentek.ai · Lisboa",
       rewardLabel: "Recompensa",
     },

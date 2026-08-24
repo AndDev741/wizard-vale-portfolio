@@ -210,6 +210,16 @@ export function BoardDialog({
                 ))}
               </div>
             </div>
+            <div className="mt-6">
+              <a
+                href={npc.link.url}
+                rel="noopener"
+                target="_blank"
+                className="inline-flex items-center rounded-full bg-[#d99a3d] px-4 py-2 text-sm font-bold text-[#221a0d] hover:opacity-90"
+              >
+                {npc.link.label[lang]}
+              </a>
+            </div>
           </>
         )}
 

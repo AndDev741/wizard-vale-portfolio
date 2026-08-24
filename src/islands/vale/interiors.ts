@@ -638,7 +638,7 @@ export const cottageInterior: InteriorConfig = {
         // The laptop, on the desk over on the left.
         { kind: "laptop", angle: 58, radius: 4.7, subject: "story:laptop", y: TABLE_TOP },
         // The orb, on the low table in the middle of the room.
-        { kind: "orb", angle: 354, radius: 1.8, subject: "story:orb", y: TABLE_LOW },
+        { kind: "orb", angle: 352, radius: 1.3, subject: "story:orb", y: TABLE_LOW },
         // The frame hangs clear of the couch, on its own stretch of wall.
         { kind: "frame", angle: 336, radius: 6.44, y: 2.25 },
         // Scenery that has to be built rather than dropped in.
@@ -650,25 +650,25 @@ export const cottageInterior: InteriorConfig = {
         { kind: "window", angle: 28, radius: 6.42 },
       ],
       props: [
-        { model: "rug_rectangle_A", x: 0, z: 1.1, scale: 1.4, rotY: 0 },
+        { model: "rug_rectangle_A", x: 0, z: 1.5, scale: 1.4, rotY: 0 },
         // the couch, with its cushions
         floor("couch", 0, 4.8, 0, 1),
         onTopRing("pillow_A", 349, 4.6, COUCH_SEAT, 0.4, 1),
         onTopRing("pillow_B", 11, 4.6, COUCH_SEAT, -0.3, 1),
         // the low table, mid-room: the orb on it makes it the centrepiece
-        floor("table_low", 0, 2.0, 0, 1),
-        onTopRing("adv_mug_full", 14, 2.1, TABLE_LOW, 0.5, 0.9),
+        floor("table_low", 0, 1.5, 0, 1),
+        onTopRing("adv_mug_full", 18, 1.6, TABLE_LOW, 0.5, 0.9),
         // the desk under the laptop, with the chair pushed out from it
         floor("table_medium", 58, 4.7, 0, 1),
-        floor("chair_A_wood", 68, 3.7, 165, 1),
+        floor("chair_A_wood", 56, 3.6, 180, 1),
         // the cabinet the orb stands on, and the lamps that light this side
         floor("cabinet_small_decorated", 248, 5.2, 0, 1),
         floor("lamp_standing", 266, 5.5, 0, 1),
         // and the shelves of things that live here
         wall("shelf_A_small", 214, 6.3, 2.2, 1),
         wall("shelf_A_small", 66, 6.3, 2.5, 1),
-        onTopRing("book_single", 214, 6.12, 2.36, 0.3, 0.9),
-        onTopRing("book_set", 66, 6.1, 2.62, 0.2, 0.85),
+        onTopRing("book_single", 214, 6.0, 2.28, 0.3, 0.9),
+        onTopRing("book_set", 66, 6.0, 2.58, 0.2, 0.85),
         floor("dg_trunk_medium_A", 146, 5.8, -10, 1),
         // the dressing: plants by the daylight, candles on the mantel, a small
         // frame over the shelf, and a rug for the cat's corner
@@ -678,7 +678,7 @@ export const cottageInterior: InteriorConfig = {
         onTopRing("dg_candle_melted", 305, 5.9, 2.55, 0, 0.7),
         wall("pictureframe_small_B", 46, 6.4, 2.7, 1.2),
         onTopRing("pillow_A", 322, 4.3, 0, 0.8, 1),
-        onTopRing("dg_bottle_A_labeled_green", 253, 4.9, CABINET_TOP, 0.3, 0.9),
+        onTopRing("dg_bottle_A_labeled_green", 248, 5.15, CABINET_TOP, 0.3, 0.9),
         floor("dg_candle_lit", 138, 5.4, 0, 1),
       ],
     },

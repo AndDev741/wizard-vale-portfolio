@@ -22,6 +22,8 @@ export interface ExperienceNpc {
   speech: Record<Lang, string>;
   deeds: Array<Record<Lang, string>>;
   tech: string[];
+  /** Where that age of the career happened, as a visitable place. */
+  link: { url: string; label: Record<Lang, string> };
 }
 
 export const experienceNpcs: ExperienceNpc[] = [
@@ -57,6 +59,10 @@ export const experienceNpcs: ExperienceNpc[] = [
       },
     ],
     tech: ["JavaScript", "React", "Real-time APIs"],
+    link: {
+      url: "https://www.telcomanager.com/en/",
+      label: { en: "Visit Telcomanager", pt: "Visitar a Telcomanager" },
+    },
   },
   {
     key: "soldier",
@@ -103,6 +109,10 @@ export const experienceNpcs: ExperienceNpc[] = [
       "Elastic Beanstalk",
       "Figma",
     ],
+    link: {
+      url: "https://beyouweb.com",
+      label: { en: "Open Beyou", pt: "Abrir o Beyou" },
+    },
   },
   {
     key: "warrior",
@@ -178,6 +188,10 @@ export const experienceNpcs: ExperienceNpc[] = [
       "AWS Bedrock",
       "React",
     ],
+    link: {
+      url: "https://www.gentekai.com/",
+      label: { en: "Visit Gentek.ai", pt: "Visitar a Gentek.ai" },
+    },
   },
 ];
 
