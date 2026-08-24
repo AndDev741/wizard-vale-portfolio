@@ -833,6 +833,86 @@ function FramePhoto({ url }: { url: string }) {
 }
 
 /**
+ * The grimoire: the book still being written, floating open over a pedestal.
+ * It is the whole point of the room named after it, so the flagship project is
+ * read from it rather than from a frame on the wall.
+ */
+function Grimoire({ angle, radius }: { angle: number; radius: number }) {
+  const book = useRef<Group>(null);
+  const light = useRef<PointLight>(null);
+  const [x, z] = ring(angle, radius);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    if (book.current) {
+      book.current.position.y = 1.75 + Math.sin(time * 0.9) * 0.09;
+      book.current.rotation.y = rad(angle) + Math.PI + Math.sin(time * 0.45) * 0.18;
+    }
+    if (light.current) light.current.intensity = 7 + Math.sin(time * 2.3) * 1.4;
+  });
+
+  const cover = "#5a2f22";
+  const pages = "#efe3c2";
+  return (
+    <group position={[x, 0, z]}>
+      {/* the pedestal, and the rune ring it stands in */}
+      <mesh position={[0, 0.55, 0]} castShadow>
+        <cylinderGeometry args={[0.3, 0.42, 1.1, 10]} />
+        <meshStandardMaterial color="#5d5347" />
+      </mesh>
+      <mesh position={[0, 1.12, 0]} castShadow>
+        <cylinderGeometry args={[0.42, 0.32, 0.14, 10]} />
+        <meshStandardMaterial color="#6b6154" />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.04, 0]}>
+        <ringGeometry args={[0.85, 1.05, 40]} />
+        <meshStandardMaterial
+          color="#ffb15e"
+          emissive="#ff9d3d"
+          emissiveIntensity={1.3}
+          transparent
+          opacity={0.85}
+        />
+      </mesh>
+
+      {/* the book itself: two halves open in a shallow V, pages on each */}
+      <group ref={book} position={[0, 1.75, 0]}>
+        {[-1, 1].map((side) => (
+          <group key={side} rotation-z={side * 0.22}>
+            <mesh position={[side * 0.42, 0, 0]} castShadow>
+              <boxGeometry args={[0.84, 0.06, 1.06]} />
+              <meshStandardMaterial color={cover} />
+            </mesh>
+            <mesh position={[side * 0.4, 0.055, 0]}>
+              <boxGeometry args={[0.72, 0.05, 0.94]} />
+              <meshStandardMaterial
+                color={pages}
+                emissive="#ffdf9e"
+                emissiveIntensity={0.55}
+              />
+            </mesh>
+          </group>
+        ))}
+        {/* the spine, closing the V */}
+        <mesh position={[0, -0.09, 0]} castShadow>
+          <boxGeometry args={[0.2, 0.08, 1.06]} />
+          <meshStandardMaterial color={cover} />
+        </mesh>
+      </group>
+
+      <pointLight
+        ref={light}
+        position={[0, 2.1, 0]}
+        color="#ffc37a"
+        intensity={7}
+        distance={7}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+/**
  * One thing in the cottage: the seat, the laptop, the journal, the orb, the
  * frame, the hearth, a window, the cat. The ones with a subject carry a label
  * you can click, and the seat is where the wizard actually sits down.
@@ -848,9 +928,12 @@ function Fixture({
 }) {
   const [x, z] = ring(fixture.angle, fixture.radius);
   const facing = rad(fixture.angle) + Math.PI + rad(fixture.rotOffset ?? 0);
-  const detail = fixture.subject
-    ? findCottageObject(fixture.subject.replace(/^story:/, ""))
+  const detail = fixture.subject?.startsWith("story:")
+    ? findCottageObject(fixture.subject.slice(6))
     : undefined;
+  const label = fixture.subject
+    ? (detail?.title[lang] ?? boardLabel(fixture.subject, lang))
+    : "";
 
   const body = (() => {
     switch (fixture.kind) {
@@ -885,6 +968,8 @@ function Fixture({
             <Model path={JOURNAL_MODEL} />
           </group>
         );
+      case "grimoire":
+        return <Grimoire angle={fixture.angle} radius={fixture.radius} />;
     }
   })();
 
@@ -896,8 +981,10 @@ function Fixture({
   const labelY =
     fixture.kind === "frame"
       ? (fixture.y ?? 2.4) + 1
-      : fixture.kind === "sofa"
-        ? 2.15
+      : fixture.kind === "grimoire"
+        ? 2.75
+        : fixture.kind === "sofa"
+          ? 2.15
         : fixture.kind === "orb"
           ? (fixture.y ?? 0) + 0.95
           : (fixture.y ?? 0) + 1.35;
@@ -918,7 +1005,7 @@ function Fixture({
           onClick={onOpen}
           className="pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border border-white/25 bg-black/55 px-3 py-1 text-xs font-semibold text-[#f0e7d6] backdrop-blur-sm transition-colors hover:bg-black/80"
         >
-          {detail?.title[lang] ?? fixture.kind}
+          {label}
         </button>
       </Html>
     </group>

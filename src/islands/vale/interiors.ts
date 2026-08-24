@@ -65,7 +65,16 @@ export interface InteriorLectern {
  * you can walk up to and open; one with a seat is a thing you can sit on.
  */
 export interface InteriorFixture {
-  kind: "hearth" | "window" | "cat" | "laptop" | "orb" | "journal" | "sofa" | "frame";
+  kind:
+    | "hearth"
+    | "window"
+    | "cat"
+    | "laptop"
+    | "orb"
+    | "journal"
+    | "sofa"
+    | "frame"
+    | "grimoire";
   angle: number;
   radius: number;
   /** Extra turn on top of facing the room's centre. */
@@ -290,7 +299,10 @@ export const towerInterior: InteriorConfig = {
       // Beyou. The floor still being written, so it is the working study.
       key: "grimoire",
       accent: "#ffb15e",
-      boards: [{ subject: "project:beyou", angle: 0 }],
+      boards: [],
+      // The room is named after it: Beyou is the grimoire still being written,
+      // so the flagship is read from the book itself, not from a frame.
+      fixtures: [{ kind: "grimoire", angle: 0, radius: 4.9, subject: "project:beyou" }],
       torches: [28, 332, 132, 216],
       banners: [334, 26],
       props: [
@@ -735,11 +747,15 @@ export function floorColliders(config: InteriorConfig, floor: InteriorFloor): Ob
     out.push({ x, z, r: 0.75 });
   }
   for (const fixture of floor.fixtures ?? []) {
-    // The hearth is masonry. Everything else here either stands on furniture
-    // that already blocks, or is a cat.
-    if (fixture.kind !== "hearth") continue;
-    const [x, z] = ring(fixture.angle, fixture.radius - 0.5);
-    out.push({ x, z, r: 1.15 });
+    // The hearth is masonry and the grimoire stands on a pedestal. Everything
+    // else either stands on furniture that already blocks, or is a cat.
+    if (fixture.kind === "hearth") {
+      const [x, z] = ring(fixture.angle, fixture.radius - 0.5);
+      out.push({ x, z, r: 1.15 });
+    } else if (fixture.kind === "grimoire") {
+      const [x, z] = ring(fixture.angle, fixture.radius);
+      out.push({ x, z, r: 0.8 });
+    }
   }
   for (const p of floor.props) {
     const slab = INTERIOR_SLAB[p.model];

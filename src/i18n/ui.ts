@@ -45,7 +45,7 @@ export const ui = {
         projects: "Five floors of things I built",
         writing: "Engineering stories, shelved as books",
         about: "Who I am, by the fire",
-        contact: "Send me a raven",
+        contact: "Where to reach me",
       },
     },
     home: {
@@ -99,8 +99,8 @@ export const ui = {
       readPost: "Read the post",
     },
     contact: {
-      title: "Send a raven",
-      sub: "The fastest ravens reach me here.",
+      title: "Send me a message",
+      sub: "You can reach me here.",
       email: "Email",
       github: "GitHub",
       linkedin: "LinkedIn",
@@ -209,7 +209,7 @@ export const ui = {
         projects: "Cinco andares de coisas que construí",
         writing: "Histórias de engenharia, em forma de livros",
         about: "Quem eu sou, ao pé da lareira",
-        contact: "Me mande um corvo",
+        contact: "Onde falar comigo",
       },
     },
     home: {
@@ -263,8 +263,8 @@ export const ui = {
       readPost: "Ler o post",
     },
     contact: {
-      title: "Envie um corvo",
-      sub: "Os corvos mais rápidos me encontram aqui.",
+      title: "Envie uma mensagem",
+      sub: "Você me encontra por aqui.",
       email: "Email",
       github: "GitHub",
       linkedin: "LinkedIn",
