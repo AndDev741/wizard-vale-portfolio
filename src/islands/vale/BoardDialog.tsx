@@ -181,30 +181,16 @@ export function BoardDialog({
             <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#9aa69d]">
               {dict.interior.deedsLabel}
             </p>
-            <div className="mt-3 space-y-4">
+            <ul className="mt-3 space-y-2.5">
               {npc.deeds.map((deed, i) => (
-                <div key={i}>
-                  <p className="text-sm leading-relaxed text-[#c9cdc2]">
-                    {deed.lead[lang]}
-                  </p>
-                  {deed.points && (
-                    <ul className="mt-2 space-y-1.5 pl-1">
-                      {deed.points.map((point, j) => (
-                        <li
-                          key={j}
-                          className="flex gap-2 text-sm leading-relaxed text-[#9aa69d]"
-                        >
-                          <span aria-hidden className="mt-[0.1rem] text-[#d99a3d]">
-                            &bull;
-                          </span>
-                          <span>{point[lang]}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-[#c9cdc2]">
+                  <span aria-hidden className="mt-[0.1rem] shrink-0 text-[#d99a3d]">
+                    &bull;
+                  </span>
+                  <span>{deed[lang]}</span>
+                </li>
               ))}
-            </div>
+            </ul>
             <div className="mt-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#9aa69d]">
                 {dict.interior.techLabel}
