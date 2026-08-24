@@ -23,6 +23,7 @@ export const ui = {
       explore: "Explore the vale",
       seeProjects: "See the projects",
       noWebgl: "The 3D vale needs WebGL. Everything else on this site works without it.",
+      loading: "Waking the vale",
     },
     world: {
       walk: "Walk",
@@ -187,6 +188,7 @@ export const ui = {
       explore: "Explorar o vale",
       seeProjects: "Ver os projetos",
       noWebgl: "O vale em 3D precisa de WebGL. Todo o resto do site funciona sem ele.",
+      loading: "Acordando o vale",
     },
     world: {
       walk: "Caminhar",

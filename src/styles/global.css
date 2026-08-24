@@ -115,6 +115,75 @@ body {
       linear-gradient(180deg, #141c28 0%, #2c2c3f 100%);
   }
 }
+/* ---------------------------------------------------------------------------
+   The loading state. The poster is a still of the vale, so without this a
+   visitor cannot tell a slow load from a site that is simply a picture.
+   --------------------------------------------------------------------------- */
+.vale-loading {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  /* Its own ground: the poster underneath is a busy scene, and a bare label
+     lands on trees as often as on open dirt. */
+  padding: 0.6rem 1.1rem 0.6rem 0.85rem;
+  border: 1px solid rgba(236, 233, 221, 0.16);
+  border-radius: 999px;
+  background: rgba(12, 14, 18, 0.62);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+.vale-loading.is-hidden {
+  opacity: 0;
+}
+.vale-spinner {
+  display: block;
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2.5px solid rgba(236, 233, 221, 0.25);
+  border-top-color: #d99a3d;
+  border-radius: 999px;
+  animation: vale-spin 850ms linear infinite;
+}
+.vale-loading-label {
+  font-size: 0.84rem;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #ece9dd;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+}
+/* Three dots that fill in, so the label itself shows progress passing. */
+.vale-loading-label::after {
+  content: "";
+  animation: vale-ellipsis 1.6s steps(1, end) infinite;
+}
+@keyframes vale-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes vale-ellipsis {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+
 .vale-poster.is-hidden {
   opacity: 0;
   pointer-events: none;
@@ -126,6 +195,10 @@ body {
   }
   .vale-poster {
     transition: none;
+  }
+  .vale-spinner,
+  .vale-loading-label::after {
+    animation: none;
   }
 }
 

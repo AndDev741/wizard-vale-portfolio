@@ -79,6 +79,12 @@ const places = [
       <ValeIsland client:only="react" lang={lang} />
     </div>
     <div id="vale-poster" class="vale-poster absolute inset-0 z-[5]"></div>
+    {/* Static markup on purpose: this has to be on screen before any of the
+        island's JavaScript has parsed, which is most of the wait. */}
+    <div id="vale-loading" class="vale-loading z-[7]" role="status" aria-live="polite">
+      <span class="vale-spinner" aria-hidden="true"></span>
+      <span class="vale-loading-label">{dict.hero.loading}</span>
+    </div>
     <Nav lang={lang} path={path} variant="overlay" />
     <div
       id="hero-copy"
@@ -154,10 +160,29 @@ const places = [
 
   <script>
     const btn = document.getElementById("explore-btn");
+    const loader = document.getElementById("vale-loading");
+    const hideLoader = () => loader?.classList.add("is-hidden");
     let valeReady = false;
     window.addEventListener("vale:ready", () => {
       valeReady = true;
+      hideLoader();
     });
+    // The island never mounts without WebGL, or when motion is turned down, so
+    // nothing would ever fire "vale:ready" and the spinner would spin forever.
+    // Same test the island itself uses.
+    const willMount = (() => {
+      try {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+        const probe = document.createElement("canvas");
+        return Boolean(probe.getContext("webgl2") ?? probe.getContext("webgl"));
+      } catch {
+        return false;
+      }
+    })();
+    if (!willMount) hideLoader();
+    // And a cap, so a failure somewhere leaves a still page rather than a
+    // promise of something that is not coming.
+    else window.setTimeout(hideLoader, 30000);
     btn?.addEventListener("click", () => {
       if (valeReady) {
         window.dispatchEvent(new CustomEvent("vale:roam"));
