@@ -74,9 +74,11 @@ useGLTF.preload("/models/dg_sword_shield.glb");
 for (const path of [COUCH_MODEL, COTTAGE_FRAME, JOURNAL_MODEL]) {
   useGLTF.preload(path);
 }
-for (const model of ["Knight", "Barbarian", "Rogue"]) {
-  useGLTF.preload(`/models/${model}.glb`);
-}
+/**
+ * The three patrons are NOT warmed here. They are 3.5MB each, they only exist
+ * in the Guild Hall, and preloading them cost every first visit ten megabytes
+ * of characters most visitors never walk up to. They load when the hall does.
+ */
 
 /** How far the ladder stands off the wall, and how wide the hatch opening is. */
 const LADDER_INSET = 0.75;
