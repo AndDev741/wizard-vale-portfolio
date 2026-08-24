@@ -237,8 +237,8 @@ const villagePairs: Array<[string, Placement]> = [
   place("crate_A_big", 16.4, -14.4, 0.4, B),
   place("crate_open", 17.2, -15.4, 1.2, B),
   place("sack", 16.9, -13.4, 0.2, B * 1.2),
-  place("barrel", 20.4, -9.4, 0, B),
-  place("barrel", 20.9, -10.2, 0.7, B),
+  place("barrel", 21.8, -8.5, 0, B),
+  place("barrel", 22.4, -9.2, 0.7, B),
 
   // Farmland south, behind the Cottage and the Raven Post: a fenced garden,
   // with the reed models standing in as rows of crops.
@@ -258,9 +258,9 @@ const villagePairs: Array<[string, Placement]> = [
 
   // Working west: a lumber yard and the windmill on open ground
   place("building_lumbermill_red", -21, 3, 1.5, 5.5),
-  place("resource_lumber", -18.6, 5.4, 0.5, B),
-  place("resource_lumber", -18.9, 4.2, 2.4, B),
-  place("pallet", -19.6, 6.6, 0.3, B),
+  place("resource_lumber", -19.4, 7.4, 0.5, B),
+  place("resource_lumber", -20.6, 6.2, 2.4, B),
+  place("pallet", -22.4, 4.8, 0.3, B),
   place("tree_single_A_cut", -23.5, 7.5, 0, 3.2),
   place("tree_single_A_cut", -22.2, 9.4, 1.1, 3.0),
   place("building_windmill_green", -20, -12.5, 2.6, 6),
@@ -274,8 +274,8 @@ const villagePairs: Array<[string, Placement]> = [
 
   // The pond east, with the watermill dipping its wheel in
   place("building_watermill_blue", 25.4, -3, 1.9, 5),
-  place("bucket_water", 17.6, 6.4, 0.5, B * 1.6),
-  place("bucket_empty", 16.9, 7.2, 1.4, B * 1.6),
+  place("bucket_water", 19.4, 4.6, 0.5, B * 1.6),
+  place("bucket_empty", 20.1, 5.2, 1.4, B * 1.6),
 
   // A second market corner and odds and ends along the ring road
   place("tent", 21.6, -6.2, 2.9, 4.2),
@@ -283,7 +283,6 @@ const villagePairs: Array<[string, Placement]> = [
   place("resource_stone", 13.6, -12.4, 0.8, B),
   place("barrel", -15.4, -8.6, 0, B),
   place("crate_A_big", -14.6, -9.4, 1.1, B),
-  place("ladder", -12.2, 12.8, 0.6, B),
   place("resource_lumber", -8.4, 18.2, 1.9, B),
   place("wheelbarrow", -14.2, 18.4, 0.7, B * 1.1),
   place("crate_open", 8.4, -16.8, 2.2, B),
@@ -306,16 +305,16 @@ const villagePairs: Array<[string, Placement]> = [
   place("fence_wood_straight", 16.6, 6.9, 0, B),
   place("fence_wood_straight_gate", 18.1, 10.47, 0, B),
   place("fence_wood_straight", 16.6, 13.8, 0, B),
-  place("fence_stone_straight", -18.5, 5.6, 0, B),
-  place("fence_stone_straight_gate", -18.5, 9.17, 0, B),
-  place("fence_stone_straight", -18.5, 12.74, 0, B),
+  place("fence_stone_straight", -15.4, 3.4, 0, B),
+  place("fence_stone_straight_gate", -15.4, 6.97, 0, B),
+  place("fence_stone_straight", -15.4, 10.54, 0, B),
 
   // Water plants around the pond rim
   place("waterplant_C", 15.2, 1.6, 0.4, 5.6),
   place("waterplant_B", 16.3, -3.2, 1.9, 5.4),
-  place("waterplant_A", 18.3, 6, 2.7, 5.6),
-  place("waterplant_C", 23.7, 6.5, 5.1, 5.2),
-  place("waterplant_B", 24.7, -5, 3.3, 5.4),
+  place("waterplant_A", 19.8, 1.2, 2.7, 5.6),
+  place("waterplant_C", 22.4, 4.9, 5.1, 5.2),
+  place("waterplant_B", 23.2, -6.1, 3.3, 5.4),
   place("waterlily_A", 20.5, 1.5, 0.6, 5),
   place("waterlily_B", 22.8, 2.6, 2.2, 5),
   place("waterlily_A", 19.8, -1.4, 4.4, 4.6),
@@ -324,11 +323,11 @@ const villagePairs: Array<[string, Placement]> = [
   place("tree_single_B", 6.2, -13.4, 0.5, 7),
   place("tree_single_A", -6.4, -12.2, 2.2, 6.6),
   place("tree_single_B", -18.4, -4.6, 1.1, 7.2),
-  place("tree_single_A", -14.8, 14.6, 3.3, 6.8),
+  place("tree_single_A", -8.6, 14.2, 3.3, 6.8),
   place("tree_single_B", -5.6, 15.4, 5.0, 7),
-  place("tree_single_A", 14.2, -17.2, 1.8, 6.6),
+  place("tree_single_A", 12.6, -19.4, 1.8, 6.6),
   place("tree_single_B", 23.6, 8.4, 2.4, 7),
-  place("tree_single_A", 25.2, -6.8, 0.9, 6.8),
+  place("tree_single_A", 27.4, -8.2, 0.9, 6.8),
 ];
 
 export const villageProps = fromPairs(villagePairs);
@@ -431,6 +430,16 @@ const rocksNear = scatterRing({
     { x: POND.x, z: POND.z, r: 6 },
     { x: 18.5, z: -11, r: 5 },
     { x: 2, z: 20, r: 5 },
+    // The working west and the sleeping north: rocks were spawning inside the
+    // lumber yard, the windmill and the back-row houses.
+    { x: -21, z: 3, r: 7 },
+    { x: -20, z: -12.5, r: 6 },
+    { x: 25.4, z: -3, r: 6 },
+    { x: -11.5, z: 19, r: 5.5 },
+    { x: -17.5, z: 15, r: 5 },
+    { x: 6, z: -20, r: 5.5 },
+    { x: -7.5, z: -18.5, r: 5 },
+    { x: -2, z: -22.5, r: 5 },
   ],
 });
 
