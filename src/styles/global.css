@@ -93,9 +93,27 @@ body {
    The poster is a real render of the vale, with a dusk gradient behind it while it loads. */
 .vale-poster {
   background:
-    url("/poster.jpg") center / cover no-repeat,
+    image-set(
+        url("/poster.webp") type("image/webp"),
+        url("/poster.jpg") type("image/jpeg")
+      )
+      center / cover no-repeat,
     linear-gradient(180deg, #141c28 0%, #2c2c3f 100%);
   transition: opacity 900ms ease;
+}
+/* A phone shows this about 400 points wide: the full render is 2560, so the
+   narrow variant saves most of the bytes on the connection least able to
+   spare them. */
+@media (max-width: 760px) {
+  .vale-poster {
+    background:
+      image-set(
+          url("/poster-small.webp") type("image/webp"),
+          url("/poster-small.jpg") type("image/jpeg")
+        )
+        center / cover no-repeat,
+      linear-gradient(180deg, #141c28 0%, #2c2c3f 100%);
+  }
 }
 .vale-poster.is-hidden {
   opacity: 0;

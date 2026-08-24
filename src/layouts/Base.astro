@@ -17,6 +17,10 @@ const enPath = lang === "en" ? path : altPath;
 const ptPath = lang === "pt" ? path : altPath;
 const pageTitle = title ?? dict.site.title;
 const pageDescription = description ?? dict.site.description;
+// Only the home page paints the poster, and it paints it immediately: without
+// this the browser finds the background image after the stylesheet, and the
+// first thing a visitor sees is the bare gradient.
+const isHome = path === "/" || path === "/pt/";
 ---
 
 <!doctype html>
@@ -31,11 +35,31 @@ const pageDescription = description ?? dict.site.description;
     <link rel="alternate" hreflang="pt-BR" href={site + ptPath} />
     <link rel="alternate" hreflang="x-default" href={site + enPath} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {
+      isHome && (
+        <>
+          <link
+            rel="preload"
+            as="image"
+            href="/poster.webp"
+            type="image/webp"
+            media="(min-width: 761px)"
+          />
+          <link
+            rel="preload"
+            as="image"
+            href="/poster-small.webp"
+            type="image/webp"
+            media="(max-width: 760px)"
+          />
+        </>
+      )
+    }
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
     <meta property="og:url" content={site + path} />
-    <meta property="og:image" content={site + "/og.png"} />
+    <meta property="og:image" content={site + "/og.jpg"} />
     <meta property="og:locale" content={lang === "pt" ? "pt_BR" : "en_US"} />
     <meta name="twitter:card" content="summary_large_image" />
     <script is:inline>
