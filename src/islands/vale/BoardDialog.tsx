@@ -8,6 +8,7 @@ import {
   writingTopics,
 } from "../../data/writingTopics";
 import { findNpc, experienceNpcs } from "../../data/experienceNpcs";
+import { findCottageObject } from "../../data/cottageObjects";
 import { localizeYears, subjectKey, subjectKind } from "./boardSubject";
 
 /**
@@ -49,11 +50,13 @@ export function BoardDialog({
   const project = kind === "project" ? findProject(key) : undefined;
   const topic = kind === "topic" ? findTopic(key) : undefined;
   const npc = kind === "npc" ? findNpc(key) : undefined;
+  const story = kind === "story" ? findCottageObject(key) : undefined;
 
   const title =
     project?.name ??
     topic?.title[lang] ??
     npc?.name[lang] ??
+    story?.title[lang] ??
     (kind === "npcs"
       ? dict.interior.rosterTitle
       : kind === "topics"
@@ -63,6 +66,7 @@ export function BoardDialog({
     project?.tagline[lang] ??
     topic?.blurb[lang] ??
     npc?.role[lang] ??
+    story?.subtitle[lang] ??
     (kind === "npcs"
       ? dict.interior.rosterSub
       : kind === "topics"
@@ -206,6 +210,31 @@ export function BoardDialog({
                 ))}
               </div>
             </div>
+          </>
+        )}
+
+        {story && (
+          <>
+            {story.paragraphs.map((para, i) => (
+              <p key={i} className="mt-4 text-sm leading-relaxed text-[#c9cdc2]">
+                {para[lang]}
+              </p>
+            ))}
+            {story.facts && (
+              <ul className="mt-5 space-y-2">
+                {story.facts.map((fact, i) => (
+                  <li
+                    key={i}
+                    className="flex gap-2.5 text-sm leading-relaxed text-[#9aa69d]"
+                  >
+                    <span aria-hidden className="mt-[0.1rem] shrink-0 text-[#d99a3d]">
+                      &bull;
+                    </span>
+                    <span>{fact[lang]}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         )}
 

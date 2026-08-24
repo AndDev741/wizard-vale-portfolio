@@ -2,12 +2,13 @@ import { t, type Lang } from "../../i18n/ui";
 import { findProject } from "../../data/projectDetail";
 import { findTopic, libraryLeaf } from "../../data/writingTopics";
 import { findNpc } from "../../data/experienceNpcs";
+import { findCottageObject } from "../../data/cottageObjects";
 
 /**
  * A board's subject is a namespaced string, so the same board, trigger and dialog
  * serve every building: a project in the tower, a shelf of writing in the library.
  */
-export type SubjectKind = "project" | "projects" | "topic" | "topics" | "text" | "npc" | "npcs";
+export type SubjectKind = "project" | "projects" | "topic" | "topics" | "text" | "npc" | "npcs" | "story";
 
 export function subjectKind(subject: string): SubjectKind {
   const [kind] = subject.split(":");
@@ -39,6 +40,8 @@ export function boardLabel(subject: string, lang: Lang): string {
       return findTopic(key)?.title[lang] ?? key;
     case "npcs":
       return dict.interior.rosterTitle;
+    case "story":
+      return findCottageObject(key)?.title[lang] ?? key;
     case "npc":
       return findNpc(key)?.name[lang] ?? key;
     case "text":

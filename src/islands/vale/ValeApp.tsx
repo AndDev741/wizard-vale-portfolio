@@ -47,6 +47,8 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const camYawRef = useRef(Math.PI);
 
   const inside = view.kind === "interior";
+  // Sitting lasts exactly as long as the seat's own dialog is open.
+  const seated = dialog === "story:seat";
   const interior = inside ? interiorFor(view.place) : undefined;
   const busy = panel !== null || dialog !== null;
   useKeyboardInput(inputRef, (mode === "roam" || inside) && !busy);
@@ -199,6 +201,10 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     if (nearTrigger.startsWith("board:npc:")) {
       return `${dict.interior.talk}: ${boardLabel(nearTrigger.slice(6), lang)}`;
     }
+    if (nearTrigger === "board:story:seat") return dict.interior.sitDown;
+    if (nearTrigger.startsWith("board:story:")) {
+      return `${dict.interior.lookAt}: ${boardLabel(nearTrigger.slice(6), lang)}`;
+    }
     if (nearTrigger.startsWith("board:text:")) {
       return `${dict.interior.read}: ${boardLabel(nearTrigger.slice(6), lang)}`;
     }
@@ -224,6 +230,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               config={interior}
               floorIndex={view.floor}
               paused={busy}
+              seated={seated}
               inputRef={inputRef}
               wizardRef={wizardRef}
               camYawRef={camYawRef}

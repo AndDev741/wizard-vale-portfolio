@@ -116,6 +116,9 @@ export const ui = {
       backToShelf: "Back to the shelf",
       backToList: "Back to the list",
       yearNow: "now",
+      sitDown: "Sit down",
+      standUp: "Stand up",
+      lookAt: "Look at",
       onTheDocs: "Read it on the docs site",
       enlarge: "Click to enlarge",
       closeDiagram: "Close",
@@ -139,6 +142,7 @@ export const ui = {
         readingRoom: "The Reading Room",
         gallery: "The Upper Gallery",
         tavern: "The Guild Hall",
+        hearthroom: "The Hearth Room",
       },
       floorNotes: {
         grimoire: "The working floor. The grimoire on the table is the one still being written.",
@@ -149,6 +153,7 @@ export const ui = {
         readingRoom: "Shelves by subject, and a frame on the wall for each.",
         gallery: "The index, and the quieter desks.",
         tavern: "Three patrons, left to right: where I started, where I sharpened, where I am. The catalogue in the middle introduces them.",
+        hearthroom: "No boards in here. Walk up to a thing and it tells you its piece. The seat is for sitting.",
       },
     },
     footer: {
@@ -267,6 +272,9 @@ export const ui = {
       backToShelf: "Voltar à prateleira",
       backToList: "Voltar à lista",
       yearNow: "hoje",
+      sitDown: "Sentar",
+      standUp: "Levantar",
+      lookAt: "Olhar",
       onTheDocs: "Ler no site de docs",
       enlarge: "Clique para ampliar",
       closeDiagram: "Fechar",
@@ -290,6 +298,7 @@ export const ui = {
         readingRoom: "A Sala de Leitura",
         gallery: "A Galeria de Cima",
         tavern: "O Salão da Guilda",
+        hearthroom: "A Sala da Lareira",
       },
       floorNotes: {
         grimoire: "O andar de trabalho. O grimório na mesa é o que ainda está sendo escrito.",
@@ -300,6 +309,7 @@ export const ui = {
         readingRoom: "Prateleiras por assunto, e um quadro na parede para cada uma.",
         gallery: "O índice, e as escrivaninhas mais quietas.",
         tavern: "Três frequentadores, da esquerda para a direita: onde comecei, onde me afiei, onde estou. O catálogo no meio apresenta cada um.",
+        hearthroom: "Aqui não tem quadro. Chega perto de uma coisa e ela te conta a parte dela. O assento é para sentar.",
       },
     },
     footer: {

@@ -58,8 +58,29 @@ export interface InteriorLectern {
   radius: number;
 }
 
+/**
+ * Something in the room the renderer knows how to build, rather than a model
+ * dropped in from a pack: the hearth and its flicker, a daylit window, the
+ * laptop, the orb, the sleeping cat. A fixture with a subject is also a thing
+ * you can walk up to and open; one with a seat is a thing you can sit on.
+ */
+export interface InteriorFixture {
+  kind: "hearth" | "window" | "cat" | "laptop" | "orb" | "journal" | "sofa" | "frame";
+  angle: number;
+  radius: number;
+  /** Extra turn on top of facing the room's centre. */
+  rotOffset?: number;
+  /** Board subject to open, e.g. "story:laptop". */
+  subject?: string;
+  /** Height off the floor, for anything standing on furniture. */
+  y?: number;
+  /** The wizard sits here instead of standing next to it. */
+  seat?: boolean;
+}
+
 export interface InteriorFloor {
   key:
+    | "hearthroom"
     | "grimoire"
     | "ledger"
     | "warding"
@@ -72,6 +93,7 @@ export interface InteriorFloor {
   bookshelves?: InteriorBookshelf[];
   lecterns?: InteriorLectern[];
   npcs?: InteriorNpc[];
+  fixtures?: InteriorFixture[];
   props: InteriorProp[];
   /** Wall angles, in degrees, for mounted torches. */
   torches: number[];
@@ -83,6 +105,12 @@ export interface InteriorFloor {
 
 export interface InteriorConfig {
   place: SectionKey;
+  /**
+   * Firelit stone by default. "home" is the cottage: warm plaster and boards,
+   * daylight through a real window, a hearth instead of torches, and no cold
+   * fill light anywhere. It is meant to be the only room that reads as lived in.
+   */
+  mood?: "stone" | "home";
   radius: number;
   wallHeight: number;
   /** Where the spiral to the next floor begins, in degrees. */
@@ -141,6 +169,17 @@ export const INTERIOR_PIVOT: Record<string, [number, number]> = {
   dg_key: [0.25, 0],
 };
 
+/**
+ * Wide, shallow furniture, as a segment rather than a circle: half its width,
+ * half its depth, and which of its own axes the width runs along. A couch is
+ * three units across and under two deep, and a circle big enough to cover it
+ * stops the wizard a metre and a half short of the cushion.
+ */
+export const INTERIOR_SLAB: Record<string, [number, number, "x" | "z"]> = {
+  couch: [1.5, 0.85, "x"],
+  table_low: [1.2, 0.75, "x"],
+};
+
 /** Interior props solid enough to walk around: half their widest extent. */
 export const INTERIOR_BLOCK: Record<string, number> = {
   dg_table_medium_decorated_A: 1.0,
@@ -164,6 +203,13 @@ export const INTERIOR_BLOCK: Record<string, number> = {
   dg_column: 0.35,
   dg_bed_decorated: 1.5,
   dg_coin_stack_small: 0.48,
+  couch: 1.5,
+  armchair: 0.9,
+  table_low: 1.2,
+  table_medium: 1,
+  cabinet_small_decorated: 0.55,
+  lamp_standing: 0.3,
+  chair_A_wood: 0.4,
 };
 
 const RADIUS = 8.5;
@@ -190,10 +236,18 @@ const MODEL_LIFT: Record<string, number> = {
   book_single: 0.25,
   adv_mug_full: 0.239,
   adv_mug_empty: 0.239,
+  pillow_A: 0.1,
+  pillow_B: 0.1,
 };
 
 /** Tabletop height of dg_table_long / dg_table_medium at scale 1. */
 export const TABLE_TOP = 1;
+
+/** Surface of the cottage's low table, and of its cabinet. */
+export const TABLE_LOW = 0.5;
+export const CABINET_TOP = 1.62;
+/** Where the couch's cushion sits, for anything (or anyone) resting on it. */
+export const COUCH_SEAT = 0.56;
 
 /**
  * Same as onTop, but placed by the ring coordinates the furniture itself uses.
@@ -554,10 +608,85 @@ export const guildInterior: InteriorConfig = {
   ],
 };
 
+/**
+ * The Cottage. The one room with no board on a wall, no shelf and nobody in it:
+ * the other three places already display things. This one you sit down in, and
+ * it says its piece through objects you walk up to.
+ *
+ * It is also the only warm room. Smaller than the rest so it feels close,
+ * lower ceilinged, daylight through a real window instead of arrow slits, and a
+ * hearth rather than torches. The cat by the fire does nothing useful.
+ */
+export const cottageInterior: InteriorConfig = {
+  place: "about",
+  mood: "home",
+  radius: 6.5,
+  wallHeight: 4.6,
+  stairsAngle: STAIRS_ANGLE,
+  hatchAngle: HATCH_ANGLE,
+  exitAngle: EXIT_ANGLE,
+  floors: [
+    {
+      key: "hearthroom",
+      accent: "#ffb877",
+      boards: [],
+      torches: [],
+      banners: [],
+      fixtures: [
+        // The seat, dead centre of the back wall: you sit facing the room.
+        { kind: "sofa", angle: 0, radius: 4.8, subject: "story:seat", seat: true },
+        // The journal, on the low table you pass on the way in.
+        { kind: "journal", angle: 3, radius: 1.8, subject: "story:journal", y: TABLE_LOW },
+        // The laptop, on the desk over on the left.
+        { kind: "laptop", angle: 58, radius: 4.7, subject: "story:laptop", y: TABLE_TOP },
+        // The orb, on the cabinet on the right.
+        { kind: "orb", angle: 248, radius: 5.2, subject: "story:orb", y: CABINET_TOP },
+        // The frame hangs clear of the couch, on its own stretch of wall.
+        { kind: "frame", angle: 336, radius: 6.44, subject: "story:frame", y: 2.25 },
+        // Scenery that has to be built rather than dropped in.
+        { kind: "hearth", angle: 300, radius: 6.3 },
+        { kind: "cat", angle: 296, radius: 4.4, rotOffset: 40 },
+        // Kept inside the arc the camera actually sees: past about 95 degrees
+        // the wall is behind the cutaway and a window there hangs in the dark.
+        { kind: "window", angle: 86, radius: 6.42 },
+        { kind: "window", angle: 28, radius: 6.42 },
+      ],
+      props: [
+        { model: "rug_rectangle_A", x: 0, z: 1.1, scale: 1.4, rotY: 0 },
+        // the couch, with its cushions
+        floor("couch", 0, 4.8, 0, 1),
+        onTopRing("pillow_A", 349, 4.6, COUCH_SEAT, 0.4, 1),
+        onTopRing("pillow_B", 11, 4.6, COUCH_SEAT, -0.3, 1),
+        // the low table, and the mug somebody left on it
+        floor("table_low", 0, 1.8, 0, 1),
+        onTopRing("adv_mug_full", 344, 1.75, TABLE_LOW, 0.5, 0.9),
+        // the desk under the laptop, with the chair pushed out from it
+        floor("table_medium", 58, 4.7, 0, 1),
+        floor("chair_A_wood", 45, 3.3, 150, 1),
+        onTopRing("book_set", 65, 4.9, TABLE_TOP, 0.4, 0.9),
+        // the cabinet the orb stands on, and the lamps that light this side
+        floor("cabinet_small_decorated", 248, 5.2, 0, 1),
+        floor("lamp_standing", 266, 5.5, 0, 1),
+        floor("lamp_table", 318, 5.5, 0, 1),
+        // a second seat, angled at the fire rather than at the room
+        floor("armchair", 328, 4.1, 46, 1),
+        // and the shelves of things that live here
+        wall("shelf_A_small", 214, 6.3, 2.2, 1),
+        wall("shelf_A_small", 66, 6.3, 2.5, 1),
+        onTopRing("book_single", 214, 6.12, 2.36, 0.3, 0.9),
+        floor("dg_trunk_medium_A", 146, 5.8, -10, 1),
+        onTopRing("dg_bottle_A_labeled_green", 253, 4.9, CABINET_TOP, 0.3, 0.9),
+        floor("dg_candle_lit", 138, 5.4, 0, 1),
+      ],
+    },
+  ],
+};
+
 export const interiors: Partial<Record<SectionKey, InteriorConfig>> = {
   projects: towerInterior,
   writing: libraryInterior,
   experience: guildInterior,
+  about: cottageInterior,
 };
 
 export function interiorFor(place: SectionKey): InteriorConfig | undefined {
@@ -602,19 +731,40 @@ export function floorColliders(config: InteriorConfig, floor: InteriorFloor): Ob
     const [x, z] = ring(lectern.angle, lectern.radius);
     out.push({ x, z, r: 0.75 });
   }
+  for (const fixture of floor.fixtures ?? []) {
+    // The hearth is masonry. Everything else here either stands on furniture
+    // that already blocks, or is a cat.
+    if (fixture.kind !== "hearth") continue;
+    const [x, z] = ring(fixture.angle, fixture.radius - 0.5);
+    out.push({ x, z, r: 1.15 });
+  }
   for (const p of floor.props) {
+    const slab = INTERIOR_SLAB[p.model];
     const half = INTERIOR_BLOCK[p.model];
-    if (half === undefined) continue;
+    if (slab === undefined && half === undefined) continue;
     const scale = p.scale ?? 1;
     const [ox, oz] = INTERIOR_PIVOT[p.model] ?? [0, 0];
     const rotY = p.rotY ?? 0;
     const cos = Math.cos(rotY);
     const sin = Math.sin(rotY);
-    out.push({
-      x: p.x + (ox * cos + oz * sin) * scale,
-      z: p.z + (-ox * sin + oz * cos) * scale,
-      r: half * scale + 0.35,
-    });
+    const cx = p.x + (ox * cos + oz * sin) * scale;
+    const cz = p.z + (-ox * sin + oz * cos) * scale;
+    if (slab) {
+      const [halfW, halfD, axis] = slab;
+      // A local axis, turned into the world: local +x goes to (cos, -sin) and
+      // local +z to (sin, cos) under a rotation about y.
+      const [ax, az] = axis === "x" ? [cos, -sin] : [sin, cos];
+      const w = halfW * scale;
+      out.push({
+        x: cx - ax * w,
+        z: cz - az * w,
+        x2: cx + ax * w,
+        z2: cz + az * w,
+        r: halfD * scale + 0.35,
+      });
+      continue;
+    }
+    out.push({ x: cx, z: cz, r: (half as number) * scale + 0.35 });
   }
   return out;
 }

@@ -8,6 +8,7 @@ import {
   type MutableRefObject,
   type RefObject,
 } from "react";
+import { useFrame } from "@react-three/fiber";
 import { Html, useAnimations, useGLTF } from "@react-three/drei";
 import {
   BackSide,
@@ -16,6 +17,7 @@ import {
   type Group,
   type Mesh,
   type MeshStandardMaterial,
+  type PointLight,
 } from "three";
 import { t, type Lang } from "../../i18n/ui";
 import { boardLabel } from "./boardSubject";
@@ -34,14 +36,20 @@ import {
   type InteriorConfig,
   type InteriorFloor,
   interiors,
+  type InteriorFixture,
   type InteriorNpc,
   type InteriorProp,
+  COUCH_SEAT,
 } from "./interiors";
+import { findCottageObject } from "../../data/cottageObjects";
 
 const LADDER_RUNG_GAP = 0.46;
 const TORCH_MODEL = "/models/dg_torch_mounted.glb";
 const BANNER_MODEL = "/models/dg_banner_patternA_blue.glb";
 const FRAME_MODEL = "/models/pictureframe_large_B.gltf";
+const COUCH_MODEL = "/models/couch.gltf";
+const COTTAGE_FRAME = "/models/pictureframe_large_A.gltf";
+const JOURNAL_MODEL = "/models/book_single.gltf";
 
 // Every model any interior can ask for, warmed before anyone walks in.
 for (const config of Object.values(interiors)) {
@@ -52,6 +60,9 @@ for (const config of Object.values(interiors)) {
 }
 useGLTF.preload(FRAME_MODEL);
 useGLTF.preload("/models/dg_sword_shield.glb");
+for (const path of [COUCH_MODEL, COTTAGE_FRAME, JOURNAL_MODEL]) {
+  useGLTF.preload(path);
+}
 for (const model of ["Knight", "Barbarian", "Rogue"]) {
   useGLTF.preload(`/models/${model}.glb`);
 }
@@ -498,6 +509,391 @@ interface InteriorProps {
   camYawRef: MutableRefObject<number>;
   onNearTrigger: (id: string | null) => void;
   onOpenBoard: (project: string) => void;
+  /** True while the open dialog is the one belonging to this room's seat. */
+  seated?: boolean;
+}
+
+
+/**
+ * A fire that will not sit still. The light wobbles on two sines that do not
+ * divide into each other, which is enough to read as flame without a texture.
+ */
+function Hearth({ angle, radius }: { angle: number; radius: number }) {
+  const light = useRef<PointLight>(null);
+  const flame = useRef<Group>(null);
+  const [x, z] = ring(angle, radius);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const wobble = Math.sin(time * 8.3) * 0.5 + Math.sin(time * 3.1) * 0.5;
+    if (light.current) light.current.intensity = 26 + wobble * 7;
+    if (flame.current) {
+      const s = 1 + wobble * 0.07;
+      flame.current.scale.set(1, s, 1);
+    }
+  });
+
+  const stone = "#7d7166";
+  const dark = "#231b16";
+  return (
+    <group position={[x, 0, z]} rotation-y={rad(angle) + Math.PI}>
+      {/* the surround: two jambs, a lintel, and a chimney breast above it */}
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 1.05, 1.1, 0]} castShadow>
+          <boxGeometry args={[0.5, 2.2, 0.75]} />
+          <meshStandardMaterial color={stone} />
+        </mesh>
+      ))}
+      <mesh position={[0, 2.32, 0]} castShadow>
+        <boxGeometry args={[2.6, 0.45, 0.85]} />
+        <meshStandardMaterial color={stone} />
+      </mesh>
+      <mesh position={[0, 3.35, 0.06]}>
+        <boxGeometry args={[1.9, 1.6, 0.62]} />
+        <meshStandardMaterial color="#6e645b" />
+      </mesh>
+      {/* the firebox, and the hearthstone it spills onto */}
+      <mesh position={[0, 1.1, -0.12]}>
+        <boxGeometry args={[1.6, 2.2, 0.5]} />
+        <meshStandardMaterial color={dark} />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.04, 0.62]} receiveShadow>
+        <planeGeometry args={[2.6, 1.1]} />
+        <meshStandardMaterial color="#8a7d70" />
+      </mesh>
+      {/* logs, and the flame over them */}
+      {[-0.32, 0.02, 0.34].map((ox, i) => (
+        <mesh
+          key={ox}
+          position={[ox, 0.16, 0.06]}
+          rotation-z={Math.PI / 2}
+          rotation-x={i * 0.5}
+          castShadow
+        >
+          <cylinderGeometry args={[0.11, 0.11, 1.1, 6]} />
+          <meshStandardMaterial color="#4a3524" />
+        </mesh>
+      ))}
+      <group ref={flame} position={[0, 0.3, 0.06]}>
+        <mesh>
+          <coneGeometry args={[0.42, 0.95, 7]} />
+          <meshStandardMaterial
+            color="#ff9b3d"
+            emissive="#ff7a1a"
+            emissiveIntensity={2.4}
+            transparent
+            opacity={0.92}
+          />
+        </mesh>
+        <mesh position={[0, 0.12, 0]}>
+          <coneGeometry args={[0.22, 0.7, 6]} />
+          <meshStandardMaterial
+            color="#ffe08a"
+            emissive="#ffd166"
+            emissiveIntensity={3}
+          />
+        </mesh>
+      </group>
+      <pointLight
+        ref={light}
+        position={[0, 0.75, 0.55]}
+        color="#ff9a4d"
+        intensity={26}
+        distance={16}
+        decay={2}
+        castShadow={false}
+      />
+    </group>
+  );
+}
+
+/**
+ * A window with actual daylight behind it, which is what separates this room
+ * from the other three: they are lit by fire through arrow slits at night.
+ */
+function Daylight({ angle, radius }: { angle: number; radius: number }) {
+  const [x, z] = ring(angle, radius);
+  const [lx, lz] = ring(angle, radius - 1.6);
+  const frame = "#6d5138";
+  return (
+    <group>
+      <group position={[x, 2.25, z]} rotation-y={rad(angle) + Math.PI} scale={0.78}>
+        {/* the opening, blown out to daylight */}
+        <mesh>
+          <planeGeometry args={[1.5, 1.9]} />
+          <meshStandardMaterial
+            color="#f4f7ff"
+            emissive="#dceaff"
+            emissiveIntensity={1.5}
+          />
+        </mesh>
+        {/* frame and mullions, so it reads as a window and not a hole */}
+        <mesh position={[0, 0, 0.04]}>
+          <boxGeometry args={[1.68, 0.12, 0.12]} />
+          <meshStandardMaterial color={frame} />
+        </mesh>
+        <mesh position={[0, 0, 0.04]}>
+          <boxGeometry args={[0.1, 2.04, 0.12]} />
+          <meshStandardMaterial color={frame} />
+        </mesh>
+        {[-1, 1].map((side) => (
+          <mesh key={`v${side}`} position={[(side * 1.66) / 2, 0, 0.04]}>
+            <boxGeometry args={[0.14, 2.04, 0.14]} />
+            <meshStandardMaterial color={frame} />
+          </mesh>
+        ))}
+        {[-1, 1].map((side) => (
+          <mesh key={`h${side}`} position={[0, (side * 2.02) / 2, 0.04]}>
+            <boxGeometry args={[1.8, 0.14, 0.14]} />
+            <meshStandardMaterial color={frame} />
+          </mesh>
+        ))}
+        {/* a sill, with the daylight catching it */}
+        <mesh position={[0, -1.08, 0.16]} castShadow>
+          <boxGeometry args={[1.9, 0.12, 0.42]} />
+          <meshStandardMaterial color={frame} />
+        </mesh>
+      </group>
+      {/* the light itself, standing inside the room from the opening */}
+      <pointLight
+        position={[lx, 2.6, lz]}
+        color="#e8f0ff"
+        intensity={20}
+        distance={15}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+/** Asleep, and breathing. It does nothing else, which is the point of it. */
+function Cat({ angle, radius, rotOffset = 0 }: { angle: number; radius: number; rotOffset?: number }) {
+  const body = useRef<Group>(null);
+  const [x, z] = ring(angle, radius);
+  useFrame((state) => {
+    if (!body.current) return;
+    const breath = 1 + Math.sin(state.clock.elapsedTime * 1.15) * 0.035;
+    body.current.scale.set(1, breath, 1);
+  });
+  const fur = "#5b5049";
+  const paler = "#776a60";
+  return (
+    <group position={[x, 0, z]} rotation-y={rad(angle) + Math.PI + rad(rotOffset)}>
+      <group ref={body}>
+        {/* curled up: a flattened ball, a head tucked against it, a tail round */}
+        <mesh position={[0, 0.19, 0]} scale={[1, 0.62, 0.82]} castShadow>
+          <sphereGeometry args={[0.32, 14, 12]} />
+          <meshStandardMaterial color={fur} />
+        </mesh>
+        <mesh position={[0.2, 0.19, 0.19]} castShadow>
+          <sphereGeometry args={[0.17, 14, 12]} />
+          <meshStandardMaterial color={fur} />
+        </mesh>
+        {[-1, 1].map((side) => (
+          <mesh
+            key={side}
+            position={[0.24 + side * 0.02, 0.32, 0.19 + side * 0.1]}
+            rotation-x={-0.3}
+            castShadow
+          >
+            <coneGeometry args={[0.06, 0.12, 5]} />
+            <meshStandardMaterial color={paler} />
+          </mesh>
+        ))}
+        <mesh position={[-0.2, 0.11, 0.24]} rotation-x={Math.PI / 2} castShadow>
+          <torusGeometry args={[0.19, 0.055, 6, 14, Math.PI * 1.35]} />
+          <meshStandardMaterial color={paler} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/**
+ * The laptop, built rather than modelled because no medieval pack ships one,
+ * and it is the whole point of the desk: the machine the story happened on.
+ */
+function Laptop({ angle, radius, y = 0 }: { angle: number; radius: number; y?: number }) {
+  const [x, z] = ring(angle, radius);
+  const shell = "#2b2f36";
+  return (
+    <group position={[x, y, z]} rotation-y={rad(angle) + Math.PI} scale={1.75}>
+      <mesh position={[0, 0.014, 0]} castShadow>
+        <boxGeometry args={[0.44, 0.028, 0.3]} />
+        <meshStandardMaterial color={shell} />
+      </mesh>
+      {/* the keyboard well, and a trackpad, so the shape is not just a slab */}
+      <mesh position={[0, 0.03, -0.02]}>
+        <boxGeometry args={[0.38, 0.006, 0.16]} />
+        <meshStandardMaterial color="#1d2026" />
+      </mesh>
+      <mesh position={[0, 0.03, 0.1]}>
+        <boxGeometry args={[0.14, 0.006, 0.09]} />
+        <meshStandardMaterial color="#22262c" />
+      </mesh>
+      {/* the lid, open, with the screen alight */}
+      <group position={[0, 0.028, -0.15]} rotation-x={-1.16}>
+        <mesh position={[0, 0.15, 0]} castShadow>
+          <boxGeometry args={[0.44, 0.3, 0.016]} />
+          <meshStandardMaterial color={shell} />
+        </mesh>
+        <mesh position={[0, 0.15, 0.011]}>
+          <planeGeometry args={[0.39, 0.25]} />
+          <meshStandardMaterial
+            color="#9fd0ff"
+            emissive="#5f9de0"
+            emissiveIntensity={1.4}
+          />
+        </mesh>
+      </group>
+      <pointLight
+        position={[0, 0.4, -0.1]}
+        color="#9ec9ff"
+        intensity={1.6}
+        distance={2.2}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+/** The scrying orb: what the monitoring stack sees, if it could be held. */
+function Orb({ angle, radius, y = 0 }: { angle: number; radius: number; y?: number }) {
+  const glow = useRef<Mesh>(null);
+  const light = useRef<PointLight>(null);
+  const [x, z] = ring(angle, radius);
+  useFrame((state) => {
+    const pulse = 0.5 + Math.sin(state.clock.elapsedTime * 1.6) * 0.5;
+    if (light.current) light.current.intensity = 5 + pulse * 3.5;
+    if (glow.current) {
+      const mat = glow.current.material as MeshStandardMaterial;
+      mat.emissiveIntensity = 1.5 + pulse * 0.9;
+    }
+  });
+  return (
+    <group position={[x, y, z]} rotation-y={rad(angle) + Math.PI}>
+      {/* a turned stand, three feet and a collar */}
+      <mesh position={[0, 0.05, 0]} castShadow>
+        <cylinderGeometry args={[0.17, 0.21, 0.1, 12]} />
+        <meshStandardMaterial color="#4a3524" />
+      </mesh>
+      <mesh position={[0, 0.13, 0]}>
+        <torusGeometry args={[0.14, 0.03, 6, 14]} />
+        <meshStandardMaterial color="#8a6a3a" metalness={0.5} roughness={0.5} />
+      </mesh>
+      <mesh ref={glow} position={[0, 0.3, 0]} castShadow>
+        <sphereGeometry args={[0.2, 20, 16]} />
+        <meshStandardMaterial
+          color="#8fd8ff"
+          emissive="#3fa9e0"
+          emissiveIntensity={1.8}
+          transparent
+          opacity={0.86}
+          roughness={0.1}
+        />
+      </mesh>
+      <pointLight
+        ref={light}
+        position={[0, 0.32, 0]}
+        color="#7fd0ff"
+        intensity={6}
+        distance={4.5}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+/**
+ * One thing in the cottage: the seat, the laptop, the journal, the orb, the
+ * frame, the hearth, a window, the cat. The ones with a subject carry a label
+ * you can click, and the seat is where the wizard actually sits down.
+ */
+function Fixture({
+  fixture,
+  lang,
+  onOpen,
+}: {
+  fixture: InteriorFixture;
+  lang: Lang;
+  onOpen: () => void;
+}) {
+  const [x, z] = ring(fixture.angle, fixture.radius);
+  const facing = rad(fixture.angle) + Math.PI + rad(fixture.rotOffset ?? 0);
+  const detail = fixture.subject
+    ? findCottageObject(fixture.subject.replace(/^story:/, ""))
+    : undefined;
+
+  const body = (() => {
+    switch (fixture.kind) {
+      case "hearth":
+        return <Hearth angle={fixture.angle} radius={fixture.radius} />;
+      case "window":
+        return <Daylight angle={fixture.angle} radius={fixture.radius} />;
+      case "cat":
+        return (
+          <Cat angle={fixture.angle} radius={fixture.radius} rotOffset={fixture.rotOffset} />
+        );
+      case "laptop":
+        return <Laptop angle={fixture.angle} radius={fixture.radius} y={fixture.y} />;
+      case "orb":
+        return <Orb angle={fixture.angle} radius={fixture.radius} y={fixture.y} />;
+      case "sofa":
+        return (
+          <group position={[x, 0, z]} rotation-y={facing}>
+            <Model path={COUCH_MODEL} />
+          </group>
+        );
+      case "frame":
+        return (
+          <group position={[x, fixture.y ?? 2.4, z]} rotation-y={facing} scale={1.5}>
+            <Model path={COTTAGE_FRAME} />
+          </group>
+        );
+      case "journal":
+        return (
+          <group position={[x, fixture.y ?? 0, z]} rotation-y={facing + 0.4} scale={1.2}>
+            <Model path={JOURNAL_MODEL} />
+          </group>
+        );
+    }
+  })();
+
+  if (!fixture.subject) return body;
+
+  // Heights chosen so neighbours do not stack: the couch and the low table in
+  // front of it are only three units apart and project almost on top of one
+  // another from the diorama camera.
+  const labelY =
+    fixture.kind === "frame"
+      ? (fixture.y ?? 2.4) + 1
+      : fixture.kind === "sofa"
+        ? 2.15
+        : fixture.kind === "journal"
+          ? (fixture.y ?? 0) + 0.42
+          : (fixture.y ?? 0) + 1.35;
+
+  return (
+    <group
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen();
+      }}
+      onPointerOver={() => (document.body.style.cursor = "pointer")}
+      onPointerOut={() => (document.body.style.cursor = "auto")}
+    >
+      {body}
+      <Html position={[x, labelY, z]} center zIndexRange={[5, 0]}>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border border-white/25 bg-black/55 px-3 py-1 text-xs font-semibold text-[#f0e7d6] backdrop-blur-sm transition-colors hover:bg-black/80"
+        >
+          {detail?.title[lang] ?? fixture.kind}
+        </button>
+      </Html>
+    </group>
+  );
 }
 
 function InteriorScene({
@@ -510,12 +906,19 @@ function InteriorScene({
   camYawRef,
   onNearTrigger,
   onOpenBoard,
+  seated = false,
 }: InteriorProps) {
   const dict = t(lang);
   const floor: InteriorFloor = config.floors[floorIndex];
   const isGround = floorIndex === 0;
   const isTop = floorIndex === config.floors.length - 1;
   const wallTop = config.wallHeight;
+  // The cottage is meant to read as home rather than as a firelit cellar, so
+  // the surfaces, the sky light and the fills all change with it.
+  const home = config.mood === "home";
+  const skin = home
+    ? { floor: "#8a6a45", wall: "#b39b7a", ceiling: "#5f4a35" }
+    : { floor: "#6b5540", wall: "#59616e", ceiling: "#3b414c" };
 
   const ladderAt = ring(config.stairsAngle, config.radius - LADDER_INSET);
   const ladderStand = ring(config.stairsAngle, config.radius - 2.1);
@@ -550,9 +953,24 @@ function InteriorScene({
       const [lx, lz] = ring(lectern.angle, lectern.radius);
       triggers.push({ id: `board:${lectern.subject}`, x: lx, z: lz, r: 2 });
     }
+    for (const fixture of floor.fixtures ?? []) {
+      if (!fixture.subject) continue;
+      // The trigger sits on the object itself with a generous reach, rather
+      // than at a guessed spot in front of it. Furniture blocks the wizard from
+      // ever standing where the object is, so a point in a walkable gap has to
+      // be found by hand and breaks the moment the furniture moves; a radius
+      // wide enough to catch him at the object's edge never does.
+      const [fx, fz] = ring(fixture.angle, fixture.radius);
+      const reach = fixture.kind === "sofa" || fixture.kind === "frame" ? 2.2 : 1.9;
+      triggers.push({ id: `board:${fixture.subject}`, x: fx, z: fz, r: reach });
+    }
     // Arriving from below you step out of the hatch; on the ground floor you
     // come in through the door.
     const spawnSpot = isGround ? exit : hatch;
+    const sofa = (floor.fixtures ?? []).find((f) => f.seat);
+    // A little forward of the couch's centre, so he lands on the cushion rather
+    // than inside the backrest, and turned to face the room.
+    const seatSpot = sofa ? ring(sofa.angle, sofa.radius - 0.28) : null;
     return {
       id: `${config.place}:${floorIndex}`,
       bounds: config.radius - 1.1,
@@ -560,19 +978,28 @@ function InteriorScene({
       triggers,
       spawn: [spawnSpot[0] * 0.5, 0, spawnSpot[1] * 0.5],
       spawnRotY: Math.atan2(-spawnSpot[0], -spawnSpot[1]),
+      seat:
+        sofa && seatSpot
+          ? {
+              spot: [seatSpot[0], COUCH_SEAT - 0.42, seatSpot[1]],
+              rotY: rad(sofa.angle) + Math.PI,
+            }
+          : undefined,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, floorIndex]);
 
   return (
     <>
-      <color attach="background" args={["#0d1014"]} />
-      <hemisphereLight args={["#7f8fae", "#3a3026", 0.7]} />
+      <color attach="background" args={[home ? "#141013" : "#0d1014"]} />
+      <hemisphereLight
+        args={home ? ["#e7d7bb", "#6b4f34", 0.95] : ["#7f8fae", "#3a3026", 0.7]}
+      />
       {/* The room's own light, tinted to this floor's mood. */}
       <pointLight
         position={[0, wallTop - 1.4, 0]}
         color={floor.accent}
-        intensity={38}
+        intensity={home ? 20 : 38}
         distance={26}
         decay={2}
       />
@@ -586,21 +1013,21 @@ function InteriorScene({
       {/* A fill on the entrance side, which the room's own light barely reaches. */}
       <pointLight
         position={[exit[0] * 0.75, 4.2, exit[1] * 0.75]}
-        color="#ffcf9c"
-        intensity={16}
+        color={home ? "#ffdcb4" : "#ffcf9c"}
+        intensity={home ? 9 : 16}
         distance={16}
         decay={2}
       />
       {/* And one on each flank: anything against the side walls sits outside the
           reach of the middle light and reads as a black slab without these. */}
-      {[90, 270].map((a) => {
+      {(home ? [200] : [90, 270]).map((a) => {
         const [fx, fz] = ring(a, config.radius * 0.62);
         return (
           <pointLight
             key={`fill-${a}`}
             position={[fx, 3.6, fz]}
-            color="#ffdcb0"
-            intensity={13}
+            color={home ? "#ffe2bd" : "#ffdcb0"}
+            intensity={home ? 8 : 13}
             distance={14}
             decay={2}
           />
@@ -610,15 +1037,15 @@ function InteriorScene({
       {/* Floor, wall and ceiling. The wall is a cylinder seen from the inside. */}
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <circleGeometry args={[config.radius, 48]} />
-        <meshStandardMaterial color="#6b5540" />
+        <meshStandardMaterial color={skin.floor} />
       </mesh>
       <mesh position={[0, wallTop / 2, 0]}>
         <cylinderGeometry args={[config.radius, config.radius, wallTop, 48, 1, true]} />
-        <meshStandardMaterial color="#59616e" side={BackSide} />
+        <meshStandardMaterial color={skin.wall} side={BackSide} />
       </mesh>
       <mesh rotation-x={Math.PI / 2} position={[0, wallTop, 0]}>
         <circleGeometry args={[config.radius, 48]} />
-        <meshStandardMaterial color="#3b414c" />
+        <meshStandardMaterial color={skin.ceiling} />
       </mesh>
       {/* The way up, as an opening cut in the ceiling above the ladder. */}
       {!isTop && (
@@ -631,8 +1058,8 @@ function InteriorScene({
         </mesh>
       )}
 
-      {/* Night through the arrow slits. */}
-      {[36, 144, 252, 324].map((a) => {
+      {/* Night through the arrow slits. The cottage gets real windows instead. */}
+      {(home ? [] : [36, 144, 252, 324]).map((a) => {
         const [wx, wz] = ring(a, config.radius - 0.06);
         return (
           <mesh
@@ -758,6 +1185,15 @@ function InteriorScene({
         />
       ))}
 
+      {(floor.fixtures ?? []).map((fixture, i) => (
+        <Fixture
+          key={`fix-${fixture.kind}-${i}`}
+          fixture={fixture}
+          lang={lang}
+          onOpen={() => fixture.subject && onOpenBoard(fixture.subject)}
+        />
+      ))}
+
       {(floor.npcs ?? []).map((npc) => (
         <Trophy
           key={`trophy-${npc.key}`}
@@ -778,6 +1214,7 @@ function InteriorScene({
 
       <Suspense fallback={null}>
         <Wizard
+          seated={seated}
           stage={stage}
           walking
           paused={paused}

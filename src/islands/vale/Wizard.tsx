@@ -37,6 +37,12 @@ export interface WizardStage {
   triggers: WizardTrigger[];
   /** Where he waits while not walking. Interiors leave this out. */
   idle?: { spot: [number, number, number]; rotY: number };
+  /**
+   * A seat in this stage, and where sitting on it puts him. The cottage has one:
+   * walking up to the couch sits him down, which is the whole point of a room
+   * you are meant to stop in.
+   */
+  seat?: { spot: [number, number, number]; rotY: number };
   spawn: [number, number, number];
   spawnRotY: number;
 }
@@ -51,6 +57,8 @@ interface WizardProps {
   /** Damped camera yaw, written by CameraRig. Input is relative to it. */
   camYawRef: MutableRefObject<number>;
   onNearTrigger: (id: string | null) => void;
+  /** True while he should be sitting in this stage's seat. */
+  seated?: boolean;
 }
 
 export function Wizard({
@@ -61,6 +69,7 @@ export function Wizard({
   wizardRef,
   camYawRef,
   onNearTrigger,
+  seated = false,
 }: WizardProps) {
   const { scene, animations } = useGLTF("/models/Mage.glb");
   const { actions } = useAnimations(animations, wizardRef as RefObject<Group>);
@@ -112,6 +121,35 @@ export function Wizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walking, stage.id]);
 
+  // Sitting. The pack has Sit_Chair_Down and Sit_Chair_Idle, so he lowers
+  // himself properly rather than snapping into a pose.
+  const seat = stage.seat;
+  useEffect(() => {
+    const g = wizardRef.current;
+    if (!g || !seat) return;
+    if (seated) {
+      g.position.set(...seat.spot);
+      g.rotation.y = seat.rotY;
+      setAction("Sit_Chair_Down");
+      const down = actions["Sit_Chair_Down"];
+      const hold = window.setTimeout(
+        () => setAction("Sit_Chair_Idle"),
+        Math.max(200, ((down?.getClip().duration ?? 1) - 0.15) * 1000),
+      );
+      return () => window.clearTimeout(hold);
+    }
+    if (current.current.startsWith("Sit_")) {
+      setAction("Sit_Chair_StandUp");
+      const up = actions["Sit_Chair_StandUp"];
+      const hold = window.setTimeout(
+        () => setAction("Idle"),
+        Math.max(200, ((up?.getClip().duration ?? 1) - 0.15) * 1000),
+      );
+      return () => window.clearTimeout(hold);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seated, seat]);
+
   const colliders = stage.colliders;
   const triggers = stage.triggers;
   const bounds = stage.bounds;
@@ -119,6 +157,7 @@ export function Wizard({
   useFrame((_, dt) => {
     const g = wizardRef.current;
     if (!g) return;
+    if (seated) return;
     if (!walking || paused) {
       setAction("Idle");
       return;
