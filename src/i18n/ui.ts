@@ -40,6 +40,13 @@ export const ui = {
         about: "The Cottage",
         contact: "Raven Post",
       },
+      blurbs: {
+        experience: "My career, told by three patrons",
+        projects: "Five floors of things I built",
+        writing: "Engineering stories, shelved as books",
+        about: "Who I am, by the fire",
+        contact: "Send me a raven",
+      },
     },
     home: {
       placesTitle: "Places in the vale",
@@ -65,6 +72,7 @@ export const ui = {
       sub: "Three ages of one career: the internship, the freelance years, and the day to day at Gentek.ai.",
       role: "Software Engineer · Gentek.ai · Lisbon",
       rewardLabel: "Reward",
+      arsenalLabel: "Technologies I work with",
     },
     projects: {
       title: "Projects",
@@ -221,6 +229,7 @@ export const ui = {
       sub: "Três eras de uma mesma carreira: o estágio, os anos de freelance, e o dia a dia na Gentek.ai.",
       role: "Engenheiro de Software · Gentek.ai · Lisboa",
       rewardLabel: "Recompensa",
+      arsenalLabel: "Tecnologias com que trabalho",
     },
     projects: {
       title: "Projetos",

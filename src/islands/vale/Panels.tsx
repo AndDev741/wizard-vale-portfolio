@@ -1,5 +1,6 @@
 import { t, localizePath, type Lang, type SectionKey } from "../../i18n/ui";
-import { quests } from "../../data/quests";
+import { experienceNpcs } from "../../data/experienceNpcs";
+import { localizeYears } from "./boardSubject";
 import { flagshipLinks, shelf } from "../../data/projects";
 import { posts, postUrl } from "../../data/writing";
 import { contact } from "../../data/contact";
@@ -37,13 +38,25 @@ function PanelContent({ lang, section }: { lang: Lang; section: SectionKey }) {
     return (
       <>
         <h2 className="text-2xl font-bold tracking-tight">{dict.experience.title}</h2>
-        <p className="mt-2 text-sm text-[#c9cdc2]">{dict.experience.role}</p>
+        <p className="mt-2 text-sm text-[#c9cdc2]">{dict.experience.sub}</p>
         <div className="mt-5 space-y-5">
-          {quests.map((q) => (
-            <div key={q.title.en}>
-              <h3 className="font-bold">{q.title[lang]}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-[#c9cdc2]">{q.body[lang]}</p>
-              <p className="mt-1 text-sm font-semibold text-[#e0a44e]">{q.reward[lang]}</p>
+          {experienceNpcs.map((npc) => (
+            <div key={npc.key}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#9aa69d]">
+                {npc.name[lang]} · {localizeYears(npc.years, lang)}
+              </p>
+              <h3 className="mt-0.5 font-bold">{npc.role[lang]}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[#c9cdc2]">
+                {npc.tagline[lang]}
+              </p>
+              <a
+                href={npc.link.url}
+                rel="noopener"
+                target="_blank"
+                className="mt-1.5 inline-block text-sm font-semibold text-[#e0a44e] underline-offset-2 hover:underline"
+              >
+                {npc.link.label[lang]}
+              </a>
             </div>
           ))}
         </div>

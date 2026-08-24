@@ -4,6 +4,7 @@ import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import { t, type Lang } from "../i18n/ui";
 import { experienceNpcs } from "../data/experienceNpcs";
+import { techCategories } from "../data/techSkills";
 import { localizeYears } from "../islands/vale/boardSubject";
 
 interface Props {
@@ -27,7 +28,37 @@ const dict = t(lang);
       {dict.experience.title}
     </h1>
     <p class="mt-4 max-w-[58ch] text-muted">{dict.experience.sub}</p>
+  </main>
 
+  {/* Every technology, drifting slowly left. Full-bleed, so it reads as a
+      band of the page rather than a box inside it. */}
+  <div class="tech-marquee mt-4" aria-label={dict.experience.arsenalLabel}>
+    <div class="tech-marquee-track">
+      {
+        [0, 1].map((copy) => (
+          <div class="tech-marquee-group" aria-hidden={copy === 1}>
+            {techCategories.map((cat) => (
+              <Fragment>
+                <span class="tech-cat">{cat.label[lang]}</span>
+                {cat.items.map((item) => (
+                  <span class="tech-tile">
+                    {item.icon ? (
+                      <img src={`/tech/${item.icon}.svg`} alt="" loading="lazy" />
+                    ) : (
+                      <span class="tech-tile-gem" aria-hidden="true" />
+                    )}
+                    <span>{item.name}</span>
+                  </span>
+                ))}
+              </Fragment>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-4xl px-4 pb-16 sm:px-6">
     <div class="mt-12 space-y-6">
       {
         experienceNpcs.map((npc) => (

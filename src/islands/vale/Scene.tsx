@@ -46,10 +46,12 @@ propModels.forEach((m) => useGLTF.preload(`/models/${m}.gltf`));
 function PlaceLabel({
   place,
   name,
+  blurb,
   onClick,
 }: {
   place: PlaceConfig;
   name: string;
+  blurb: string;
   onClick: () => void;
 }) {
   // No distanceFactor: these are map markers, so they hold one screen size.
@@ -64,9 +66,10 @@ function PlaceLabel({
       <button
         type="button"
         onClick={onClick}
-        className="pointer-events-auto cursor-pointer whitespace-nowrap rounded-full border border-white/25 bg-black/45 px-3 py-1 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm transition-colors hover:bg-black/70"
+        className="pointer-events-auto block w-[12rem] cursor-pointer rounded-2xl border border-white/25 bg-black/50 px-3 py-1.5 text-center backdrop-blur-sm transition-colors hover:bg-black/75"
       >
-        {name}
+        <span className="block whitespace-nowrap text-xs font-bold text-[#ece9dd]">{name}</span>
+        <span className="mt-0.5 block text-[11px] leading-snug text-[#c9cdc2]">{blurb}</span>
       </button>
     </Html>
   );
@@ -75,11 +78,13 @@ function PlaceLabel({
 function Building({
   place,
   name,
+  blurb,
   showLabel,
   onClick,
 }: {
   place: PlaceConfig;
   name: string;
+  blurb: string;
   showLabel: boolean;
   onClick: () => void;
 }) {
@@ -96,7 +101,7 @@ function Building({
       onPointerOut={() => (document.body.style.cursor = "auto")}
     >
       {place.model && <Model path={place.model} />}
-      {showLabel && <PlaceLabel place={place} name={name} onClick={onClick} />}
+      {showLabel && <PlaceLabel place={place} name={name} blurb={blurb} onClick={onClick} />}
     </group>
   );
 }
@@ -105,11 +110,13 @@ function Building({
 function RavenPost({
   place,
   name,
+  blurb,
   showLabel,
   onClick,
 }: {
   place: PlaceConfig;
   name: string;
+  blurb: string;
   showLabel: boolean;
   onClick: () => void;
 }) {
@@ -138,7 +145,7 @@ function RavenPost({
       <group position={[-0.9, 0, 0.4]} scale={1.5}>
         <Model path="/models/crate_A_small.gltf" />
       </group>
-      {showLabel && <PlaceLabel place={place} name={name} onClick={onClick} />}
+      {showLabel && <PlaceLabel place={place} name={name} blurb={blurb} onClick={onClick} />}
     </group>
   );
 }
@@ -395,6 +402,7 @@ function ValeScene({
             key={p.key}
             place={p}
             name={dict.world.places[p.key]}
+            blurb={dict.world.blurbs[p.key]}
             showLabel={showLabels}
             onClick={() => onPlaceClick(p.key)}
           />
@@ -403,6 +411,7 @@ function ValeScene({
             key={p.key}
             place={p}
             name={dict.world.places[p.key]}
+            blurb={dict.world.blurbs[p.key]}
             showLabel={showLabels}
             onClick={() => onPlaceClick(p.key)}
           />

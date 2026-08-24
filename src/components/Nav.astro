@@ -49,12 +49,16 @@ const isOverlay = variant === "overlay";
         links.map((link) => (
           <a
             href={link.href}
+            aria-current={path === link.href ? "page" : undefined}
             class:list={[
               "rounded-full px-2 py-1.5 text-[13px] font-medium sm:px-3 sm:text-sm",
               isOverlay
                 ? "drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] hover:bg-white/10"
                 : "text-muted hover:bg-surface hover:text-ink",
-              !isOverlay && path === link.href ? "text-ink" : "",
+              !isOverlay && path === link.href
+                ? "bg-surface font-semibold text-accent"
+                : "",
+              isOverlay && path === link.href ? "bg-white/15 font-semibold" : "",
             ]}
           >
             {link.label}

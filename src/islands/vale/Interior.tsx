@@ -12,6 +12,7 @@ import { useFrame } from "@react-three/fiber";
 import { Html, useAnimations, useGLTF, useTexture } from "@react-three/drei";
 import {
   BackSide,
+  CanvasTexture,
   Color,
   DoubleSide,
   SRGBColorSpace,
@@ -19,6 +20,8 @@ import {
   type Mesh,
   type MeshStandardMaterial,
   type PointLight,
+  type Sprite,
+  type SpriteMaterial,
 } from "three";
 import { t, type Lang } from "../../i18n/ui";
 import { boardLabel } from "./boardSubject";
@@ -43,6 +46,7 @@ import {
   COUCH_SEAT,
 } from "./interiors";
 import { findCottageObject } from "../../data/cottageObjects";
+import { allTech } from "../../data/techSkills";
 
 const LADDER_RUNG_GAP = 0.46;
 const TORCH_MODEL = "/models/dg_torch_mounted.glb";
@@ -921,6 +925,164 @@ function Fixture({
   );
 }
 
+const TECH_TIER_COLORS = [
+  "#e0a44e",
+  "#8fd8ff",
+  "#b7e08a",
+  "#e08a9b",
+  "#c9a3e8",
+  "#8ae0cf",
+  "#e0c98a",
+  "#9bb1e8",
+  "#e88a5f",
+  "#a3e89b",
+];
+
+function techLogoTexture(icon: string): CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 128;
+  const tex = new CanvasTexture(canvas);
+  tex.colorSpace = SRGBColorSpace;
+  tex.anisotropy = 4;
+  const img = new Image();
+  img.onload = () => {
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, 128, 128);
+    ctx.drawImage(img, 8, 8, 112, 112);
+    tex.needsUpdate = true;
+  };
+  img.src = `/tech/${icon}.svg`;
+  return tex;
+}
+
+function techLabelTexture(text: string): { tex: CanvasTexture; aspect: number } {
+  const font = "600 44px system-ui, -apple-system, sans-serif";
+  const probe = document.createElement("canvas").getContext("2d")!;
+  probe.font = font;
+  const w = Math.ceil(probe.measureText(text).width) + 36;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = 76;
+  const ctx = canvas.getContext("2d")!;
+  ctx.font = font;
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.9)";
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = "#ece9dd";
+  ctx.fillText(text, 18, 40);
+  const tex = new CanvasTexture(canvas);
+  tex.colorSpace = SRGBColorSpace;
+  tex.anisotropy = 4;
+  return { tex, aspect: w / 76 };
+}
+
+/**
+ * The skill procession over the Guild Hall: every technology orbiting slowly
+ * in the void above the open room, its name under it. Two counter-rotating
+ * rings, because the sliver of sky the diorama camera sees is only a few
+ * degrees tall: stacking rows there collided with the site's own header, so
+ * the skills parade through the visible arc instead of all standing in it.
+ * Labels are canvas sprites rather than DOM: fifty drei Html elements would
+ * each reproject every frame, and a sprite costs nothing once built.
+ */
+function TechConstellation({ wallTop }: { wallTop: number }) {
+  const rings = [useRef<Group>(null), useRef<Group>(null)];
+
+  const items = useMemo(() => {
+    const cats = [...new Set(allTech.map((t) => t.category))];
+    return allTech.map((t, i) => {
+      const ring2 = i % 2 === 1;
+      const slot = Math.floor(i / 2);
+      const count = Math.ceil(allTech.length / 2);
+      const angle = (360 / count) * slot + (ring2 ? 360 / count / 2 : 0);
+      const radius = ring2 ? 13.5 : 11.5;
+      const [x, z] = ring(angle, radius);
+      const baseAngle = rad(angle);
+      const { tex, aspect } = techLabelTexture(t.name);
+      return {
+        key: t.name,
+        logo: t.icon ? techLogoTexture(t.icon) : null,
+        ringIndex: ring2 ? 1 : 0,
+        x,
+        z,
+        y: (ring2 ? wallTop + 0.85 : wallTop + 0.5) + (slot % 2) * 0.22,
+        color: TECH_TIER_COLORS[cats.indexOf(t.category) % TECH_TIER_COLORS.length],
+        tex,
+        aspect,
+        baseAngle,
+        phase: i * 0.61,
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallTop]);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    // Opposite directions, slightly different speeds: neighbours drift apart.
+    if (rings[0].current) rings[0].current.rotation.y = time * 0.045;
+    if (rings[1].current) rings[1].current.rotation.y = -time * 0.034;
+    for (const ref of rings) {
+      const g = ref.current;
+      if (!g) continue;
+      for (let i = 0; i < g.children.length; i++) {
+        const child = g.children[i];
+        child.position.y = child.userData.baseY + Math.sin(time * 0.7 + i) * 0.08;
+        const head = child.children[0] as Mesh | Sprite;
+        if ((head as Mesh).isMesh) head.rotation.y = time * 0.4 + i;
+        // A full ring has a near side, and the near side marches through the
+        // middle of the tavern at billboard size. Fade anything that swings
+        // out of the back arc, so the parade only exists behind the room.
+        const world = child.userData.baseAngle + g.rotation.y;
+        const towardBack = Math.cos(world);
+        const fade = Math.max(0, Math.min(1, (towardBack + 0.05) / 0.35));
+        child.visible = fade > 0.01;
+        (head.material as MeshStandardMaterial | SpriteMaterial).opacity = fade;
+        const label = child.children[1] as Sprite;
+        (label.material as SpriteMaterial).opacity = fade;
+      }
+    }
+  });
+
+  return (
+    <>
+      {[0, 1].map((ringIndex) => (
+        <group key={ringIndex} ref={rings[ringIndex]}>
+          {items
+            .filter((item) => item.ringIndex === ringIndex)
+            .map((item) => (
+              <group
+                key={item.key}
+                position={[item.x, item.y, item.z]}
+                userData={{ baseY: item.y, baseAngle: item.baseAngle }}
+              >
+                {item.logo ? (
+                  <sprite scale={[0.72, 0.72, 1]}>
+                    <spriteMaterial map={item.logo} transparent depthWrite={false} />
+                  </sprite>
+                ) : (
+                  <mesh>
+                    <octahedronGeometry args={[0.18]} />
+                    <meshStandardMaterial
+                      color={item.color}
+                      emissive={item.color}
+                      emissiveIntensity={0.85}
+                      roughness={0.3}
+                      transparent
+                    />
+                  </mesh>
+                )}
+                <sprite position={[0, -0.62, 0]} scale={[item.aspect * 0.4, 0.4, 1]}>
+                  <spriteMaterial map={item.tex} transparent depthWrite={false} />
+                </sprite>
+              </group>
+            ))}
+        </group>
+      ))}
+    </>
+  );
+}
+
 function InteriorScene({
   lang,
   config,
@@ -1209,6 +1371,8 @@ function InteriorScene({
           onOpen={() => onOpenBoard(lectern.subject)}
         />
       ))}
+
+      {floor.key === "tavern" && <TechConstellation wallTop={wallTop} />}
 
       {(floor.fixtures ?? []).map((fixture, i) => (
         <Fixture
