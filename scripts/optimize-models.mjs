@@ -25,6 +25,7 @@ import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
 import { dedup, prune, resample } from "@gltf-transform/functions";
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 
 const DRY = process.argv.includes("--dry");
 const MODELS = path.join(process.cwd(), "public", "models");
@@ -119,5 +120,51 @@ for (const file of files) {
   }
 }
 
+/**
+ * A .gltf and its .bin have to change together, and they are two independent
+ * HTTP resources with independent cache lifetimes. Rewriting both left the
+ * live site shattered for anyone holding an old .bin: the buffers here changed
+ * content while keeping the exact same byte length, which is the ideal shape
+ * for a stale cache hit, and a new descriptor reading an old buffer draws
+ * triangles out of garbage.
+ *
+ * Naming the buffer after its own content ends that for good. An old .gltf
+ * asks for an old .bin and gets a consistent pair; a new one asks for a name
+ * the cache has never seen.
+ */
+function hashBuffers() {
+  let renamed = 0;
+  for (const file of fs.readdirSync(MODELS).filter((f) => f.endsWith(".gltf"))) {
+    const full = path.join(MODELS, file);
+    const json = JSON.parse(fs.readFileSync(full, "utf8"));
+    let changed = false;
+
+    for (const buffer of json.buffers ?? []) {
+      const uri = buffer.uri;
+      if (!uri || uri.startsWith("data:")) continue;
+      const binPath = path.join(MODELS, uri);
+      if (!fs.existsSync(binPath)) continue;
+
+      const bytes = fs.readFileSync(binPath);
+      const hash = crypto.createHash("sha256").update(bytes).digest("hex").slice(0, 8);
+      // Strip any hash a previous run put there, so this stays idempotent.
+      const stem = uri.replace(/\.gltf$/, "").replace(/\.[0-9a-f]{8}\.bin$/, "").replace(/\.bin$/, "");
+      const wanted = `${stem}.${hash}.bin`;
+      if (uri === wanted) continue;
+
+      fs.renameSync(binPath, path.join(MODELS, wanted));
+      buffer.uri = wanted;
+      changed = true;
+      renamed += 1;
+    }
+
+    if (changed && !DRY) fs.writeFileSync(full, JSON.stringify(json));
+  }
+  return renamed;
+}
+
+const renamed = DRY ? 0 : hashBuffers();
+
 const mb = (b) => (b / 1048576).toFixed(1);
 console.log(`\n${files.length} files: ${mb(before)}MB -> ${mb(after)}MB${DRY ? "  (dry run)" : ""}`);
+if (renamed) console.log(`${renamed} buffers renamed to their content hash`);
