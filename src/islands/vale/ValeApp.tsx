@@ -279,7 +279,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               key={p.key}
               type="button"
               onClick={() => openPlace(p.key)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-sm transition-colors sm:text-[13px] ${
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm transition-colors sm:px-3 sm:py-1.5 sm:text-[13px] ${
                 panel === p.key
                   ? "border-[#d99a3d] bg-[#d99a3d] text-[#221a0d]"
                   : "border-white/20 bg-black/30 text-[#ece9dd] hover:bg-black/50"
@@ -291,7 +291,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           <button
             type="button"
             onClick={mode === "roam" ? exitRoam : startRoam}
-            className="mt-2 rounded-full border border-[#d99a3d]/70 bg-black/30 px-3 py-1.5 text-xs font-bold text-[#e0a44e] backdrop-blur-sm hover:bg-black/50 sm:text-[13px]"
+            className="mt-1.5 rounded-full border border-[#d99a3d]/70 bg-black/30 px-2.5 py-1 text-[11px] font-bold text-[#e0a44e] backdrop-blur-sm hover:bg-black/50 sm:mt-2 sm:px-3 sm:py-1.5 sm:text-[13px]"
           >
             {mode === "roam" ? dict.world.exitWalk : dict.world.walk}
           </button>
@@ -301,11 +301,11 @@ export default function ValeApp({ lang }: { lang: Lang }) {
       {/* Inside: which floor you are on, and the stairs, as buttons too. */}
       {inside && interior && view.kind === "interior" && !dialog && (
         <div className="pointer-events-auto absolute right-3 top-1/2 z-[6] flex -translate-y-1/2 flex-col items-end gap-1.5">
-          <p className="rounded-full bg-black/45 px-3 py-1.5 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm">
+          <p className="rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold text-[#ece9dd] backdrop-blur-sm sm:px-3 sm:py-1.5 sm:text-xs">
             {floorKey ? dict.interior.floors[floorKey] : ""}
           </p>
           {interior.floors.length > 1 && (
-            <p className="rounded-full bg-black/30 px-3 py-1 text-[11px] text-[#9aa69d] backdrop-blur-sm">
+            <p className="rounded-full bg-black/30 px-2.5 py-0.5 text-[10px] text-[#9aa69d] backdrop-blur-sm sm:px-3 sm:py-1 sm:text-[11px]">
               {dict.interior.floorOf
                 .replace("{n}", String(view.floor + 1))
                 .replace("{total}", String(interior.floors.length))}
@@ -315,7 +315,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
             <button
               type="button"
               onClick={() => changeFloor(1)}
-              className="mt-1 rounded-full border border-white/20 bg-black/30 px-3 py-1.5 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm hover:bg-black/50"
+              className="mt-1 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[11px] font-semibold text-[#ece9dd] backdrop-blur-sm hover:bg-black/50 sm:px-3 sm:py-1.5 sm:text-xs"
             >
               {dict.interior.climb}
             </button>
@@ -324,7 +324,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
             <button
               type="button"
               onClick={() => changeFloor(-1)}
-              className="rounded-full border border-white/20 bg-black/30 px-3 py-1.5 text-xs font-semibold text-[#ece9dd] backdrop-blur-sm hover:bg-black/50"
+              className="rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[11px] font-semibold text-[#ece9dd] backdrop-blur-sm hover:bg-black/50 sm:px-3 sm:py-1.5 sm:text-xs"
             >
               {dict.interior.descend}
             </button>
@@ -332,7 +332,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           <button
             type="button"
             onClick={leaveBuilding}
-            className="mt-2 rounded-full border border-[#d99a3d]/70 bg-black/30 px-3 py-1.5 text-xs font-bold text-[#e0a44e] backdrop-blur-sm hover:bg-black/50"
+            className="mt-1.5 rounded-full border border-[#d99a3d]/70 bg-black/30 px-2.5 py-1 text-[11px] font-bold text-[#e0a44e] backdrop-blur-sm hover:bg-black/50 sm:mt-2 sm:px-3 sm:py-1.5 sm:text-xs"
           >
             {dict.interior.leaveBuilding}
           </button>
@@ -341,7 +341,13 @@ export default function ValeApp({ lang }: { lang: Lang }) {
 
       {/* Walk hint, and whatever is within reach */}
       {(mode === "roam" || inside) && !busy && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-24 z-[6] flex flex-col items-center gap-2 px-4 sm:bottom-10">
+        <div
+          className={`pointer-events-none absolute inset-x-0 z-[6] flex flex-col items-center gap-2 px-4 sm:bottom-10 ${
+            // The joystick stands 112px tall from 32px up, so on a touch screen
+            // the hint has to start above its top edge or it reads through it.
+            coarse ? "bottom-40" : "bottom-24"
+          }`}
+        >
           {nearTrigger && promptLabel && (
             <button
               type="button"

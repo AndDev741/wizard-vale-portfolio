@@ -135,6 +135,27 @@ export const techCategories: TechCategory[] = [
   },
 ];
 
+/**
+ * What to draw when a technology has no brand mark: its own initials, so the
+ * placeholder says which one it is. Half of this list is concepts (AOP, OLAP,
+ * Clean Code) or AWS services, whose marks Simple Icons no longer carries, and
+ * one repeated diamond for all of them reads as a broken image.
+ */
+export function techMonogram(name: string): string {
+  const plain = name.replace(/\([^)]*\)/g, "").trim();
+  if (/^AWS\b/i.test(plain)) return "AWS";
+  const words = plain.split(/[\s/&-]+/).filter(Boolean);
+  if (words.length === 1) {
+    const w = words[0];
+    return (w.length <= 5 ? w : w.slice(0, 2)).toUpperCase();
+  }
+  return words
+    .slice(0, 3)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
 /** Every item, flat, with the category it came from. */
 export const allTech: Array<TechItem & { category: string }> = techCategories.flatMap(
   (c) => c.items.map((item) => ({ ...item, category: c.key })),

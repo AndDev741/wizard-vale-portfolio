@@ -4,7 +4,25 @@ import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import { t, type Lang } from "../i18n/ui";
 import { experienceNpcs } from "../data/experienceNpcs";
-import { techCategories } from "../data/techSkills";
+import { techCategories, techMonogram } from "../data/techSkills";
+import fs from "node:fs";
+import nodePath from "node:path";
+
+/**
+ * The logos, read off disk at build time and written straight into the page.
+ * As <img> tags they were twenty-six separate requests inside a CSS-animated
+ * strip, and with loading="lazy" a transformed container kept them from ever
+ * being considered on screen: on a phone most of them simply never arrived.
+ */
+const logoDir = nodePath.join(process.cwd(), "public", "tech");
+const logos = new Map<string, string>();
+for (const cat of techCategories) {
+  for (const item of cat.items) {
+    if (!item.icon || logos.has(item.icon)) continue;
+    const file = nodePath.join(logoDir, `${item.icon}.svg`);
+    if (fs.existsSync(file)) logos.set(item.icon, fs.readFileSync(file, "utf8"));
+  }
+}
 import { localizeYears } from "../islands/vale/boardSubject";
 
 interface Props {
@@ -42,10 +60,12 @@ const dict = t(lang);
                 <span class="tech-cat">{cat.label[lang]}</span>
                 {cat.items.map((item) => (
                   <span class="tech-tile">
-                    {item.icon ? (
-                      <img src={`/tech/${item.icon}.svg`} alt="" loading="lazy" />
+                    {item.icon && logos.has(item.icon) ? (
+                      <span class="tech-logo" set:html={logos.get(item.icon)} />
                     ) : (
-                      <span class="tech-tile-gem" aria-hidden="true" />
+                      <span class="tech-mono" aria-hidden="true">
+                        {techMonogram(item.name)}
+                      </span>
                     )}
                     <span>{item.name}</span>
                   </span>

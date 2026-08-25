@@ -189,6 +189,15 @@ body {
   pointer-events: none;
 }
 
+/* Walking with a thumb: a drag that starts anywhere over the scene should move
+   the wizard, never scroll the page out from under him. */
+body.vale-roam {
+  overscroll-behavior: none;
+}
+body.vale-roam .vale-stage {
+  touch-action: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -469,23 +478,43 @@ body {
   font-size: 0.72rem;
   color: var(--ink);
 }
-.tech-tile img {
+.tech-logo {
+  display: block;
   height: 1.5rem;
   width: 1.5rem;
 }
-/* Concepts have no brand mark, so they get the hall's gem instead. */
-.tech-tile-gem {
+.tech-logo svg {
+  height: 100%;
+  width: 100%;
+}
+/* No brand mark to show, so it shows which one it is instead. */
+.tech-mono {
+  display: grid;
+  place-items: center;
   height: 1.5rem;
-  width: 1.5rem;
-  background: var(--accent-fill);
-  opacity: 0.85;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  min-width: 1.5rem;
+  padding: 0 0.2rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 0.35rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--accent);
 }
 @keyframes tech-scroll {
   to {
     transform: translateX(-50%);
   }
 }
+/* Walking with a thumb: a drag that starts anywhere over the scene should move
+   the wizard, never scroll the page out from under him. */
+body.vale-roam {
+  overscroll-behavior: none;
+}
+body.vale-roam .vale-stage {
+  touch-action: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tech-marquee-track {
     animation: none;
