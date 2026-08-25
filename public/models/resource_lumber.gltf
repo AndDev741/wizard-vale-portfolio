@@ -1,136 +1,132 @@
 {
-    "asset" : {
-        "generator" : "Khronos glTF Blender I/O v3.4.50",
-        "version" : "2.0"
+  "asset": {
+    "generator": "glTF-Transform v4.4.2",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 330,
+      "max": [
+        0.3414117693901062,
+        0.20999956130981445,
+        0.1668621450662613
+      ],
+      "min": [
+        -0.3445308208465576,
+        -0.0000014901161193847656,
+        -0.1636335700750351
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
     },
-    "scene" : 0,
-    "scenes" : [
-        {
-            "name" : "Scene",
-            "nodes" : [
-                0
-            ]
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 330,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 330,
+      "bufferView": 0,
+      "byteOffset": 20
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 660,
+      "bufferView": 1,
+      "byteOffset": 0
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 10560,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 10560,
+      "byteLength": 1320,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "hexagons_medieval",
+      "mimeType": "image/png",
+      "uri": "hexagons_medieval.png"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "resource_lumber.bin",
+      "byteLength": 11880
+    }
+  ],
+  "materials": [
+    {
+      "name": "hexagons_medieval",
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
         }
-    ],
-    "nodes" : [
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Cube.569",
+      "primitives": [
         {
-            "mesh" : 0,
-            "name" : "resource_lumber"
+          "attributes": {
+            "POSITION": 0,
+            "TEXCOORD_0": 1,
+            "NORMAL": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
         }
-    ],
-    "materials" : [
-        {
-            "name" : "hexagons_medieval",
-            "pbrMetallicRoughness" : {
-                "baseColorTexture" : {
-                    "index" : 0
-                },
-                "metallicFactor" : 0,
-                "roughnessFactor" : 0.5
-            }
-        }
-    ],
-    "meshes" : [
-        {
-            "name" : "Cube.569",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "POSITION" : 0,
-                        "TEXCOORD_0" : 1,
-                        "NORMAL" : 2
-                    },
-                    "indices" : 3,
-                    "material" : 0
-                }
-            ]
-        }
-    ],
-    "textures" : [
-        {
-            "sampler" : 0,
-            "source" : 0
-        }
-    ],
-    "images" : [
-        {
-            "mimeType" : "image/png",
-            "name" : "hexagons_medieval",
-            "uri" : "hexagons_medieval.png"
-        }
-    ],
-    "accessors" : [
-        {
-            "bufferView" : 0,
-            "componentType" : 5126,
-            "count" : 330,
-            "max" : [
-                0.3414117693901062,
-                0.20999956130981445,
-                0.1668621450662613
-            ],
-            "min" : [
-                -0.3445308208465576,
-                -1.4901161193847656e-06,
-                -0.1636335700750351
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 1,
-            "componentType" : 5126,
-            "count" : 330,
-            "type" : "VEC2"
-        },
-        {
-            "bufferView" : 2,
-            "componentType" : 5126,
-            "count" : 330,
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 3,
-            "componentType" : 5123,
-            "count" : 660,
-            "type" : "SCALAR"
-        }
-    ],
-    "bufferViews" : [
-        {
-            "buffer" : 0,
-            "byteLength" : 3960,
-            "byteOffset" : 0,
-            "target" : 34962
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 2640,
-            "byteOffset" : 3960,
-            "target" : 34962
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 3960,
-            "byteOffset" : 6600,
-            "target" : 34962
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 1320,
-            "byteOffset" : 10560,
-            "target" : 34963
-        }
-    ],
-    "samplers" : [
-        {
-            "magFilter" : 9729,
-            "minFilter" : 9987
-        }
-    ],
-    "buffers" : [
-        {
-            "byteLength" : 11880,
-            "uri" : "resource_lumber.bin"
-        }
-    ]
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "resource_lumber",
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0
 }
