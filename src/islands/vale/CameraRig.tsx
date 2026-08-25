@@ -3,7 +3,9 @@ import { useFrame } from "@react-three/fiber";
 import { Vector3, type Group } from "three";
 import { easing } from "maath";
 import type { SectionKey } from "../../i18n/ui";
+import type { Obstacle } from "./props";
 import { places, placeCamera, overviewCamera, ROAM_CAM_LIMIT } from "./world";
+import { cameraTrees } from "./props";
 
 interface CameraRigProps {
   mode: "tour" | "roam";
@@ -27,7 +29,30 @@ const FOLLOW_HEIGHT = 6.8;
  */
 const YAW_ESCAPES = [0, 0.44, -0.44, 0.87, -0.87, 1.31, -1.31, 1.75, -1.75, 2.36, -2.36, Math.PI];
 
-/** Somewhere the follow camera can sit: inside the bowl, outside every building. */
+/**
+ * Trees anywhere near the wizard, refreshed once a frame. There are 138 of them
+ * and the yaw search asks about a dozen candidate spots, so filtering to the
+ * handful within reach first keeps the whole thing at a few hundred compares
+ * instead of a couple of thousand.
+ */
+const nearTrees: Obstacle[] = [];
+
+function gatherNearTrees(wx: number, wz: number, reach: number) {
+  nearTrees.length = 0;
+  for (let i = 0; i < cameraTrees.length; i++) {
+    const t = cameraTrees[i];
+    const dx = wx - t.x;
+    const dz = wz - t.z;
+    const span = reach + t.r;
+    if (dx * dx + dz * dz < span * span) nearTrees.push(t);
+  }
+}
+
+/**
+ * Somewhere the follow camera can sit: inside the bowl, outside every building,
+ * and out of the trees. The trees were the gap: walking to the treeline used to
+ * park the lens inside a pine and fill the screen with leaves.
+ */
 function cameraIsClear(x: number, z: number): boolean {
   if (Math.hypot(x, z) > ROAM_CAM_LIMIT) return false;
   for (let i = 0; i < places.length; i++) {
@@ -38,6 +63,12 @@ function cameraIsClear(x: number, z: number): boolean {
     ) {
       return false;
     }
+  }
+  for (let i = 0; i < nearTrees.length; i++) {
+    const t = nearTrees[i];
+    const dx = x - t.x;
+    const dz = z - t.z;
+    if (dx * dx + dz * dz < t.r * t.r) return false;
   }
   return true;
 }
@@ -57,6 +88,12 @@ function hasClearView(camX: number, camZ: number, wx: number, wz: number): boole
       if (Math.hypot(sx - pl.position[0], sz - pl.position[2]) < pl.colliderRadius) {
         return false;
       }
+    }
+    for (let i = 0; i < nearTrees.length; i++) {
+      const t = nearTrees[i];
+      const dx = sx - t.x;
+      const dz = sz - t.z;
+      if (dx * dx + dz * dz < t.r * t.r) return false;
     }
   }
   return true;
@@ -118,6 +155,7 @@ export function CameraRig({ mode, focus, wizardRef, camYawRef, indoors }: Camera
       // inside a wall, and shortening the boom alone ends up on top of his hat.
       const base = camYawRef.current;
       const dist = FOLLOW_DIST * (aspect < 0.8 ? 1.22 : 1);
+      gatherNearTrees(p.x, p.z, dist + 3);
       let yaw = base;
       let camX = p.x - Math.sin(base) * dist;
       let camZ = p.z - Math.cos(base) * dist;
@@ -136,19 +174,35 @@ export function CameraRig({ mode, focus, wizardRef, camYawRef, indoors }: Camera
           }
         }
       }
+      // Pulling in along the way it already faces, but only accepting a spot
+      // that can also SEE him: the old loop tested clearance alone, so at the
+      // treeline it would happily stop with a trunk between lens and wizard.
+      let height = FOLLOW_HEIGHT;
       if (!settled) {
-        // Nowhere clear at full length: pull in along the way it already faces.
         let shortened = dist;
-        while (shortened > 2.4 && !cameraIsClear(camX, camZ)) {
+        while (shortened > 3) {
           shortened -= 0.4;
           camX = p.x - Math.sin(base) * shortened;
           camZ = p.z - Math.cos(base) * shortened;
+          if (cameraIsClear(camX, camZ) && hasClearView(camX, camZ, p.x, p.z)) {
+            settled = true;
+            break;
+          }
         }
+      }
+      if (!settled) {
+        // Everything around him is blocked, which happens at the treeline where
+        // the forest closes in. Go over it instead of through it: high and
+        // close looks down on him, and nothing is ever above him.
+        const near = 4.2;
+        camX = p.x - Math.sin(base) * near;
+        camZ = p.z - Math.cos(base) * near;
+        height = FOLLOW_HEIGHT * 1.75;
       }
       // Keep the steering frame on the camera, so "up" still means away from it.
       camYawRef.current = yaw;
 
-      pos.set(camX, p.y + FOLLOW_HEIGHT, camZ);
+      pos.set(camX, p.y + height, camZ);
       target.set(p.x, p.y + 2, p.z);
       easing.damp3(state.camera.position, pos, 0.24, dt);
       easing.damp3(look.current, target, 0.24, dt);

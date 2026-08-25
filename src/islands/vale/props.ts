@@ -489,6 +489,40 @@ const mountains = scatterRing({
 /** Instanced scatter, grouped so each model is one draw call. */
 export const scatter = mergeGroups(forest, treeline, rocksNear, rocksFar);
 
+/**
+ * Half-width of each tree model, measured off its own bounding box. The
+ * trees_* files are clusters of several trunks, which is why they are three
+ * times the single ones.
+ */
+const TREE_HALF: Record<string, number> = {
+  trees_A_medium: 0.941,
+  trees_A_large: 0.991,
+  trees_A_small: 0.76,
+  trees_B_medium: 0.974,
+  trees_B_large: 0.986,
+  trees_B_small: 0.693,
+  tree_single_A: 0.302,
+  tree_single_B: 0.36,
+};
+
+/**
+ * Where the camera must not settle. The wizard may walk under a canopy quite
+ * happily, so these are not walk colliders: they exist because the follow
+ * camera used to park itself inside a pine and fill the screen with leaves.
+ * Grazing the outer foliage is fine, hence the 0.7.
+ */
+export const cameraTrees: Obstacle[] = Object.entries(
+  mergeGroups(forest, treeline),
+).flatMap(([model, items]) =>
+  TREE_HALF[model] === undefined
+    ? []
+    : items.map((p) => ({
+        x: p.x,
+        z: p.z,
+        r: TREE_HALF[model] * (p.scale ?? 1) * 0.7,
+      })),
+);
+
 /** Terrain on the skyline, drawn darker so it sits behind the vale. */
 export const ridge = mergeGroups(foothills, mountains);
 
