@@ -27,6 +27,8 @@ export const ui = {
     },
     world: {
       walk: "Walk",
+      soundOn: "Sound on",
+      soundOff: "Sound off",
       exitWalk: "Leave walk mode",
       hintWalk: "WASD or arrow keys to walk. Get close to a door and press E to enter.",
       hintWalkTouch: "Use the joystick to walk. Get close to a door and tap Enter.",
@@ -192,6 +194,8 @@ export const ui = {
     },
     world: {
       walk: "Caminhar",
+      soundOn: "Som ligado",
+      soundOff: "Som desligado",
       exitWalk: "Sair do modo caminhada",
       hintWalk: "WASD ou setas para andar. Chegue perto de uma porta e aperte E para entrar.",
       hintWalkTouch: "Use o joystick para andar. Chegue perto de uma porta e toque em Entrar.",

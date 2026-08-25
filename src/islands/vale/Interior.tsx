@@ -524,6 +524,8 @@ interface InteriorProps {
   onOpenBoard: (project: string) => void;
   /** True while the open dialog is the one belonging to this room's seat. */
   seated?: boolean;
+  /** 0 in daylight, 1 after dark. Windows and arrow slits answer to it. */
+  night?: number;
 }
 
 
@@ -624,10 +626,21 @@ function Hearth({ angle, radius }: { angle: number; radius: number }) {
  * A window with actual daylight behind it, which is what separates this room
  * from the other three: they are lit by fire through arrow slits at night.
  */
-function Daylight({ angle, radius }: { angle: number; radius: number }) {
+function Daylight({
+  angle,
+  radius,
+  night,
+}: {
+  angle: number;
+  radius: number;
+  /** A cottage with blazing daylight windows at 2am reads as a mistake. */
+  night: number;
+}) {
   const [x, z] = ring(angle, radius);
   const [lx, lz] = ring(angle, radius - 1.6);
   const frame = "#6d5138";
+  const pane = night > 0.6 ? "#2c3c5c" : night > 0.25 ? "#a8bcd8" : "#f4f7ff";
+  const glow = night > 0.6 ? "#41598c" : night > 0.25 ? "#c3d4ea" : "#dceaff";
   return (
     <group>
       <group position={[x, 2.25, z]} rotation-y={rad(angle) + Math.PI} scale={0.78}>
@@ -635,9 +648,9 @@ function Daylight({ angle, radius }: { angle: number; radius: number }) {
         <mesh>
           <planeGeometry args={[1.5, 1.9]} />
           <meshStandardMaterial
-            color="#f4f7ff"
-            emissive="#dceaff"
-            emissiveIntensity={1.5}
+            color={pane}
+            emissive={glow}
+            emissiveIntensity={1.5 - night * 0.75}
           />
         </mesh>
         {/* frame and mullions, so it reads as a window and not a hole */}
@@ -670,8 +683,8 @@ function Daylight({ angle, radius }: { angle: number; radius: number }) {
       {/* the light itself, standing inside the room from the opening */}
       <pointLight
         position={[lx, 2.6, lz]}
-        color="#e8f0ff"
-        intensity={20}
+        color={night > 0.6 ? "#93aee0" : "#e8f0ff"}
+        intensity={20 - night * 11}
         distance={15}
         decay={2}
       />
@@ -922,10 +935,12 @@ function Grimoire({ angle, radius }: { angle: number; radius: number }) {
 function Fixture({
   fixture,
   lang,
+  night,
   onOpen,
 }: {
   fixture: InteriorFixture;
   lang: Lang;
+  night: number;
   onOpen: () => void;
 }) {
   const [x, z] = ring(fixture.angle, fixture.radius);
@@ -942,7 +957,7 @@ function Fixture({
       case "hearth":
         return <Hearth angle={fixture.angle} radius={fixture.radius} />;
       case "window":
-        return <Daylight angle={fixture.angle} radius={fixture.radius} />;
+        return <Daylight angle={fixture.angle} radius={fixture.radius} night={night} />;
       case "cat":
         return (
           <Cat angle={fixture.angle} radius={fixture.radius} rotOffset={fixture.rotOffset} />
@@ -1183,6 +1198,7 @@ function InteriorScene({
   onNearTrigger,
   onOpenBoard,
   seated = false,
+  night = 0.75,
 }: InteriorProps) {
   const dict = t(lang);
   const floor: InteriorFloor = config.floors[floorIndex];
@@ -1345,9 +1361,9 @@ function InteriorScene({
           >
             <planeGeometry args={[0.5, 1.5]} />
             <meshStandardMaterial
-              color="#2b3a55"
-              emissive="#3f5f8f"
-              emissiveIntensity={0.7}
+              color={night > 0.5 ? "#2b3a55" : "#c9d8ee"}
+              emissive={night > 0.5 ? "#3f5f8f" : "#cfe0f6"}
+              emissiveIntensity={night > 0.5 ? 0.7 : 1.15}
             />
           </mesh>
         );
@@ -1468,6 +1484,7 @@ function InteriorScene({
           key={`fix-${fixture.kind}-${i}`}
           fixture={fixture}
           lang={lang}
+          night={night}
           onOpen={() => fixture.subject && onOpenBoard(fixture.subject)}
         />
       ))}

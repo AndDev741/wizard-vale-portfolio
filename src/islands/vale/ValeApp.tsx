@@ -13,6 +13,42 @@ import { useKeyboardInput, type InputVec } from "./useInput";
 import { places } from "./world";
 import { interiorFor } from "./interiors";
 import { boardLabel } from "./boardSubject";
+import { Ambience } from "./ambience";
+import { localDaylight } from "./daylight";
+
+/**
+ * The sound control. It starts silent on purpose: browsers will not let audio
+ * begin without a gesture, and a site that makes noise unasked deserves the
+ * back button. The choice is remembered between visits.
+ */
+function SoundToggle({
+  on,
+  onToggle,
+  label,
+}: {
+  on: boolean;
+  onToggle: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={on}
+      title={label}
+      className={`mt-1 flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-sm transition-colors sm:h-8 sm:w-8 ${
+        on
+          ? "border-[#d99a3d] bg-[#d99a3d]/20 text-[#e0a44e]"
+          : "border-white/20 bg-black/30 text-[#9aa69d] hover:bg-black/50"
+      }`}
+    >
+      <span aria-hidden className="text-[13px] leading-none">
+        {on ? "\u{1F50A}" : "\u{1F507}"}
+      </span>
+      <span className="sr-only">{label}</span>
+    </button>
+  );
+}
 
 type Mode = "tour" | "roam";
 type Focus = SectionKey | "overview";
@@ -40,6 +76,11 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   // Read synchronously: this island is client:only, and the Canvas reads
   // `detail` for its shadow setting on the very first render.
   const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  // The vale's hour, read once, shared with the sound so the crickets know
+  // whether it is night.
+  const [sky] = useState(() => localDaylight());
+  const [sound, setSound] = useState(false);
+  const ambience = useRef<Ambience | null>(null);
   const [detail] = useState(() => (window.innerWidth < 700 ? 0.55 : 1));
 
   const inputRef = useRef<InputVec>({ x: 0, z: 0 });
@@ -49,6 +90,33 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const inside = view.kind === "interior";
   // Sitting lasts exactly as long as the seat's own dialog is open.
   const seated = dialog === "story:seat";
+
+  /** One instance for the life of the island, torn down with it. */
+  useEffect(() => {
+    ambience.current = new Ambience();
+    return () => {
+      ambience.current?.dispose();
+      ambience.current = null;
+    };
+  }, []);
+
+  const toggleSound = useCallback(() => {
+    const next = !sound;
+    setSound(next);
+    if (next) {
+      ambience.current?.start(inside ? "interior" : "vale", sky.night);
+    } else {
+      ambience.current?.stop();
+    }
+  }, [sound, inside, sky.night]);
+
+  // Walking into a building, or up to the cottage's fire, changes the mix
+  // rather than the track.
+  useEffect(() => {
+    if (!sound) return;
+    const scene = !inside ? "vale" : view.kind === "interior" && view.place === "about" ? "hearth" : "interior";
+    ambience.current?.setScene(scene, sky.night);
+  }, [sound, inside, view, sky.night]);
   const interior = inside ? interiorFor(view.place) : undefined;
   const busy = panel !== null || dialog !== null;
   useKeyboardInput(inputRef, (mode === "roam" || inside) && !busy);
@@ -231,6 +299,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               floorIndex={view.floor}
               paused={busy}
               seated={seated}
+              night={sky.night}
               inputRef={inputRef}
               wizardRef={wizardRef}
               camYawRef={camYawRef}
@@ -295,6 +364,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           >
             {mode === "roam" ? dict.world.exitWalk : dict.world.walk}
           </button>
+          <SoundToggle on={sound} onToggle={toggleSound} label={sound ? dict.world.soundOn : dict.world.soundOff} />
         </div>
       )}
 
@@ -336,6 +406,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           >
             {dict.interior.leaveBuilding}
           </button>
+          <SoundToggle on={sound} onToggle={toggleSound} label={sound ? dict.world.soundOn : dict.world.soundOff} />
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { memo, Suspense, useMemo, useRef, type MutableRefObject, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html, Stars, useGLTF } from "@react-three/drei";
+import { localDaylight } from "./daylight";
 import type { Group, Points } from "three";
 import { t, type Lang, type SectionKey } from "../../i18n/ui";
 import {
@@ -153,9 +154,12 @@ function RavenPost({
 function Lantern({
   position,
   light,
+  boost,
 }: {
   position: [number, number, number];
   light: boolean;
+  /** Lamps matter at midnight and barely register at noon. */
+  boost: number;
 }) {
   return (
     <group position={position}>
@@ -175,11 +179,11 @@ function Lantern({
         <boxGeometry args={[0.2, 0.08, 0.2]} />
         <meshStandardMaterial color="#39413a" />
       </mesh>
-      {light && (
+      {light && boost > 0.15 && (
         <pointLight
           position={[0, 2.3, 0]}
           color="#ffb15e"
-          intensity={10}
+          intensity={10 * boost}
           distance={14}
           decay={2}
         />
@@ -188,7 +192,7 @@ function Lantern({
   );
 }
 
-function Fireflies({ count = 64 }: { count?: number }) {
+function Fireflies({ count = 64, night = 1 }: { count?: number; night?: number }) {
   const ref = useRef<Points>(null);
   const seeds = useMemo(
     () =>
@@ -229,7 +233,7 @@ function Fireflies({ count = 64 }: { count?: number }) {
         size={0.14}
         color="#ffd27a"
         transparent
-        opacity={0.85}
+        opacity={0.85 * night}
         sizeAttenuation
       />
     </points>
@@ -285,6 +289,9 @@ function ValeScene({
 }: SceneProps) {
   const dict = t(lang);
   const scattered = useMemo(() => thinGroups(scatter, detail), [detail]);
+  // Read once per mount: the vale sits at the visitor's own hour and stays
+  // there. A sky that cycles while you read is a distraction, not a detail.
+  const sky = useMemo(() => localDaylight(), []);
 
   /** The vale as somewhere to walk: its edge, what blocks, and the five doors. */
   const stage = useMemo<WizardStage>(() => {
@@ -325,15 +332,16 @@ function ValeScene({
 
   return (
     <>
-      <color attach="background" args={["#141c28"]} />
-      <fog attach="fog" args={["#141c28", 62, 190]} />
-      <hemisphereLight args={["#8092c0", "#33422f", 0.8]} />
-      {/* Low dusk sun. Its shadow camera covers the village only, so the
-          plaza gets crisp shadows without spending resolution on the horizon. */}
+      <color attach="background" args={[sky.air]} />
+      <fog attach="fog" args={[sky.air, sky.fogNear, sky.fogFar]} />
+      <hemisphereLight args={[sky.skyTop, sky.skyGround, sky.hemiIntensity]} />
+      {/* The sun, or the moon standing in for it after dark. Its shadow camera
+          covers the village only, so the plaza gets crisp shadows without
+          spending resolution on the horizon. */}
       <directionalLight
-        color="#ffd2a6"
-        intensity={1.65}
-        position={[-34, 28, 14]}
+        color={sky.sunColor}
+        intensity={sky.sunIntensity}
+        position={sky.sun}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-40}
@@ -346,14 +354,25 @@ function ValeScene({
         shadow-normalBias={0.02}
       />
       {/* Cool fill from the opposite side so shadowed faces keep some shape. */}
-      <directionalLight color="#6a8cc4" intensity={0.8} position={[22, 12, -16]} />
-      <Stars radius={150} depth={60} count={1800} factor={5} saturation={0} fade speed={0.4} />
+      <directionalLight color={sky.fillColor} intensity={sky.fillIntensity} position={[22, 12, -16]} />
+      {/* Stars only when there are stars to see. */}
+      {sky.night > 0.15 && (
+        <Stars
+          radius={150}
+          depth={60}
+          count={Math.round(1800 * sky.night)}
+          factor={5}
+          saturation={0}
+          fade
+          speed={0.4}
+        />
+      )}
 
       {/* Ground: a wide grass plate, soft colour patches, the packed plaza,
           the roads out to each door, and the pond east of the village. */}
       <mesh rotation-x={-Math.PI / 2} position-y={-0.03} receiveShadow>
         <circleGeometry args={[GROUND_RADIUS, 64]} />
-        <meshStandardMaterial color="#2c4534" />
+        <meshStandardMaterial color={sky.ground} />
       </mesh>
       {grassPatches.map((p, i) => (
         <mesh
@@ -428,14 +447,14 @@ function ValeScene({
       />
 
       {lanterns.map(([x, z], i) => (
-        <Lantern key={`lantern-${i}`} position={[x, 0, z]} light={i < 4} />
+        <Lantern key={`lantern-${i}`} position={[x, 0, z]} light={i < 4} boost={sky.lampBoost} />
       ))}
 
       <InstancedGroups groups={villageProps} />
       <InstancedGroups groups={scattered} />
       <InstancedGroups groups={ridge} castShadow={false} tint={0.42} />
       <Clouds />
-      <Fireflies />
+      {sky.night > 0.25 && <Fireflies night={sky.night} />}
 
       {/* The wizard is the heaviest single download, so the vale is allowed to
           appear before he walks on. */}
