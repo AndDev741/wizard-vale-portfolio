@@ -273,6 +273,8 @@ interface SceneProps {
   exitedFrom?: SectionKey | null;
   /** 1 on desktop, lower on small screens: thins the scattered rings. */
   detail: number;
+  /** One footfall, per stride. */
+  onStep?: () => void;
 }
 
 function ValeScene({
@@ -286,6 +288,7 @@ function ValeScene({
   camYawRef,
   exitedFrom,
   detail,
+  onStep,
 }: SceneProps) {
   const dict = t(lang);
   const scattered = useMemo(() => thinGroups(scatter, detail), [detail]);
@@ -460,6 +463,7 @@ function ValeScene({
           appear before he walks on. */}
       <Suspense fallback={null}>
         <Wizard
+          onStep={onStep}
           stage={stage}
           walking={mode === "roam"}
           paused={paused}

@@ -100,23 +100,23 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     };
   }, []);
 
+  /** Where the sound thinks you are: out in the vale, or in one of the five. */
+  const room = view.kind === "interior" ? view.place : "vale";
+
   const toggleSound = useCallback(() => {
     const next = !sound;
     setSound(next);
-    if (next) {
-      ambience.current?.start(inside ? "interior" : "vale", sky.night);
-    } else {
-      ambience.current?.stop();
-    }
-  }, [sound, inside, sky.night]);
+    if (next) ambience.current?.start(room, sky.night);
+    else ambience.current?.stop();
+  }, [sound, room, sky.night]);
 
-  // Walking into a building, or up to the cottage's fire, changes the mix
-  // rather than the track.
+  // Walking into a building changes the place, not the track.
   useEffect(() => {
-    if (!sound) return;
-    const scene = !inside ? "vale" : view.kind === "interior" && view.place === "about" ? "hearth" : "interior";
-    ambience.current?.setScene(scene, sky.night);
-  }, [sound, inside, view, sky.night]);
+    if (sound) ambience.current?.setRoom(room, sky.night);
+  }, [sound, room, sky.night]);
+
+  /** One stride. The wizard calls this, so the pace is his and not a timer's. */
+  const onStep = useCallback(() => ambience.current?.footstep(), []);
   const interior = inside ? interiorFor(view.place) : undefined;
   const busy = panel !== null || dialog !== null;
   useKeyboardInput(inputRef, (mode === "roam" || inside) && !busy);
@@ -158,6 +158,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
       inputRef.current.z = 0;
       setPanel(null);
       setFocus("overview");
+      ambience.current?.door();
       wipe(() => {
         setNearTrigger(null);
         setView({ kind: "interior", place, floor: 0 });
@@ -172,6 +173,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     setDialog(null);
     setDialogBack(null);
     const place = view.kind === "interior" ? view.place : null;
+    ambience.current?.door();
     wipe(() => {
       setNearTrigger(null);
       setExitedFrom(place);
@@ -300,6 +302,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               paused={busy}
               seated={seated}
               night={sky.night}
+              onStep={onStep}
               inputRef={inputRef}
               wizardRef={wizardRef}
               camYawRef={camYawRef}
@@ -311,6 +314,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
             />
           ) : (
             <Scene
+              onStep={onStep}
               lang={lang}
               mode={mode}
               paused={panel !== null}
@@ -467,6 +471,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
                 }
               : undefined
           }
+          onTurn={() => ambience.current?.page()}
         />
       ) : (
         dialog && (

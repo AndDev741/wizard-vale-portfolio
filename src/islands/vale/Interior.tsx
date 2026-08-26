@@ -526,6 +526,8 @@ interface InteriorProps {
   seated?: boolean;
   /** 0 in daylight, 1 after dark. Windows and arrow slits answer to it. */
   night?: number;
+  /** One footfall, per stride. */
+  onStep?: () => void;
 }
 
 
@@ -1199,6 +1201,7 @@ function InteriorScene({
   onOpenBoard,
   seated = false,
   night = 0.75,
+  onStep,
 }: InteriorProps) {
   const dict = t(lang);
   const floor: InteriorFloor = config.floors[floorIndex];
@@ -1510,6 +1513,7 @@ function InteriorScene({
       <Suspense fallback={null}>
         <Wizard
           seated={seated}
+          onStep={onStep}
           stage={stage}
           walking
           paused={paused}

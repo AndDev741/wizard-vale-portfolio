@@ -85,11 +85,14 @@ export function BookReader({
   textKey,
   onClose,
   onBack,
+  onTurn,
 }: {
   lang: Lang;
   textKey: string;
   onClose: () => void;
   onBack?: () => void;
+  /** A leaf turning. In the library it is most of the soundtrack. */
+  onTurn?: () => void;
 }) {
   const dict = t(lang);
   const leaf = libraryLeaf(textKey, lang);
@@ -133,12 +136,24 @@ export function BookReader({
         return;
       }
       if (zoomed) return;
-      if (e.key === "ArrowRight") setSpread((s) => Math.min(spreads - 1, s + 1));
-      if (e.key === "ArrowLeft") setSpread((s) => Math.max(0, s - 1));
+      if (e.key === "ArrowRight") {
+        setSpread((s) => {
+          const next = Math.min(spreads - 1, s + 1);
+          if (next !== s) onTurn?.();
+          return next;
+        });
+      }
+      if (e.key === "ArrowLeft") {
+        setSpread((s) => {
+          const next = Math.max(0, s - 1);
+          if (next !== s) onTurn?.();
+          return next;
+        });
+      }
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [onClose, spreads, zoomed]);
+  }, [onClose, spreads, zoomed, onTurn]);
 
   // Drawn large, from the source rather than by copying the leaf's SVG: mermaid
   // wires its arrowheads to ids inside the document, and two copies would fight.
@@ -247,7 +262,10 @@ export function BookReader({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setSpread((s) => Math.max(0, s - 1))}
+            onClick={() => {
+              setSpread((s) => Math.max(0, s - 1));
+              onTurn?.();
+            }}
             disabled={clamped === 0}
             className="rounded-full border border-[#e8dcc0]/30 px-4 py-1.5 text-sm font-semibold disabled:opacity-30 enabled:hover:bg-white/10"
           >
@@ -260,7 +278,10 @@ export function BookReader({
           </p>
           <button
             type="button"
-            onClick={() => setSpread((s) => Math.min(spreads - 1, s + 1))}
+            onClick={() => {
+              setSpread((s) => Math.min(spreads - 1, s + 1));
+              onTurn?.();
+            }}
             disabled={clamped >= spreads - 1}
             className="rounded-full border border-[#e8dcc0]/30 px-4 py-1.5 text-sm font-semibold disabled:opacity-30 enabled:hover:bg-white/10"
           >

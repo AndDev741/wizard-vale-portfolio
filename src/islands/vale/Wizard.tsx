@@ -15,6 +15,8 @@ import type { InputVec } from "./useInput";
 
 /** Loadout options in the source model that must not render together. */
 const HIDDEN_PROPS = new Set(["Spellbook", "Spellbook_open", "2H_Staff"]);
+/** How far he covers between footfalls. Tuned against the walk animation. */
+const STRIDE = 1.45;
 
 export interface WizardTrigger {
   id: string;
@@ -59,6 +61,11 @@ interface WizardProps {
   onNearTrigger: (id: string | null) => void;
   /** True while he should be sitting in this stage's seat. */
   seated?: boolean;
+  /**
+   * One stride. Called per distance covered rather than per second, so the
+   * footfalls keep his pace instead of a metronome's.
+   */
+  onStep?: () => void;
 }
 
 export function Wizard({
@@ -70,11 +77,14 @@ export function Wizard({
   camYawRef,
   onNearTrigger,
   seated = false,
+  onStep,
 }: WizardProps) {
   const { scene, animations } = useGLTF("/models/Mage.glb");
   const { actions } = useAnimations(animations, wizardRef as RefObject<Group>);
   const current = useRef("Idle");
   const lastTrigger = useRef<string | null>(null);
+  /** Distance walked since the last footfall. */
+  const strideDebt = useRef(0);
 
   const setAction = (name: string) => {
     if (current.current === name) return;
@@ -160,6 +170,7 @@ export function Wizard({
     if (seated) return;
     if (!walking || paused) {
       setAction("Idle");
+      strideDebt.current = STRIDE * 0.65;
       return;
     }
     const { x, z } = inputRef.current;
@@ -178,6 +189,16 @@ export function Wizard({
       const speed = WALK_SPEED * Math.min(len, 1);
       g.position.x += nx * speed * dt;
       g.position.z += nz * speed * dt;
+
+      // A footfall every stride's worth of ground. Counting distance rather
+      // than time means walking slowly gives slow steps for free.
+      if (onStep) {
+        strideDebt.current += speed * dt;
+        if (strideDebt.current >= STRIDE) {
+          strideDebt.current = 0;
+          onStep();
+        }
+      }
 
       const dist = Math.hypot(g.position.x, g.position.z);
       if (dist > bounds) {
