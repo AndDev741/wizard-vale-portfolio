@@ -7,7 +7,8 @@
     "prebuild": "node scripts/fetch-library.mjs",
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "preview:live": "astro build && wrangler pages dev dist --port 8788 --compatibility-date=2026-08-01"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.0",
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.175.0",
     "marked": "^18.0.10",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "wrangler": "^4.126.0"
   }
 }

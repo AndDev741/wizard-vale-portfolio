@@ -1,0 +1,12 @@
+# Copy to .dev.vars (git-ignored) to review the scrying orb with real data:
+#
+#   cp .dev.vars.example .dev.vars   and paste the token
+#
+# Without it `npm run preview:live` still works: the orb falls back to probing
+# the four public Beyou URLs from the edge, which is the same thing production
+# does when GlitchTip cannot be reached.
+#
+# The same name has to exist in the Cloudflare Pages project's environment
+# variables, encrypted, for production. Pages binds env vars per deployment, so
+# adding one only takes effect on the next build.
+GLITCHTIP_TOKEN=

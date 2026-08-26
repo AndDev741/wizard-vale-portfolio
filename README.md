@@ -22,8 +22,16 @@ Live at: (Cloudflare Pages URL after first deploy)
 npm install
 npm run dev       # dev server
 npm run build     # static build to dist/
-npm run preview   # serve the build locally
+npm run preview       # serve the build locally
+npm run preview:live  # ...and run the /api/status function with it
 ```
+
+`preview` is the plain static build, which is enough for everything except the
+scrying orb: `astro preview` does not run Cloudflare Functions, so `/api/status`
+would 404 and the orb would show its clouded state. Use `preview:live` to review
+it for real. To see the orb with the full seventeen monitors rather than the
+four-URL fallback, copy `.dev.vars.example` to `.dev.vars` and paste a GlitchTip
+API token. That file is git-ignored.
 
 Content lives in `src/i18n/ui.ts` (copy) and `src/data/` (quests, projects, writing, contact). The world layout (building positions, camera targets, walk physics constants) lives in `src/islands/vale/world.ts`.
 
@@ -32,11 +40,15 @@ Content lives in `src/i18n/ui.ts` (copy) and `src/data/` (quests, projects, writ
 1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → this repo.
 2. Framework preset: **Astro**. Build command `npm run build`, output directory `dist`.
 3. After the first deploy, set the real URL in `astro.config.mjs` (`site:`) so canonical/OG tags point at the right domain, and push again.
+4. Set `GLITCHTIP_TOKEN` in the project's environment variables, encrypted, for
+   Production and Preview. Pages binds env vars per deployment, so a new or
+   changed variable only takes effect on the next build. Without it the orb
+   falls back to probing the public Beyou URLs from the edge.
 
 ## Roadmap
 
 - Building interiors
-- A crystal ball in the Cottage streaming live Grafana metrics from the machine that hosts Beyou
+- ~~A crystal ball in the Cottage showing what the monitoring stack sees~~ (done: reads GlitchTip's monitors through `functions/api/status.ts`)
 - Day/night cycle, ambient sound with a mute control
 - A "visited every place" achievement
 - A cat familiar that follows the wizard
