@@ -3,3 +3,9 @@ dist/
 .astro/
 .DS_Store
 *.log
+
+# local secrets for wrangler pages dev
+.dev.vars
+
+# wrangler local state
+.wrangler/

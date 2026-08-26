@@ -86,8 +86,8 @@ export const cottageObjects: CottageObject[] = [
     key: "orb",
     title: { en: "The scrying orb", pt: "A bola de cristal" },
     subtitle: {
-      en: "What the monitoring stack sees, right now",
-      pt: "O que a stack de monitoramento vê, agora",
+      en: "Everything Beyou runs, as it stands this minute",
+      pt: "Tudo o que o Beyou roda, como está neste minuto",
     },
     paragraphs: [
       {
@@ -97,6 +97,10 @@ export const cottageObjects: CottageObject[] = [
       {
         en: "I did not set that up to look serious. I set it up because the machine under all of it is a laptop from 2020, and I wanted to know before my users did.",
         pt: "Não montei isso para parecer sério. Montei porque a máquina embaixo de tudo é um laptop de 2020, e eu queria saber antes dos meus usuários.",
+      },
+      {
+        en: "What you see above is read live, through this site's own edge function rather than from the laptop, so it can still tell you the laptop is down. That is the whole point of putting the watchman somewhere else.",
+        pt: "O que você vê acima é lido ao vivo, por uma função na borda deste site e não pelo laptop, então ela ainda consegue dizer que o laptop caiu. É todo o sentido de pôr o vigia em outro lugar.",
       },
     ],
     facts: [

@@ -9,6 +9,7 @@ import {
 } from "../../data/writingTopics";
 import { findNpc, experienceNpcs } from "../../data/experienceNpcs";
 import { findCottageObject } from "../../data/cottageObjects";
+import { OrbStatus } from "./OrbStatus";
 import { localizeYears, subjectKey, subjectKind } from "./boardSubject";
 
 /**
@@ -225,6 +226,8 @@ export function BoardDialog({
 
         {story && (
           <>
+            {/* The orb is the one object here that reports rather than tells. */}
+            {story.key === "orb" && <OrbStatus lang={lang} />}
             {story.paragraphs.map((para, i) => (
               <p key={i} className="mt-4 text-sm leading-relaxed text-[#c9cdc2]">
                 {para[lang]}
