@@ -16,8 +16,11 @@ export interface CottageObject {
   title: Record<Lang, string>;
   /** One line under it. */
   subtitle: Record<Lang, string>;
-  /** The body, a few short paragraphs. */
-  paragraphs: Array<Record<Lang, string>>;
+  /**
+   * The body. The orb leaves this out: its live panel says everything, and
+   * prose underneath was just describing what the reader could already see.
+   */
+  paragraphs?: Array<Record<Lang, string>>;
   /** Optional facts, listed under the body. */
   facts?: Array<Record<Lang, string>>;
 }
@@ -89,26 +92,6 @@ export const cottageObjects: CottageObject[] = [
       en: "Everything Beyou runs, as it stands this minute",
       pt: "Tudo o que o Beyou roda, como está neste minuto",
     },
-    paragraphs: [
-      {
-        en: "Everything I self-host is watched. Prometheus scrapes it, Grafana draws it, Loki keeps the logs and GlitchTip catches what breaks, in development and in production both.",
-        pt: "Tudo o que eu hospedo é vigiado. O Prometheus coleta, o Grafana desenha, o Loki guarda os logs e o GlitchTip pega o que quebra, em desenvolvimento e em produção.",
-      },
-      {
-        en: "I did not set that up to look serious. I set it up because the machine under all of it is a laptop from 2020, and I wanted to know before my users did.",
-        pt: "Não montei isso para parecer sério. Montei porque a máquina embaixo de tudo é um laptop de 2020, e eu queria saber antes dos meus usuários.",
-      },
-      {
-        en: "What you see above is read live, through this site's own edge function rather than from the laptop, so it can still tell you the laptop is down. That is the whole point of putting the watchman somewhere else.",
-        pt: "O que você vê acima é lido ao vivo, por uma função na borda deste site e não pelo laptop, então ela ainda consegue dizer que o laptop caiu. É todo o sentido de pôr o vigia em outro lugar.",
-      },
-    ],
-    facts: [
-      { en: "Prometheus and Grafana, dev and prod", pt: "Prometheus e Grafana, dev e prod" },
-      { en: "Loki with Alloy for unified logs", pt: "Loki com Alloy para logs unificados" },
-      { en: "GlitchTip for errors, web and mobile", pt: "GlitchTip para erros, web e mobile" },
-      { en: "Watchtower rolls out new images on its own", pt: "Watchtower sobe imagens novas sozinho" },
-    ],
   },
 ];
 
