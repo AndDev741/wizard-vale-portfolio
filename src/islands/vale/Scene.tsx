@@ -275,6 +275,98 @@ interface SceneProps {
   detail: number;
   /** One footfall, per stride. */
   onStep?: () => void;
+  /** How many badges this visitor has, and how many there are. */
+  deedsEarned: number;
+  deedsTotal: number;
+  onOpenDeeds: () => void;
+}
+
+/** Where the noticeboard stands, and which way it faces. */
+export const DEEDS_SPOT: [number, number] = [-4.2, 2.2];
+/** The camera looks from +z, so the board turns to face it and stays readable. */
+const DEEDS_FACING = 0.34;
+
+/**
+ * The village noticeboard: what this visitor has managed, on a post in the
+ * plaza. The count lives in 3D and the list lives in a dialog, because fifteen
+ * badges rendered as geometry would be a smudge at any distance you can read
+ * the village from.
+ */
+function DeedsBoard({
+  earned,
+  total,
+  label,
+  onOpen,
+}: {
+  earned: number;
+  total: number;
+  label: string;
+  onOpen: () => void;
+}) {
+  const [x, z] = DEEDS_SPOT;
+  const done = earned >= total;
+  return (
+    <group
+      position={[x, 0, z]}
+      rotation-y={DEEDS_FACING}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen();
+      }}
+      onPointerOver={() => (document.body.style.cursor = "pointer")}
+      onPointerOut={() => (document.body.style.cursor = "auto")}
+    >
+      {/* two posts and a plank, with a little roof so rain is somebody's problem */}
+      {[-1.15, 1.15].map((ox) => (
+        <mesh key={ox} position={[ox, 1.15, 0]} castShadow>
+          <boxGeometry args={[0.22, 2.3, 0.22]} />
+          <meshStandardMaterial color="#4a3524" />
+        </mesh>
+      ))}
+      <mesh position={[0, 2.1, 0]} castShadow>
+        <boxGeometry args={[2.75, 1.5, 0.16]} />
+        <meshStandardMaterial color="#6b4e2c" />
+      </mesh>
+      <mesh position={[0, 2.1, 0.09]}>
+        <boxGeometry args={[2.45, 1.24, 0.03]} />
+        <meshStandardMaterial color="#d8c79c" />
+      </mesh>
+      <mesh position={[0, 2.96, 0.06]} rotation-x={-0.24} castShadow>
+        <boxGeometry args={[3.1, 0.14, 0.7]} />
+        <meshStandardMaterial color="#5a3f26" />
+      </mesh>
+      {/* a lantern on the post, brighter once the board is full */}
+      <mesh position={[1.15, 2.55, 0.16]}>
+        <sphereGeometry args={[0.11, 12, 10]} />
+        <meshStandardMaterial
+          color={done ? "#ffe0a0" : "#c9b98a"}
+          emissive={done ? "#ffb43d" : "#6b5a34"}
+          emissiveIntensity={done ? 2.2 : 0.5}
+        />
+      </mesh>
+      {done && (
+        <pointLight position={[1.15, 2.55, 0.4]} color="#ffb43d" intensity={5} distance={7} decay={2} />
+      )}
+      <Html position={[0, 3.5, 0]} center zIndexRange={[5, 0]}>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="pointer-events-auto block w-[11rem] cursor-pointer rounded-2xl border border-white/25 bg-black/55 px-3 py-1.5 text-center backdrop-blur-sm transition-colors hover:bg-black/80"
+        >
+          <span className="block whitespace-nowrap text-xs font-bold text-[#ece9dd]">
+            {label}
+          </span>
+          <span
+            className={`mt-0.5 block text-[11px] leading-snug ${
+              done ? "text-[#e0a44e]" : "text-[#c9cdc2]"
+            }`}
+          >
+            {earned} / {total}
+          </span>
+        </button>
+      </Html>
+    </group>
+  );
 }
 
 function ValeScene({
@@ -289,6 +381,9 @@ function ValeScene({
   exitedFrom,
   detail,
   onStep,
+  deedsEarned,
+  deedsTotal,
+  onOpenDeeds,
 }: SceneProps) {
   const dict = t(lang);
   const scattered = useMemo(() => thinGroups(scatter, detail), [detail]);
@@ -316,13 +411,17 @@ function ValeScene({
       bounds: PLAZA_LIMIT,
       colliders: [
         { x: 0, z: 0, r: WELL_RADIUS },
+        { x: DEEDS_SPOT[0], z: DEEDS_SPOT[1], r: 1.5 },
         ...places.map((p) => ({ x: p.position[0], z: p.position[2], r: p.colliderRadius })),
         ...obstacles,
       ],
-      triggers: places.map((p) => {
-        const [x, z] = doorPoint(p);
-        return { id: p.key, x, z, r: DOOR_TRIGGER };
-      }),
+      triggers: [
+        ...places.map((p) => {
+          const [x, z] = doorPoint(p);
+          return { id: p.key, x, z, r: DOOR_TRIGGER };
+        }),
+        { id: "deeds", x: DEEDS_SPOT[0], z: DEEDS_SPOT[1], r: 2.6 },
+      ],
       idle: { spot: IDLE_SPOT, rotY: IDLE_ROT_Y },
       // Facing into the village, so the first thing you see is his back.
       spawn,
@@ -392,6 +491,13 @@ function ValeScene({
         <circleGeometry args={[11, 48]} />
         <meshStandardMaterial color="#4d4636" />
       </mesh>
+      <DeedsBoard
+        earned={deedsEarned}
+        total={deedsTotal}
+        label={dict.world.deedsBoard}
+        onOpen={onOpenDeeds}
+      />
+
       {places.map((p) => {
         const dist = Math.hypot(p.position[0], p.position[2]);
         const len = Math.max(dist - 6, 2);

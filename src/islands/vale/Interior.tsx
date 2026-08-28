@@ -528,6 +528,8 @@ interface InteriorProps {
   night?: number;
   /** One footfall, per stride. */
   onStep?: () => void;
+  /** Somebody reached down to the cat by the fire. */
+  onPetCat?: () => void;
 }
 
 
@@ -695,7 +697,18 @@ function Daylight({
 }
 
 /** Asleep, and breathing. It does nothing else, which is the point of it. */
-function Cat({ angle, radius, rotOffset = 0 }: { angle: number; radius: number; rotOffset?: number }) {
+function Cat({
+  angle,
+  radius,
+  rotOffset = 0,
+  onPet,
+}: {
+  angle: number;
+  radius: number;
+  rotOffset?: number;
+  /** It stays asleep either way. The badge is for the visitor, not the cat. */
+  onPet?: () => void;
+}) {
   const body = useRef<Group>(null);
   const [x, z] = ring(angle, radius);
   useFrame((state) => {
@@ -706,7 +719,16 @@ function Cat({ angle, radius, rotOffset = 0 }: { angle: number; radius: number; 
   const fur = "#5b5049";
   const paler = "#776a60";
   return (
-    <group position={[x, 0, z]} rotation-y={rad(angle) + Math.PI + rad(rotOffset)}>
+    <group
+      position={[x, 0, z]}
+      rotation-y={rad(angle) + Math.PI + rad(rotOffset)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onPet?.();
+      }}
+      onPointerOver={() => onPet && (document.body.style.cursor = "pointer")}
+      onPointerOut={() => onPet && (document.body.style.cursor = "auto")}
+    >
       <group ref={body}>
         {/* curled up: a flattened ball, a head tucked against it, a tail round */}
         <mesh position={[0, 0.19, 0]} scale={[1, 0.62, 0.82]} castShadow>
@@ -939,11 +961,13 @@ function Fixture({
   lang,
   night,
   onOpen,
+  onPetCat,
 }: {
   fixture: InteriorFixture;
   lang: Lang;
   night: number;
   onOpen: () => void;
+  onPetCat?: () => void;
 }) {
   const [x, z] = ring(fixture.angle, fixture.radius);
   const facing = rad(fixture.angle) + Math.PI + rad(fixture.rotOffset ?? 0);
@@ -962,7 +986,12 @@ function Fixture({
         return <Daylight angle={fixture.angle} radius={fixture.radius} night={night} />;
       case "cat":
         return (
-          <Cat angle={fixture.angle} radius={fixture.radius} rotOffset={fixture.rotOffset} />
+          <Cat
+            angle={fixture.angle}
+            radius={fixture.radius}
+            rotOffset={fixture.rotOffset}
+            onPet={onPetCat}
+          />
         );
       case "laptop":
         return <Laptop angle={fixture.angle} radius={fixture.radius} y={fixture.y} />;
@@ -1202,6 +1231,7 @@ function InteriorScene({
   seated = false,
   night = 0.75,
   onStep,
+  onPetCat,
 }: InteriorProps) {
   const dict = t(lang);
   const floor: InteriorFloor = config.floors[floorIndex];
@@ -1249,6 +1279,13 @@ function InteriorScene({
       triggers.push({ id: `board:${lectern.subject}`, x: lx, z: lz, r: 2 });
     }
     for (const fixture of floor.fixtures ?? []) {
+      if (fixture.kind === "cat") {
+        // She is not a collider, so he can walk right onto her corner. Petting
+        // her is the same deed whether it comes from a click or the button.
+        const [cx, cz] = ring(fixture.angle, fixture.radius);
+        triggers.push({ id: "pet:cat", x: cx, z: cz, r: 1.6 });
+        continue;
+      }
       if (!fixture.subject) continue;
       // The trigger sits on the object itself with a generous reach, rather
       // than at a guessed spot in front of it. Furniture blocks the wizard from
@@ -1488,6 +1525,7 @@ function InteriorScene({
           fixture={fixture}
           lang={lang}
           night={night}
+          onPetCat={onPetCat}
           onOpen={() => fixture.subject && onOpenBoard(fixture.subject)}
         />
       ))}

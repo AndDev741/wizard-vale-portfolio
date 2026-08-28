@@ -15,6 +15,11 @@ Live at: (Cloudflare Pages URL after first deploy)
 - [React Three Fiber](https://r3f.docs.pmnd.rs) island for the vale, lazy-loaded, WebGL-gated, disabled under `prefers-reduced-motion`
 - Tailwind CSS 4, Satoshi (self-hosted), Phosphor icons
 - 3D models by [Kay Lousberg](https://www.kaylousberg.com) (KayKit Medieval Hexagon Pack + Adventurers Character Pack, CC0)
+- Sound. Everything is synthesised in the browser except three recordings:
+  - The cat's purr: [Purring cat](https://commons.wikimedia.org/wiki/File:Purring_cat.oga) by Mysid, public domain, cut to 1.3s. Chosen by measurement: most purr recordings put everything below 80Hz, which small speakers cannot reproduce, and this one is close-miked and nearly flat up past 3kHz
+  - The hearth: [Fireplace Sound loop](https://opengameart.org/content/fireplace-sound-loop) by pagdev, CC0, cut to a seamless 14s loop
+  - The Guild Hall: [Medieval: Minstrel Dance](https://opengameart.org/content/medieval-minstrel-dance) by randommind, CC0
+  - The vale: [Medieval: Harvest Season](https://opengameart.org/content/medieval-harvest-season) by randommind, CC0, cut to a 32.6s loop
 
 ## Development
 

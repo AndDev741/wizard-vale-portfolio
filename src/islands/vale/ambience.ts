@@ -11,6 +11,24 @@ import type { SectionKey } from "../../i18n/ui";
 
 export type Room = "vale" | SectionKey;
 
+/**
+ * The recorded sounds. Everything else in here is synthesised, and these three
+ * are not, because synthesis was not getting there: a purr is an animal
+ * breathing, a fire is a thousand small events at once, and a tune wants a
+ * player. All CC0 or public domain, credited in the README.
+ */
+const PURR_URL = "/audio/purr.mp3";
+const FIRE_URL = "/audio/fire.mp3";
+
+/** The recorded tunes, by the name a room asks for. */
+type TuneName = "tavern" | "meadow";
+const TUNES: Record<TuneName, string> = {
+  // A minstrel's dance for the hall, and something slower and further away for
+  // the open vale: same family, half the weight.
+  tavern: "/audio/tavern.mp3",
+  meadow: "/audio/meadow.mp3",
+};
+
 const STORE_KEY = "vale:sound";
 
 /* ------------------------------------------------------------------------- */
@@ -42,6 +60,58 @@ function noiseBuffer(ctx: AudioContext, seconds: number, brown = true): AudioBuf
 interface Bed {
   gain: GainNode;
   stop: () => void;
+  /**
+   * Fetch whatever this bed needs, if anything. Called the first time a room
+   * actually asks to hear it, so a visitor who never opens the Guild Hall never
+   * downloads the minstrel.
+   */
+  wake?: () => void;
+}
+
+/**
+ * A bed that loops a recording. The file is fetched once and decoded once; if
+ * either fails the bed simply stays silent and the rest of the room plays on.
+ */
+function sampleBed(ctx: AudioContext, dest: AudioNode, url: string, level: number): Bed {
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  gain.connect(dest);
+  let src: AudioBufferSourceNode | null = null;
+  let stopped = false;
+  let woken = false;
+  const load = async () => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok || stopped) return;
+      const buffer = await ctx.decodeAudioData(await res.arrayBuffer());
+      if (stopped) return;
+      const trim = ctx.createGain();
+      trim.gain.value = level;
+      src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+      src.connect(trim).connect(gain);
+      src.start();
+    } catch {
+      // Nothing to loop. The room keeps whatever else it has.
+    }
+  };
+  return {
+    gain,
+    wake: () => {
+      if (woken) return;
+      woken = true;
+      void load();
+    },
+    stop: () => {
+      stopped = true;
+      try {
+        src?.stop();
+      } catch {
+        // Already stopped.
+      }
+    },
+  };
 }
 
 /** Moving air, gusting on two periods that do not divide into each other. */
@@ -126,55 +196,6 @@ function insects(ctx: AudioContext, dest: AudioNode, live: () => boolean): Bed {
   return { gain, stop: () => void (stopped = true) };
 }
 
-/** A hearth: low rumble with logs settling. */
-function fire(ctx: AudioContext, dest: AudioNode, live: () => boolean): Bed {
-  const gain = ctx.createGain();
-  gain.gain.value = 0;
-  gain.connect(dest);
-
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer(ctx, 5);
-  src.loop = true;
-  const body = ctx.createBiquadFilter();
-  body.type = "lowpass";
-  body.frequency.value = 820;
-  const bodyGain = ctx.createGain();
-  bodyGain.gain.value = 0.5;
-  src.connect(body).connect(bodyGain).connect(gain);
-  src.start();
-
-  let stopped = false;
-  const pop = () => {
-    if (stopped) return;
-    if (!live()) {
-      window.setTimeout(pop, 900);
-      return;
-    }
-    const now = ctx.currentTime;
-    const s = ctx.createBufferSource();
-    s.buffer = noiseBuffer(ctx, 0.08, false);
-    const band = ctx.createBiquadFilter();
-    band.type = "bandpass";
-    band.frequency.value = 900 + Math.random() * 1900;
-    band.Q.value = 3;
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0, now);
-    env.gain.linearRampToValueAtTime(0.3 + Math.random() * 0.25, now + 0.003);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    s.connect(band).connect(env).connect(gain);
-    s.start(now);
-    s.stop(now + 0.08);
-    window.setTimeout(pop, 130 + Math.random() * 800);
-  };
-  window.setTimeout(pop, 250);
-  return {
-    gain,
-    stop: () => {
-      stopped = true;
-      src.stop();
-    },
-  };
-}
 
 /** The dull pressure of being inside. */
 function roomTone(ctx: AudioContext, dest: AudioNode): Bed {
@@ -220,35 +241,6 @@ function arcane(ctx: AudioContext, dest: AudioNode): Bed {
 /* Voices: things that play notes                                            */
 /* ------------------------------------------------------------------------- */
 
-/** A plucked string, near enough a lute for a tavern. */
-function pluck(ctx: AudioContext, dest: AudioNode, freq: number, at: number, level: number) {
-  const osc = ctx.createOscillator();
-  osc.type = "triangle";
-  osc.frequency.value = freq;
-  const partial = ctx.createOscillator();
-  partial.type = "sine";
-  partial.frequency.value = freq * 2.01;
-  const partialGain = ctx.createGain();
-  partialGain.gain.value = 0.25;
-
-  const body = ctx.createBiquadFilter();
-  body.type = "lowpass";
-  body.frequency.setValueAtTime(2600, at);
-  body.frequency.exponentialRampToValueAtTime(700, at + 0.5);
-
-  const env = ctx.createGain();
-  env.gain.setValueAtTime(0, at);
-  env.gain.linearRampToValueAtTime(level, at + 0.008);
-  env.gain.exponentialRampToValueAtTime(0.0008, at + 1.5);
-
-  osc.connect(body);
-  partial.connect(partialGain).connect(body);
-  body.connect(env).connect(dest);
-  osc.start(at);
-  partial.start(at);
-  osc.stop(at + 1.6);
-  partial.stop(at + 1.6);
-}
 
 /** A soft key, for the cottage. Rounder and slower than the lute. */
 function key(ctx: AudioContext, dest: AudioNode, freq: number, at: number, level: number) {
@@ -296,16 +288,6 @@ const NOTE: Record<string, number> = {
   F5: 698.46, A5: 880,
 };
 
-/**
- * A tune in D dorian, which is the mode that sounds medieval to modern ears
- * without trying. Four phrases over a held fifth, played on the pluck.
- */
-const TAVERN_PHRASES: Array<Array<[string, number]>> = [
-  [["D4", 1], ["F4", 1], ["A4", 1], ["G4", 1], ["F4", 2]],
-  [["E4", 1], ["F4", 1], ["G4", 1], ["A4", 1], ["G4", 1], ["E4", 1]],
-  [["A4", 1], ["C5", 1], ["Bb4", 1], ["A4", 1], ["G4", 2]],
-  [["F4", 1], ["E4", 1], ["D4", 1], ["E4", 1], ["D4", 2]],
-];
 
 /** Four gentle chords for the cottage, rolled rather than struck. */
 const HEARTH_CHORDS: string[][] = [
@@ -325,25 +307,83 @@ interface RoomMix {
   fire: number;
   room: number;
   arcane: number;
-  /** Which sequence plays here, if any. */
-  music: "tavern" | "hearth" | "tower" | null;
+  /** Which recorded tune plays here, and how loud. */
+  tune: { name: TuneName; level: number } | null;
+  /** Which synthesised sequence plays here, if any. */
+  music: "hearth" | "tower" | null;
   /** Footsteps on grass or on boards. */
   floor: "soft" | "hard";
 }
 
 const ROOMS: Record<Room, RoomMix> = {
-  // Out in the open: a breeze, and insects when it is dark.
-  vale: { wind: 0.42, insects: 0.2, fire: 0, room: 0, arcane: 0, music: null, floor: "soft" },
-  // The pub. A lute in the corner, and the room full enough to feel it.
-  experience: { wind: 0.05, insects: 0, fire: 0.1, room: 0.4, arcane: 0, music: "tavern", floor: "hard" },
+  // Out in the open: a tune drifting from somewhere, and insects when it is
+  // dark. No wind bed out here any more; the music is the air now.
+  vale: {
+    wind: 0,
+    insects: 0.2,
+    fire: 0,
+    room: 0,
+    arcane: 0,
+    tune: { name: "meadow", level: 0.34 },
+    music: null,
+    floor: "soft",
+  },
+  // The pub. A minstrel playing a dance in the corner, and the room full enough
+  // to feel it.
+  experience: {
+    wind: 0.05,
+    insects: 0,
+    fire: 0.1,
+    room: 0.4,
+    arcane: 0,
+    tune: { name: "tavern", level: 0.5 },
+    music: null,
+    floor: "hard",
+  },
   // The library keeps its silence. Footsteps and turning pages, nothing else.
-  writing: { wind: 0, insects: 0, fire: 0, room: 0.16, arcane: 0, music: null, floor: "hard" },
+  writing: {
+    wind: 0,
+    insects: 0,
+    fire: 0,
+    room: 0.16,
+    arcane: 0,
+    tune: null,
+    music: null,
+    floor: "hard",
+  },
   // The tower hums. Something in here is always working.
-  projects: { wind: 0.04, insects: 0, fire: 0, room: 0.2, arcane: 0.16, music: "tower", floor: "hard" },
+  projects: {
+    wind: 0.04,
+    insects: 0,
+    fire: 0,
+    room: 0.2,
+    arcane: 0.16,
+    tune: null,
+    music: "tower",
+    floor: "hard",
+  },
   // Home: the fire, and a piano somebody left playing.
-  about: { wind: 0.03, insects: 0, fire: 0.34, room: 0.3, arcane: 0, music: "hearth", floor: "soft" },
+  about: {
+    wind: 0.03,
+    insects: 0,
+    fire: 0.34,
+    room: 0.3,
+    arcane: 0,
+    tune: null,
+    music: "hearth",
+    floor: "soft",
+  },
   // The Raven Post has no inside; kept so the map is total.
-  contact: { wind: 0.42, insects: 0.2, fire: 0, room: 0, arcane: 0, music: null, floor: "soft" },
+  contact: {
+    wind: 0,
+    insects: 0.2,
+    fire: 0,
+    room: 0,
+    arcane: 0,
+    tune: { name: "meadow", level: 0.34 },
+    music: null,
+    floor: "soft",
+  },
 };
 
 /* ------------------------------------------------------------------------- */
@@ -356,6 +396,10 @@ export class Ambience {
   private room: Room = "vale";
   private night = 1;
   private on = false;
+  /** When the last purr started, on the wall clock. See `purr`. */
+  private lastPurr = -1e6;
+  private purrSample: AudioBuffer | null = null;
+  private purrLoading: Promise<AudioBuffer | null> | null = null;
 
   /** Sequencer state: notes are scheduled a little ahead of the clock. */
   private timer: number | null = null;
@@ -396,12 +440,16 @@ export class Ambience {
       this.musicBus.gain.value = 0;
       this.musicBus.connect(this.master);
       this.beds.wind = wind(this.ctx, this.master);
-      this.beds.insects = insects(this.ctx, this.master, () => this.wants("insects"));
-      this.beds.fire = fire(this.ctx, this.master, () => this.wants("fire"));
+      this.beds.insects = insects(this.ctx, this.master, () => this.wantsInsects());
+      this.beds.fire = sampleBed(this.ctx, this.master, FIRE_URL, 1);
+      (Object.keys(TUNES) as TuneName[]).forEach((name) => {
+        this.beds[`tune:${name}`] = sampleBed(this.ctx!, this.master!, TUNES[name], 1);
+      });
       this.beds.room = roomTone(this.ctx, this.master);
       this.beds.arcane = arcane(this.ctx, this.master);
     }
     void this.ctx.resume();
+    void this.loadPurr();
     this.ramp(this.master!.gain, 0.55, 1.6);
     this.applyRoom();
     this.remember(true);
@@ -425,10 +473,13 @@ export class Ambience {
   }
 
   /** Whether the current room asks for a bed at all. */
-  private wants(bed: "insects" | "fire"): boolean {
+  /**
+   * Whether crickets should bother minting anything. Their one-shots are timed
+   * rather than looped, and a room at zero gain used to keep making them.
+   */
+  private wantsInsects(): boolean {
     if (!this.on) return false;
     const mix = ROOMS[this.room] ?? ROOMS.vale;
-    if (bed === "fire") return mix.fire > 0.02;
     const outdoors = this.room === "vale" || this.room === "contact";
     return mix.insects * (0.15 + (outdoors ? this.night : 0)) > 0.02;
   }
@@ -439,9 +490,16 @@ export class Ambience {
     const dark = outdoors ? this.night : 0;
     this.ramp(this.beds.wind?.gain.gain, mix.wind * (1 - dark * 0.4), 2.5);
     this.ramp(this.beds.insects?.gain.gain, mix.insects * (0.15 + dark), 2.5);
+    if (mix.fire > 0) this.beds.fire?.wake?.();
     this.ramp(this.beds.fire?.gain.gain, mix.fire, 2);
     this.ramp(this.beds.room?.gain.gain, mix.room, 2);
     this.ramp(this.beds.arcane?.gain.gain, mix.arcane, 3);
+    (Object.keys(TUNES) as TuneName[]).forEach((name) => {
+      const level = mix.tune?.name === name ? mix.tune.level : 0;
+      const bed = this.beds[`tune:${name}`];
+      if (level > 0) bed?.wake?.();
+      this.ramp(bed?.gain.gain, level, 2.5);
+    });
     this.ramp(this.musicBus?.gain, mix.music ? 0.5 : 0, 2.5);
     if (mix.music) this.startSequencer();
     else this.stopSequencer();
@@ -515,6 +573,68 @@ export class Ambience {
     thud.stop(thudAt + 0.2);
   }
 
+  /**
+   * A purr, when the cat is petted. A purr is a real animal breathing, and
+   * synthesis was not getting there: a 26 Hz tremolo on filtered noise came out
+   * sounding like a passing wave. So this is a recording, public domain, cut to
+   * 1.3 seconds and 8 kB.
+   *
+   * Picking it took measuring. Most purr recordings are almost entirely below
+   * 80 Hz, which laptop and phone speakers cannot reproduce at all, so they
+   * play as silence. This one is close-miked and nearly flat from its
+   * fundamental up past 3 kHz, and it pulses at 30 Hz where a cat should.
+   */
+  purr() {
+    if (!this.ctx || !this.on || !this.master) return;
+    // Wall clock, not the audio clock: the audio clock stops dead while the
+    // context is suspended, and a guard reading a stopped clock never opens.
+    const wall = performance.now();
+    if (wall - this.lastPurr < 450) return;
+    this.lastPurr = wall;
+    if (this.purrSample) {
+      this.playPurr(this.purrSample);
+      return;
+    }
+    // First pet before the file has landed: play it the moment it does, which
+    // is quick enough that it still reads as a response to the touch.
+    void this.loadPurr().then((buffer) => {
+      if (buffer && this.on) this.playPurr(buffer);
+    });
+  }
+
+  private playPurr(buffer: AudioBuffer) {
+    if (!this.ctx || !this.master) return;
+    const now = this.ctx.currentTime;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    // The fades are baked into the file, so this is level and nothing else.
+    const env = this.ctx.createGain();
+    // The file is peak-normalised and short, so it needs pushing to sit a
+    // couple of dB over the tune the room is playing.
+    env.gain.value = 1.6;
+    src.connect(env).connect(this.master);
+    src.start(now);
+    src.stop(now + buffer.duration);
+  }
+
+  /** Fetched once, decoded once, kept for the rest of the visit. */
+  private loadPurr(): Promise<AudioBuffer | null> {
+    this.purrLoading ??= (async () => {
+      try {
+        const res = await fetch(PURR_URL);
+        if (!res.ok) return null;
+        const bytes = await res.arrayBuffer();
+        if (!this.ctx) return null;
+        this.purrSample = await this.ctx.decodeAudioData(bytes);
+        return this.purrSample;
+      } catch {
+        // No purr then. She is still petted, and the badge is still earned.
+        return null;
+      }
+    })();
+    return this.purrLoading;
+  }
+
   /** A leaf turning. The library's only other sound. */
   page() {
     if (!this.ctx || !this.on || !this.master) return;
@@ -568,23 +688,7 @@ export class Ambience {
     if (!music) return;
 
     while (this.nextNoteAt < ctx.currentTime + 0.6) {
-      if (music === "tavern") {
-        const beat = 0.44;
-        const phrase = TAVERN_PHRASES[Math.floor(this.step / 8) % TAVERN_PHRASES.length];
-        const idx = this.step % 8;
-        const note = phrase[idx % phrase.length];
-        if (idx < phrase.length) {
-          pluck(ctx, bus, NOTE[note[0]] ?? 440, this.nextNoteAt, 0.12);
-          // A held fifth underneath, once a phrase.
-          if (idx === 0) {
-            pluck(ctx, bus, NOTE.D3, this.nextNoteAt, 0.09);
-            pluck(ctx, bus, NOTE.A2, this.nextNoteAt + 0.02, 0.07);
-          }
-          this.nextNoteAt += beat * note[1];
-        } else {
-          this.nextNoteAt += beat;
-        }
-      } else if (music === "hearth") {
+      if (music === "hearth") {
         // A chord rolled slowly, then a long rest. Nothing hurries here.
         const chord = HEARTH_CHORDS[Math.floor(this.step / 2) % HEARTH_CHORDS.length];
         if (this.step % 2 === 0) {

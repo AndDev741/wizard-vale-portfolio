@@ -27,6 +27,11 @@ export const ui = {
     },
     world: {
       walk: "Walk",
+      deedsBoard: "The noticeboard",
+      deedsCount: "{n} of {total} earned",
+      deedsLocked: "not yet",
+      deedsNote: "Kept in this browser and nowhere else. There is no account here and no reason to want one.",
+      deedsWon: "Badge earned",
       soundOn: "Sound on",
       soundOff: "Sound off",
       exitWalk: "Leave walk mode",
@@ -112,6 +117,7 @@ export const ui = {
       climb: "Climb",
       descend: "Go down",
       leave: "Leave",
+      petCat: "Pet the cat",
       read: "Read",
       talk: "Talk",
       deedsLabel: "Deeds worth telling",
@@ -181,7 +187,8 @@ export const ui = {
       },
     },
     footer: {
-      credits: "Built with Astro and React Three Fiber. 3D models by Kay Lousberg, CC0.",
+      credits:
+        "Built with Astro and React Three Fiber. 3D models by Kay Lousberg, CC0. The music, the fire and the cat's purr are CC0 and public domain recordings, credited in the repository.",
     },
   },
   pt: {
@@ -207,6 +214,11 @@ export const ui = {
     },
     world: {
       walk: "Caminhar",
+      deedsBoard: "O mural",
+      deedsCount: "{n} de {total} conquistadas",
+      deedsLocked: "ainda não",
+      deedsNote: "Guardado neste navegador e em nenhum outro lugar. Aqui não há conta, e não há razão para querer uma.",
+      deedsWon: "Conquista obtida",
       soundOn: "Som ligado",
       soundOff: "Som desligado",
       exitWalk: "Sair do modo caminhada",
@@ -292,6 +304,7 @@ export const ui = {
       climb: "Subir",
       descend: "Descer",
       leave: "Sair",
+      petCat: "Fazer carinho no gato",
       read: "Ler",
       talk: "Conversar",
       deedsLabel: "Feitos que valem contar",
@@ -361,7 +374,8 @@ export const ui = {
       },
     },
     footer: {
-      credits: "Feito com Astro e React Three Fiber. Modelos 3D de Kay Lousberg, CC0.",
+      credits:
+        "Feito com Astro e React Three Fiber. Modelos 3D de Kay Lousberg, CC0. A música, a fogueira e o ronronar da gata são gravações CC0 e de domínio público, creditadas no repositório.",
     },
   },
 } as const;

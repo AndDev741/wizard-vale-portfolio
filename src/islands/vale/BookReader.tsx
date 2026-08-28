@@ -86,6 +86,7 @@ export function BookReader({
   onClose,
   onBack,
   onTurn,
+  onEnlarge,
 }: {
   lang: Lang;
   textKey: string;
@@ -93,6 +94,8 @@ export function BookReader({
   onBack?: () => void;
   /** A leaf turning. In the library it is most of the soundtrack. */
   onTurn?: () => void;
+  /** A diagram opened full size. */
+  onEnlarge?: () => void;
 }) {
   const dict = t(lang);
   const leaf = libraryLeaf(textKey, lang);
@@ -172,6 +175,7 @@ export function BookReader({
         c.charCodeAt(0),
       );
       setZoomed(new TextDecoder().decode(bytes));
+      onEnlarge?.();
     } catch {
       // Nothing to open: the plate keeps its caption.
     }
