@@ -50,6 +50,73 @@ Content lives in `src/i18n/ui.ts` (copy) and `src/data/` (quests, projects, writ
    changed variable only takes effect on the next build. Without it the orb
    falls back to probing the public Beyou URLs from the edge.
 
+## Multiplayer (optional, off until deployed)
+
+Everyone in the vale can see everyone else walking around, and one word about
+what each of them is doing. It carries a colour, a room, a position and that
+word. No name, no account, no database: the server holds open sockets and
+nothing else, and the id it hands out is gone when the tab closes. Visitors can
+switch it off, which closes their socket rather than hiding other people, and
+the default is on.
+
+The presence server is a separate Worker in `presence/`, so it cannot affect the
+site: with no `PUBLIC_PRESENCE_URL` set in a real build, the vale is
+single-player and the control does not appear.
+
+The control says which of those it is, which matters because being alone and
+being unable to reach anybody otherwise look identical: **showing** means
+connected, **joining** means trying, **cannot reach the vale** means the server
+is not answering, and no control at all means no URL was configured.
+
+### Trying it without deploying anything
+
+Two terminals. The first runs the presence server, the second the site pointed
+at it:
+
+```bash
+npm run presence:dev
+PUBLIC_PRESENCE_URL=ws://localhost:8787/green npm run preview:mp
+```
+
+`npm run dev` works too: in dev the site defaults to that same local worker, so
+two terminals is still the whole setup.
+
+Then open <http://localhost:8788> twice. Use one normal window and one private
+window: they have separate storage, so they roll different colours and you can
+actually tell them apart. Press **Walk** in both and they will see each other.
+
+To try it on a phone at the same time, both servers already listen on the whole
+network, so point the variable at this machine's address instead:
+
+```bash
+# find this machine's address: `ip -4 addr` on Linux, `ipconfig` on Windows
+PUBLIC_PRESENCE_URL=ws://192.168.x.y:8787/green npm run preview:mp
+```
+
+and open `http://192.168.x.y:8788` on the phone. Private addresses are on the
+origin allowlist for exactly this.
+
+### Deploying it
+
+```bash
+npm run presence:deploy
+```
+
+Then set `PUBLIC_PRESENCE_URL` on the Pages project to the `wss://.../green` URL
+it prints, and rebuild.
+
+One Durable Object holds the room, using the WebSocket Hibernation API so an
+idle vale bills nothing. Durable Objects are on the Workers free plan with the
+SQLite backend, and incoming WebSocket messages bill at 20:1, so the free
+100k requests a day is about two million messages. The client only sends when
+something actually changed: standing still sends nothing at all. `presence/src/index.ts`
+allowlists the site's origins, assigns the ids, caps the room at 48 people,
+rate-limits each socket and validates every field against closed sets, so a peer
+cannot push text into anyone else's screen. A socket that goes quiet for more
+than a minute is closed and announced as gone, because a phone that sleeps does
+not always close cleanly and the alternative is a stranger standing in the plaza
+forever; clients send a word every twenty seconds so that rule can be applied.
+
 ## Roadmap
 
 - Building interiors
@@ -57,4 +124,5 @@ Content lives in `src/i18n/ui.ts` (copy) and `src/data/` (quests, projects, writ
 - Day/night cycle, ambient sound with a mute control
 - A "visited every place" achievement
 - A cat familiar that follows the wizard
+- ~~Multiplayer presence~~ (done: `presence/`, see above)
 - Model compression (gltf-transform) once the asset set grows

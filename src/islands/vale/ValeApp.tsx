@@ -18,20 +18,40 @@ import { localDaylight } from "./daylight";
 import { record, snapshot, type Deed, type Snapshot } from "./achievements";
 import { achievements, findAchievement } from "../../data/achievements";
 import { DeedsPanel } from "./DeedsPanel";
+import { Peers, PresenceSync } from "./Peers";
+import { Presence, type Link, type PeerAction } from "./presence";
+import { readCompany, readLook, writeCompany } from "./look";
+
+/**
+ * Where the presence server lives. Unset in a real build means the vale is a
+ * single-player place, which is how it behaves until the variable is set on the
+ * deployment.
+ *
+ * In `astro dev` it defaults to the local worker, so `npm run presence:dev` in
+ * another terminal is the whole setup. Without that worker the control says it
+ * cannot reach the vale, which is a better answer than the control quietly not
+ * being there.
+ */
+const PRESENCE_URL =
+  (import.meta.env.PUBLIC_PRESENCE_URL as string | undefined) ??
+  (import.meta.env.DEV ? "ws://localhost:8787/green" : undefined);
 
 /**
  * The sound control. It starts silent on purpose: browsers will not let audio
  * begin without a gesture, and a site that makes noise unasked deserves the
  * back button. The choice is remembered between visits.
  */
-function SoundToggle({
+function RoundToggle({
   on,
   onToggle,
   label,
+  icons,
 }: {
   on: boolean;
   onToggle: () => void;
   label: string;
+  /** The glyph when on, and when off. */
+  icons: [string, string];
 }) {
   return (
     <button
@@ -46,7 +66,7 @@ function SoundToggle({
       }`}
     >
       <span aria-hidden className="text-[13px] leading-none">
-        {on ? "\u{1F50A}" : "\u{1F507}"}
+        {on ? icons[0] : icons[1]}
       </span>
       <span className="sr-only">{label}</span>
     </button>
@@ -89,6 +109,12 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   /** The badge just taken, shown as a toast and then let go. */
   const [won, setWon] = useState<string | null>(null);
   const [detail] = useState(() => (window.innerWidth < 700 ? 0.55 : 1));
+  // Company is on by default, and off means the socket is never opened.
+  const [company, setCompany] = useState(() => readCompany());
+  // State, not a ref: mounting the peers is a render, and a ref does not cause one.
+  const [presence, setPresence] = useState<Presence | null>(null);
+  const [peersHere, setPeersHere] = useState(0);
+  const [link, setLink] = useState<Link>("off");
 
   const inputRef = useRef<InputVec>({ x: 0, z: 0 });
   const wizardRef = useRef<Group>(null);
@@ -121,6 +147,64 @@ export default function ValeApp({ lang }: { lang: Lang }) {
 
   /** Where the sound thinks you are: out in the vale, or in one of the five. */
   const room = view.kind === "interior" ? view.place : "vale";
+  const floor = view.kind === "interior" ? view.floor : 0;
+
+  /** What the others see you doing. Walking is added by the sync, from input. */
+  const doing: PeerAction = seated
+    ? "sit"
+    : dialog === null
+      ? nearTrigger === "up" || nearTrigger === "down"
+        ? "climb"
+        : "idle"
+      : dialog.startsWith("text:")
+        ? "read"
+        : dialog.startsWith("npc:")
+          ? "talk"
+          : dialog === "story:orb"
+            ? "scry"
+            : "look";
+
+  /**
+   * The socket, open only while company is on. Turning it off closes it rather
+   * than filtering anyone out, so nothing about this visitor leaves the browser
+   * after that.
+   */
+  useEffect(() => {
+    if (!company || !Presence.configured(PRESENCE_URL)) return;
+    const p = new Presence(PRESENCE_URL, readLook());
+    p.open({ room: "vale", floor: 0, x: 0, z: 0, r: 0, a: "idle" });
+    setPresence(p);
+    const stop = p.onRoster(() => setPeersHere(p.peers.size));
+    const stopLink = p.onLink(setLink);
+    setLink(p.link);
+    return () => {
+      stop();
+      stopLink();
+      setLink("off");
+      p.close();
+      setPresence(null);
+      setPeersHere(0);
+    };
+  }, [company]);
+
+  /**
+   * What the control says. Being alone and being unable to reach anyone look
+   * identical otherwise, and one of those is a problem worth seeing.
+   */
+  const companyLabel = !company
+    ? dict.world.companyOff
+    : link === "in"
+      ? dict.world.companyOn
+      : link === "joining"
+        ? dict.world.companyJoining
+        : dict.world.companyLost;
+
+  const toggleCompany = useCallback(() => {
+    setCompany((was) => {
+      writeCompany(!was);
+      return !was;
+    });
+  }, []);
 
   const toggleSound = useCallback(() => {
     const next = !sound;
@@ -421,6 +505,19 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               detail={detail}
             />
           )}
+          {presence && (
+            <>
+              <Peers presence={presence} lang={lang} room={room} floor={floor} />
+              <PresenceSync
+                presence={presence}
+                wizardRef={wizardRef}
+                inputRef={inputRef}
+                room={room}
+                floor={floor}
+                action={doing}
+              />
+            </>
+          )}
           <Ready onReady={onReady} />
         </Suspense>
         <CameraRig
@@ -441,6 +538,17 @@ export default function ValeApp({ lang }: { lang: Lang }) {
             panel ? "hidden md:flex md:right-[29rem]" : "flex right-3"
           }`}
         >
+          {/* Somebody else is about. Worth saying even when they are indoors,
+              because an empty-looking vale that is not empty is a missed thing. */}
+          {company && link === "lost" ? (
+            <p className="rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[11px] font-semibold text-[#9aa69d] backdrop-blur-sm sm:px-3 sm:py-1.5 sm:text-xs">
+              {dict.world.companyLost}
+            </p>
+          ) : peersHere > 0 ? (
+            <p className="rounded-full border border-[#d99a3d]/40 bg-[#d99a3d]/15 px-2.5 py-1 text-[11px] font-semibold text-[#e0a44e] backdrop-blur-sm sm:px-3 sm:py-1.5 sm:text-xs">
+              {dict.company.here.replace("{n}", String(peersHere))}
+            </p>
+          ) : null}
           {places.map((p) => (
             <button
               key={p.key}
@@ -462,7 +570,20 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           >
             {mode === "roam" ? dict.world.exitWalk : dict.world.walk}
           </button>
-          <SoundToggle on={sound} onToggle={toggleSound} label={sound ? dict.world.soundOn : dict.world.soundOff} />
+          <RoundToggle
+            on={sound}
+            onToggle={toggleSound}
+            label={sound ? dict.world.soundOn : dict.world.soundOff}
+            icons={["\u{1F50A}", "\u{1F507}"]}
+          />
+          {Presence.configured(PRESENCE_URL) && (
+            <RoundToggle
+              on={company}
+              onToggle={toggleCompany}
+              label={`${companyLabel} \u2014 ${dict.company.note}`}
+              icons={["\u{1F465}", "\u{1F464}"]}
+            />
+          )}
         </div>
       )}
 
@@ -504,7 +625,20 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           >
             {dict.interior.leaveBuilding}
           </button>
-          <SoundToggle on={sound} onToggle={toggleSound} label={sound ? dict.world.soundOn : dict.world.soundOff} />
+          <RoundToggle
+            on={sound}
+            onToggle={toggleSound}
+            label={sound ? dict.world.soundOn : dict.world.soundOff}
+            icons={["\u{1F50A}", "\u{1F507}"]}
+          />
+          {Presence.configured(PRESENCE_URL) && (
+            <RoundToggle
+              on={company}
+              onToggle={toggleCompany}
+              label={`${companyLabel} \u2014 ${dict.company.note}`}
+              icons={["\u{1F465}", "\u{1F464}"]}
+            />
+          )}
         </div>
       )}
 

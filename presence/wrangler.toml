@@ -1,0 +1,21 @@
+# The vale's presence server. A single Durable Object holds everyone currently
+# walking around, and does nothing else: no database, no logs, no accounts.
+#
+# Deploy:  cd presence && npx wrangler deploy
+# Then set PUBLIC_PRESENCE_URL on the Pages project to the wss:// URL it prints.
+# Until that variable is set, the site simply has no multiplayer.
+name = "wizard-vale-presence"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+[[durable_objects.bindings]]
+name = "GREEN"
+class_name = "ValeGreen"
+
+# SQLite-backed, which is the only kind the Workers free plan allows.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ValeGreen"]
+
+[observability]
+enabled = true
