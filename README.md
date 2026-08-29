@@ -123,6 +123,6 @@ forever; clients send a word every twenty seconds so that rule can be applied.
 - ~~A crystal ball in the Cottage showing what the monitoring stack sees~~ (done: reads GlitchTip's monitors through `functions/api/status.ts`)
 - Day/night cycle, ambient sound with a mute control
 - A "visited every place" achievement
-- A cat familiar that follows the wizard
+- ~~A cat familiar that follows the wizard~~ (done: pet her in the Cottage and she comes along, `Familiar.tsx`)
 - ~~Multiplayer presence~~ (done: `presence/`, see above)
 - Model compression (gltf-transform) once the asset set grows

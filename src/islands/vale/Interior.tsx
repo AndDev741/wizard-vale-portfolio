@@ -530,6 +530,8 @@ interface InteriorProps {
   onStep?: () => void;
   /** Somebody reached down to the cat by the fire. */
   onPetCat?: () => void;
+  /** She is out following the wizard, so her spot by the fire is empty. */
+  catAway?: boolean;
 }
 
 
@@ -962,12 +964,15 @@ function Fixture({
   night,
   onOpen,
   onPetCat,
+  catAway,
 }: {
   fixture: InteriorFixture;
   lang: Lang;
   night: number;
   onOpen: () => void;
   onPetCat?: () => void;
+  /** She is out following the wizard, so her spot by the fire is empty. */
+  catAway?: boolean;
 }) {
   const [x, z] = ring(fixture.angle, fixture.radius);
   const facing = rad(fixture.angle) + Math.PI + rad(fixture.rotOffset ?? 0);
@@ -985,7 +990,8 @@ function Fixture({
       case "window":
         return <Daylight angle={fixture.angle} radius={fixture.radius} night={night} />;
       case "cat":
-        return (
+        // Nothing here when she is with you: one cat, in one place.
+        return catAway ? null : (
           <Cat
             angle={fixture.angle}
             radius={fixture.radius}
@@ -1232,6 +1238,7 @@ function InteriorScene({
   night = 0.75,
   onStep,
   onPetCat,
+  catAway,
 }: InteriorProps) {
   const dict = t(lang);
   const floor: InteriorFloor = config.floors[floorIndex];
@@ -1280,8 +1287,11 @@ function InteriorScene({
     }
     for (const fixture of floor.fixtures ?? []) {
       if (fixture.kind === "cat") {
-        // She is not a collider, so he can walk right onto her corner. Petting
-        // her is the same deed whether it comes from a click or the button.
+        // Only while she is actually lying there. Once she is following you
+        // around, the action belongs on the cat and not on the patch of floor
+        // she used to be on.
+        if (catAway) continue;
+        // She is not a collider, so he can walk right onto her corner.
         const [cx, cz] = ring(fixture.angle, fixture.radius);
         triggers.push({ id: "pet:cat", x: cx, z: cz, r: 1.6 });
         continue;
@@ -1319,7 +1329,7 @@ function InteriorScene({
           : undefined,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, floorIndex]);
+  }, [config, floorIndex, catAway]);
 
   return (
     <>
@@ -1526,6 +1536,7 @@ function InteriorScene({
           lang={lang}
           night={night}
           onPetCat={onPetCat}
+          catAway={catAway}
           onOpen={() => fixture.subject && onOpenBoard(fixture.subject)}
         />
       ))}

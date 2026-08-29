@@ -19,6 +19,7 @@ import { record, snapshot, type Deed, type Snapshot } from "./achievements";
 import { achievements, findAchievement } from "../../data/achievements";
 import { DeedsPanel } from "./DeedsPanel";
 import { Peers, PresenceSync } from "./Peers";
+import { Familiar } from "./Familiar";
 import { Presence, type Link, type PeerAction } from "./presence";
 import { readCompany, readLook, writeCompany } from "./look";
 
@@ -165,6 +166,14 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   /** Where the sound thinks you are: out in the vale, or in one of the five. */
   const room = view.kind === "interior" ? view.place : "vale";
   const floor = view.kind === "interior" ? view.floor : 0;
+  /**
+   * She follows once you have petted her, and only from then: this is a visit,
+   * not an account. The badge for petting her is kept between visits because
+   * it is an achievement, but arriving to find a cat already at your heel
+   * skips the only part that earns her, so she starts by the fire every time.
+   */
+  const [following, setFollowing] = useState(false);
+  const stageId = `${room}:${floor}`;
 
   /** What the others see you doing. Walking is added by the sync, from input. */
   const doing: PeerAction = seated
@@ -272,6 +281,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   /** Petting the cat, from a click on her or from the action button. */
   const petCat = useCallback(() => {
     ambience.current?.purr();
+    setFollowing(true);
     noteDeed({ kind: "cat" });
   }, [noteDeed]);
 
@@ -526,6 +536,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               night={sky.night}
               onStep={onStep}
               onPetCat={petCat}
+              catAway={following}
               inputRef={inputRef}
               wizardRef={wizardRef}
               camYawRef={camYawRef}
@@ -553,6 +564,9 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               exitedFrom={exitedFrom}
               detail={detail}
             />
+          )}
+          {following && (
+            <Familiar wizardRef={wizardRef} stageId={stageId} onPet={petCat} />
           )}
           {presence && (
             <>
