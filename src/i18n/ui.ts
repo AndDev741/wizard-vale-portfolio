@@ -67,7 +67,7 @@ export const ui = {
       placesSub: "Every part of this site is a place. Walk in, or just click.",
       cards: {
         experience: "The quest board. Work I shipped at Gentek.ai, with the numbers to prove it.",
-        projects: "Beyou glowing at the top, older artifacts on the shelf below.",
+        projects: "Beyou glowing where you walk in, older artifacts up the ladder.",
         writing: "Engineering stories from the Beyou docs, in English and Portuguese.",
         about: "Who I am, the laptop that started everything, and where this is going.",
       },
@@ -90,7 +90,7 @@ export const ui = {
     },
     projects: {
       title: "Projects",
-      sub: "One artifact glows at the top of the tower. The rest live on the shelf.",
+      sub: "One artifact glows on the floor you walk into. The rest climb from there to the shelf at the top.",
       flagshipName: "Beyou",
       flagshipTag: "A free, gamified habit and routine manager, running as a real production.",
       flagshipFacts: [
@@ -197,7 +197,7 @@ export const ui = {
       },
       floorNotes: {
         grimoire: "The working floor. The grimoire on the table is the one still being written.",
-        ledger: "Coins and chests, because down here everything is a record of what happened.",
+        ledger: "Coins and chests, because in here everything is a record of what happened.",
         warding: "Where the wards are kept, the ones that decide what gets through.",
         attic: "Smaller works, and the relic that started the rest.",
         observatory: "The top of the tower, where the whole shelf is visible at once.",
@@ -275,7 +275,7 @@ export const ui = {
       placesSub: "Cada parte deste site é um lugar. Entre andando, ou só clique.",
       cards: {
         experience: "O mural de missões. O que entreguei na Gentek.ai, com os números para provar.",
-        projects: "O Beyou brilhando no topo, artefatos mais antigos na prateleira.",
+        projects: "O Beyou brilhando logo na entrada, artefatos mais antigos escada acima.",
         writing: "Histórias de engenharia dos docs do Beyou, em inglês e português.",
         about: "Quem eu sou, o laptop que começou tudo, e para onde isso vai.",
       },
@@ -298,7 +298,7 @@ export const ui = {
     },
     projects: {
       title: "Projetos",
-      sub: "Um artefato brilha no topo da torre. Os outros vivem na prateleira.",
+      sub: "Um artefato brilha no andar de entrada. Os outros sobem dali até a prateleira no topo.",
       flagshipName: "Beyou",
       flagshipTag: "Um gestor de hábitos e rotinas gamificado, gratuito, rodando como produção de verdade.",
       flagshipFacts: [
@@ -405,7 +405,7 @@ export const ui = {
       },
       floorNotes: {
         grimoire: "O andar de trabalho. O grimório na mesa é o que ainda está sendo escrito.",
-        ledger: "Moedas e baús, porque aqui embaixo tudo é registro do que aconteceu.",
+        ledger: "Moedas e baús, porque aqui dentro tudo é registro do que aconteceu.",
         warding: "Onde ficam as guardas, as que decidem o que passa.",
         attic: "Trabalhos menores, e a relíquia que começou o resto.",
         observatory: "O topo da torre, de onde a prateleira inteira se vê de uma vez.",
