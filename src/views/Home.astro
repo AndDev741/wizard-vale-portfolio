@@ -74,7 +74,12 @@ const places = [
   }
 
   {/* The hero is always dusk: the 3D vale paints it, the poster stands in until then. */}
-  <section class="relative min-h-[100dvh] overflow-hidden bg-[#141c28] text-[#ece9dd]">
+  {/* `vale-focus` is what the vale's fullscreen control fills the screen with:
+      the whole hero, so the header and the name come along and only the rest of
+      the page is left behind. */}
+  <section
+    class="vale-focus relative min-h-[100dvh] overflow-hidden bg-[#141c28] text-[#ece9dd]"
+  >
     <div class="vale-stage absolute inset-0 z-[1]">
       <ValeIsland client:only="react" lang={lang} />
     </div>

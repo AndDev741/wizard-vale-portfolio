@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import type { Group } from "three";
 import { t, type Lang, type SectionKey } from "../../i18n/ui";
@@ -50,8 +50,8 @@ function RoundToggle({
   on: boolean;
   onToggle: () => void;
   label: string;
-  /** The glyph when on, and when off. */
-  icons: [string, string];
+  /** What to show when on, and when off. */
+  icons: [ReactNode, ReactNode];
 }) {
   return (
     <button
@@ -72,6 +72,18 @@ function RoundToggle({
     </button>
   );
 }
+
+/** Corners pointing out, and the same pointing in. */
+const EXPAND = (
+  <svg viewBox="0 0 16 16" aria-hidden className="h-[13px] w-[13px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+    <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4" />
+  </svg>
+);
+const SHRINK = (
+  <svg viewBox="0 0 16 16" aria-hidden className="h-[13px] w-[13px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+    <path d="M2 6h4V2M14 6h-4V2M2 10h4v4M14 10h-4v4" />
+  </svg>
+);
 
 type Mode = "tour" | "roam";
 type Focus = SectionKey | "overview";
@@ -115,6 +127,11 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const [presence, setPresence] = useState<Presence | null>(null);
   const [peersHere, setPeersHere] = useState(0);
   const [link, setLink] = useState<Link>("off");
+  const stage = useRef<HTMLDivElement>(null);
+  const [focused, setFocused] = useState(false);
+  // iPhones do not do element fullscreen at all, so the control stays away
+  // rather than offering something that cannot happen.
+  const [canFocus] = useState(() => Boolean(document.fullscreenEnabled));
 
   const inputRef = useRef<InputVec>({ x: 0, z: 0 });
   const wizardRef = useRef<Group>(null);
@@ -198,6 +215,38 @@ export default function ValeApp({ lang }: { lang: Lang }) {
       : link === "joining"
         ? dict.world.companyJoining
         : dict.world.companyLost;
+
+  /**
+   * What fills the screen: the whole hero section, marked `vale-focus` by the
+   * page, so the header and the name come with it and only the rest of the page
+   * is left behind. Walking already hides the name on its own, so walk mode in
+   * here is the vale and nothing else. Falls back to this island if it is ever
+   * used somewhere without that wrapper.
+   */
+  const focusTarget = useCallback(
+    () => stage.current?.closest<HTMLElement>(".vale-focus") ?? stage.current,
+    [],
+  );
+
+  // Escape and the browser's own controls leave without telling us, so the
+  // state comes from the event and never from what we last did.
+  useEffect(() => {
+    const sync = () => setFocused(document.fullscreenElement === focusTarget());
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, [focusTarget]);
+
+  const toggleFocus = useCallback(() => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {
+        // Already leaving.
+      });
+      return;
+    }
+    void focusTarget()?.requestFullscreen().catch(() => {
+      // Refused, which some browsers do outside a plain click. Nothing breaks.
+    });
+  }, [focusTarget]);
 
   const toggleCompany = useCallback(() => {
     setCompany((was) => {
@@ -459,7 +508,7 @@ export default function ValeApp({ lang }: { lang: Lang }) {
     interior && view.kind === "interior" ? interior.floors[view.floor].key : null;
 
   return (
-    <div className="relative h-full w-full">
+    <div ref={stage} className="relative h-full w-full">
       <Canvas
         dpr={[1, 1.75]}
         shadows={detail === 1}
@@ -584,6 +633,14 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               icons={["\u{1F465}", "\u{1F464}"]}
             />
           )}
+          {canFocus && (
+            <RoundToggle
+              on={focused}
+              onToggle={toggleFocus}
+              label={focused ? dict.world.focusOff : dict.world.focusOn}
+              icons={[SHRINK, EXPAND]}
+            />
+          )}
         </div>
       )}
 
@@ -637,6 +694,14 @@ export default function ValeApp({ lang }: { lang: Lang }) {
               onToggle={toggleCompany}
               label={`${companyLabel} \u2014 ${dict.company.note}`}
               icons={["\u{1F465}", "\u{1F464}"]}
+            />
+          )}
+          {canFocus && (
+            <RoundToggle
+              on={focused}
+              onToggle={toggleFocus}
+              label={focused ? dict.world.focusOff : dict.world.focusOn}
+              icons={[SHRINK, EXPAND]}
             />
           )}
         </div>

@@ -194,6 +194,16 @@ body {
 body.vale-roam {
   overscroll-behavior: none;
 }
+/* The vale on its own. Only this element goes fullscreen, so the nav and the
+   name over the hero are outside it and simply not there. The UA gives a
+   fullscreen element its own box, and this fills it. */
+.vale-focus:fullscreen,
+.vale-focus:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background: #141c28;
+}
+
 body.vale-roam .vale-stage {
   touch-action: none;
 }
