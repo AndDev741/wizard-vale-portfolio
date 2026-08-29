@@ -7,14 +7,22 @@ Two ways to visit:
 - **Walk.** A wizard you control with WASD, arrow keys, or a touch joystick. Get close to a door and enter.
 - **Click.** A dock of shortcuts flies the camera to each place and opens its panel. The classic pages (`/about`, `/projects`, `/experience`, `/writing`) exist as plain fast HTML too, in English and Portuguese.
 
-Live at: (Cloudflare Pages URL after first deploy)
+What is in there, besides the five places: all four buildings are enterable and
+furnished; the vale keeps your local hour, so it is dusk here when it is dusk
+there; each room has its own sound, off by default and switched on from the
+control in the corner; fifteen badges hang on a noticeboard in the plaza; a cat
+sleeps by the fire in the Cottage and follows you once you pet her; anyone else
+visiting at the same time is walking around in there with you; and a control
+next to the others fills the screen with the vale alone.
+
+Live at **[myportfolio.beyouweb.com](https://myportfolio.beyouweb.com)**.
 
 ## Stack
 
 - [Astro](https://astro.build) static shell, all content prerendered in `en` (root) and `pt` (`/pt`)
 - [React Three Fiber](https://r3f.docs.pmnd.rs) island for the vale, lazy-loaded, WebGL-gated, disabled under `prefers-reduced-motion`
 - Tailwind CSS 4, Satoshi (self-hosted), Phosphor icons
-- 3D models by [Kay Lousberg](https://www.kaylousberg.com) (KayKit Medieval Hexagon Pack + Adventurers Character Pack, CC0)
+- 3D models by [Kay Lousberg](https://www.kaylousberg.com), all CC0: Medieval Hexagon and City Builder for the village, Dungeon Remastered for what fills the rooms, Adventurers for the wizard and the three patrons, Furniture Bits for the Cottage. The cat is not from any of them: no pack ships an animal, so both cats are built out of primitives in `Interior.tsx` and `Familiar.tsx`
 - Sound. Everything is synthesised in the browser except three recordings:
   - The cat's purr: [Purring cat](https://commons.wikimedia.org/wiki/File:Purring_cat.oga) by Mysid, public domain, cut to 1.3s. Chosen by measurement: most purr recordings put everything below 80Hz, which small speakers cannot reproduce, and this one is close-miked and nearly flat up past 3kHz
   - The hearth: [Fireplace Sound loop](https://opengameart.org/content/fireplace-sound-loop) by pagdev, CC0, cut to a seamless 14s loop
@@ -44,13 +52,20 @@ Content lives in `src/i18n/ui.ts` (copy) and `src/data/` (quests, projects, writ
 
 1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → this repo.
 2. Framework preset: **Astro**. Build command `npm run build`, output directory `dist`.
-3. After the first deploy, set the real URL in `astro.config.mjs` (`site:`) so canonical/OG tags point at the right domain, and push again.
-4. Set `GLITCHTIP_TOKEN` in the project's environment variables, encrypted, for
-   Production and Preview. Pages binds env vars per deployment, so a new or
-   changed variable only takes effect on the next build. Without it the orb
-   falls back to probing the public Beyou URLs from the edge.
+3. Set the real URL in `astro.config.mjs` (`site:`) so canonical and OG tags
+   point at the right domain. Already done: `https://myportfolio.beyouweb.com`.
+4. Two environment variables on the project, both of which only take effect on
+   the **next** build, because Pages binds them per deployment. Adding one and
+   not rebuilding does nothing at all.
+   - `GLITCHTIP_TOKEN`, a **Secret**. Without it the orb falls back to probing
+     the public Beyou URLs from the edge.
+   - `PUBLIC_PRESENCE_URL`, plain **Text**, the `wss://` address of the
+     presence Worker. It has to be Text, not Secret: Vite reads it during the
+     build and it ends up in the bundle either way, so it is a public address
+     behind an origin allowlist rather than a secret. Without it the vale is
+     single-player and its control does not appear.
 
-## Multiplayer (optional, off until deployed)
+## Multiplayer
 
 Everyone in the vale can see everyone else walking around, and one word about
 what each of them is doing. It carries a colour, a room, a position and that
@@ -58,6 +73,8 @@ word. No name, no account, no database: the server holds open sockets and
 nothing else, and the id it hands out is gone when the tab closes. Visitors can
 switch it off, which closes their socket rather than hiding other people, and
 the default is on.
+
+Live since 2026-08-28, at `wss://wizard-vale-presence.beyouwebapp.workers.dev/green`.
 
 The presence server is a separate Worker in `presence/`, so it cannot affect the
 site: with no `PUBLIC_PRESENCE_URL` set in a real build, the vale is
@@ -117,12 +134,25 @@ than a minute is closed and announced as gone, because a phone that sleeps does
 not always close cleanly and the alternative is a stranger standing in the plaza
 forever; clients send a word every twenty seconds so that rule can be applied.
 
-## Roadmap
+## Built
 
-- Building interiors
-- ~~A crystal ball in the Cottage showing what the monitoring stack sees~~ (done: reads GlitchTip's monitors through `functions/api/status.ts`)
-- Day/night cycle, ambient sound with a mute control
-- A "visited every place" achievement
-- ~~A cat familiar that follows the wizard~~ (done: pet her in the Cottage and she comes along, `Familiar.tsx`)
-- ~~Multiplayer presence~~ (done: `presence/`, see above)
-- Model compression (gltf-transform) once the asset set grows
+- Building interiors, all four, in `interiors.ts`
+- A crystal ball in the Cottage showing what the monitoring stack sees, through `functions/api/status.ts`
+- Day/night cycle from the visitor's own clock, and a voice for each room: `daylight.ts`, `ambience.ts`
+- Fifteen badges on a noticeboard in the plaza: `data/achievements.ts`, kept in the browser
+- A cat familiar: pet her in the Cottage and she comes along, `Familiar.tsx`
+- Multiplayer presence: `presence/`, see above
+- Model compression, `scripts/optimize-models.mjs`, which documents at length why quantize, Draco and meshopt are all forbidden here
+- A control that fills the screen with the vale alone
+
+## Known gaps
+
+- The cat has no colliders. Lead her into a table and she walks through it. She
+  mostly follows where you have already walked, so it rarely shows, and giving
+  her collision would mean a second movement system for a cat.
+- Multiplayer has been tested against a real deployed Worker but never with
+  several real people on real connections. The interpolation is tuned for about
+  five updates a second; `EASE` in `Peers.tsx` is the number to change if it
+  looks jumpy, and `MAX_PEERS` in the Worker if a crowd gets heavy.
+- The vale runs at something under 30fps on a mid-range Android. Playable, not
+  smooth.
