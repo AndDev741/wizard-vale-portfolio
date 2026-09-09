@@ -55,6 +55,7 @@ export const projectDetail: ProjectDetail[] = [
     years: "2023 - now",
     links: [
       { label: { en: "Live app", pt: "App ao vivo" }, url: "https://app.beyouweb.com" },
+      { label: { en: "Google Play", pt: "Google Play" }, url: "https://play.google.com/store/apps/details?id=com.beyou.mobile" },
       { label: { en: "Engineering docs", pt: "Docs de engenharia" }, url: "https://docs.beyouweb.com" },
       { label: source, url: "https://github.com/AndDev741/Beyou-backend-spring" },
     ],

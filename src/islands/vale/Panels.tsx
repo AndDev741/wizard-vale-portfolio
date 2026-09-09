@@ -84,6 +84,9 @@ function PanelContent({ lang, section }: { lang: Lang; section: SectionKey }) {
           >
             {dict.projects.liveApp}
           </a>
+          <a href={flagshipLinks.play} rel="noopener" className={linkClass}>
+            {dict.projects.googlePlay}
+          </a>
           <a href={flagshipLinks.docs} rel="noopener" className={linkClass}>
             {dict.projects.docs}
           </a>

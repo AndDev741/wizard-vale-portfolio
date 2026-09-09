@@ -3,6 +3,7 @@ import type { Lang } from "../i18n/ui";
 export const flagshipLinks = {
   app: "https://app.beyouweb.com",
   docs: "https://docs.beyouweb.com",
+  play: "https://play.google.com/store/apps/details?id=com.beyou.mobile",
   source: "https://github.com/AndDev741/Beyou-backend-spring",
 };
 
