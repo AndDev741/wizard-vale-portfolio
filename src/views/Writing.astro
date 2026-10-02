@@ -4,7 +4,9 @@ import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import { t, type Lang } from "../i18n/ui";
-import { posts, postUrl } from "../data/writing";
+import { posts, postUrl, type Post } from "../data/writing";
+import { libraryLeaf, type LibraryLeaf } from "../data/writingTopics";
+import WritingBook from "../islands/WritingBook";
 
 interface Props {
   lang: Lang;
@@ -13,6 +15,17 @@ interface Props {
 const { lang, path } = Astro.props;
 const dict = t(lang);
 const [latest, ...rest] = posts;
+
+// Writing that lives only here opens as a book over this page, rather than
+// linking out to the docs.
+const books = posts
+  .filter((post) => post.own)
+  .map((post) => libraryLeaf(post.key, lang))
+  .filter((leaf): leaf is LibraryLeaf => leaf !== undefined);
+const bookOf = (post: Post) => (post.own ? books.find((b) => b.key === post.key) : undefined);
+const hrefOf = (post: Post) =>
+  bookOf(post) ? `#read-${encodeURIComponent(post.key)}` : postUrl(lang, post.key);
+const latestBook = bookOf(latest);
 ---
 
 <Base
@@ -30,37 +43,64 @@ const [latest, ...rest] = posts;
     <p class="mt-4 max-w-[58ch] text-muted">{dict.writing.sub}</p>
 
     <a
-      href={postUrl(lang, latest.key)}
-      rel="noopener"
+      href={hrefOf(latest)}
+      rel={latestBook ? undefined : "noopener"}
       class="group mt-10 block rounded-xl border border-accent-fill/50 bg-surface p-6 sm:p-8"
     >
       <p class="text-sm font-semibold text-accent">{dict.writing.latest}</p>
       <h2 class="mt-2 max-w-[38ch] text-2xl font-bold tracking-tight sm:text-3xl">
         {latest.title[lang]}
       </h2>
-      <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
-        {dict.writing.readPost}
-        <Icon name="arrowUpRight" class="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-      </span>
+      {latestBook?.summary && (
+        <p class="mt-3 max-w-[68ch] text-muted">{latestBook.summary}</p>
+      )}
+      {
+        latestBook ? (
+          <span class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span class="inline-flex items-center gap-1.5 font-semibold text-accent">
+              <Icon name="bookOpen" class="h-4 w-4" />
+              {dict.writing.readBook}
+            </span>
+            <span class="text-muted">
+              {dict.interior.leaves
+                .replace("{pages}", String(latestBook.pages.length))
+                .replace("{minutes}", String(latestBook.readingMinutes))}
+            </span>
+          </span>
+        ) : (
+          <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+            {dict.writing.readPost}
+            <Icon name="arrowUpRight" class="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </span>
+        )
+      }
     </a>
 
     <div class="mt-6 grid gap-4 md:grid-cols-2">
       {
         rest.map((post) => (
           <a
-            href={postUrl(lang, post.key)}
-            rel="noopener"
+            href={hrefOf(post)}
+            rel={bookOf(post) ? undefined : "noopener"}
             class="group flex flex-col rounded-xl border border-line bg-surface p-6 transition-colors hover:border-accent-fill/60"
           >
             <h2 class="max-w-[40ch] text-lg font-bold leading-snug">{post.title[lang]}</h2>
-            <span class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
-              {dict.writing.readPost}
-              <Icon name="arrowUpRight" class="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </span>
+            {bookOf(post) ? (
+              <span class="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-semibold text-accent">
+                <Icon name="bookOpen" class="h-3.5 w-3.5" />
+                {dict.writing.readBook}
+              </span>
+            ) : (
+              <span class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
+                {dict.writing.readPost}
+                <Icon name="arrowUpRight" class="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
+            )}
           </a>
         ))
       }
     </div>
   </main>
+  {books.length > 0 && <WritingBook client:idle lang={lang} leaves={books} />}
   <Footer lang={lang} />
 </Base>

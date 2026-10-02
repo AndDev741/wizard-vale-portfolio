@@ -154,7 +154,7 @@ export function record(deed: Deed): string[] {
     case "book":
       if (add(p.books, deed.key)) changed = true;
       give("reader");
-      if (p.books.length >= (TOTAL.get("bookworm") ?? 7)) give("bookworm");
+      if (p.books.length >= (TOTAL.get("bookworm") ?? 8)) give("bookworm");
       break;
     case "patron":
       if (add(p.patrons, deed.key)) changed = true;

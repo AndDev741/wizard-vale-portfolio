@@ -224,7 +224,8 @@ body.vale-roam .vale-stage {
 /* ---------------------------------------------------------------------------
    The Library's book. A leaf of parchment with the docs markdown set on it, so
    the styling here dresses HTML this file does not author: it arrives from the
-   Beyou docs API and is turned into pages at build time.
+   Beyou docs API or from the markdown in writing/, and is turned into pages at
+   build time.
    Serif on purpose, and only here. It is the one place in this site where the
    thing being imitated is a manuscript.
    --------------------------------------------------------------------------- */
@@ -273,6 +274,9 @@ body.vale-roam .vale-stage {
 }
 .book-page > :first-child {
   margin-top: 0;
+}
+.book-page > :last-child {
+  margin-bottom: 0;
 }
 .book-page p {
   margin: 0 0 0.72em;
@@ -333,7 +337,10 @@ body.vale-roam .vale-stage {
   background: rgba(94, 71, 34, 0.1);
   text-align: left;
 }
+/* Block, so its own line height sets the lines. Inline, the leaf's taller
+   prose line height won and every line of code took a line of prose. */
 .book-page pre code {
+  display: block;
   padding: 0;
   background: none;
   font-size: 0.74em;
@@ -377,6 +384,22 @@ body.vale-roam .vale-stage {
   font-style: italic;
   font-size: 0.82em;
   color: rgba(74, 51, 22, 0.85);
+}
+/* Charts are drawn on white, and multiply lets the parchment show through the
+   white while the ink stays as it was. Each one opens full size. */
+.book-page img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.4em auto 0.8em;
+  border-radius: 3px;
+  mix-blend-mode: multiply;
+  cursor: zoom-in;
+}
+.book-page img:hover,
+.book-page img:focus-visible {
+  outline: 1px solid rgba(120, 92, 46, 0.6);
+  outline-offset: 3px;
 }
 /* The very first leaf of a text opens with a large initial. */
 .book-page--opening > p:first-of-type::first-letter {
@@ -436,6 +459,13 @@ body.vale-roam .vale-stage {
   width: 100%;
   height: 100%;
   max-width: none !important;
+}
+.book-zoom-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 /* ---------------------------------------------------------------------------

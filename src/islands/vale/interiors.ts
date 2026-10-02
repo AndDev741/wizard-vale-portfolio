@@ -454,9 +454,9 @@ const LIB_RADIUS = 9;
 
 /**
  * The Library. Columns of shelves around the walls, and a framed board for each
- * subject, which opens the texts as a book. Every text is the real thing, pulled
- * from the Beyou docs API at build time; personal writing can join the same
- * shelves later without touching this file's shape.
+ * subject, which opens the texts as a book. Every text is the real thing: the
+ * Beyou ones pulled from its docs API at build time, my own baked from the
+ * markdown in `writing/`.
  *
  * Floor props stay off the middle: the entrance corridor runs straight to the
  * boards, so anything on the floor sits at 40 degrees or more off the door line.
@@ -508,11 +508,16 @@ export const libraryInterior: InteriorConfig = {
       key: "gallery",
       accent: "#bfa77a",
       boards: [],
-      bookshelves: [{ topic: "security", angle: 332 }],
+      // Mirrored across the lectern, so the index stands between the two cases.
+      bookshelves: [
+        { topic: "security", angle: 332 },
+        { topic: "metal", angle: 44 },
+      ],
       // The whole index, as an open book on a stand in the middle of the floor.
       lecterns: [{ subject: "topics:all", angle: 8, radius: 4.6 }],
       torches: [348, 20, 96, 208],
-      banners: [312, 44],
+      // The left banner hangs past the wall shelves, clear of the metal case.
+      banners: [312, 78],
       props: [
         { model: "rug_oval_A", x: 0, z: 3, scale: 1.5, rotY: 0 },
         wall("dg_wall_shelves", 62, LIB_RADIUS - 0.1, 0, 1),

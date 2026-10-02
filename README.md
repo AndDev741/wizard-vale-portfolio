@@ -90,7 +90,13 @@ its clouded state. Use `preview:live` to review it for real.
 > file is git-ignored.
 
 Content lives in `src/i18n/ui.ts` (all copy, both languages) and `src/data/`
-(quests, projects, writing, contact). The world itself — building positions,
+(quests, projects, writing, contact).
+
+Writing that has no home on the Beyou docs lives in `writing/`: one markdown file
+per text, named by its key, with `<key>.pt.md` beside it for the Portuguese
+edition and its images in `public/writing/<key>/`. `npm run writing` bakes it
+into book pages after an edit, and every build bakes it again. It opens as a
+book in the Library and on `/writing`, since there is nowhere to link out to. The world itself — building positions,
 camera targets, walk physics — lives in `src/islands/vale/world.ts`.
 
 ## Multiplayer

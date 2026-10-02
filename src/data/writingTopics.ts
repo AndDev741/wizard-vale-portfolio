@@ -1,11 +1,13 @@
 import type { Lang } from "../i18n/ui";
 import library from "./generated/libraryTexts.json";
+import own from "./generated/ownTexts.json";
 
 /**
  * The Library's shelves. Each topic gathers a few of the texts, and every text is
- * the real thing: fetched from the Beyou docs API at build time and split into
- * book pages by `scripts/fetch-library.mjs`. Personal writing can join later by
- * dropping more keys into a topic, or adding a topic of its own.
+ * the real thing, split into book pages at build time. The Beyou ones are
+ * fetched from its docs API by `scripts/fetch-library.mjs`. My own live as
+ * markdown in `writing/` and are baked by `scripts/bake-writing.mjs`; they have
+ * no page anywhere else, so the book is where they are read.
  */
 
 export interface WritingTopic {
@@ -62,11 +64,25 @@ export const writingTopics: WritingTopic[] = [
     },
     texts: ["security-audit-with-claude-code"],
   },
+  {
+    key: "metal",
+    title: { en: "Close to the metal", pt: "Perto do metal" },
+    blurb: {
+      en: "Experiments of my own, run on my laptop and read off the CPU's hardware counters. The first one sums the same numbers from an array and from a linked list, and lets the caches decide which is faster.",
+      pt: "Experimentos meus, rodados no meu laptop e lidos direto dos contadores de hardware da CPU. O primeiro soma os mesmos números de um array e de uma lista encadeada, e deixa os caches decidirem qual é mais rápido.",
+    },
+    texts: ["cache-benchmark"],
+  },
 ];
 
 export interface LibraryLeaf {
   key: string;
   title: string;
+  summary: string | null;
+  /** The language this edition is in, which is English when there is no other. */
+  lang: Lang;
+  /** Its page on the Beyou docs, or null for my own writing, which lives only here. */
+  docsUrl: string | null;
   readingMinutes: number;
   pages: string[];
   coverEmoji: string | null;
@@ -74,34 +90,44 @@ export interface LibraryLeaf {
   tags: string[];
 }
 
-type Generated = {
-  fetchedAt: string | null;
-  texts: Record<
-    string,
-    {
-      key: string;
-      publishedAt: string | null;
-      coverEmoji: string | null;
-      coverColor: string | null;
-      tags: string[];
-      en?: { title: string; readingMinutes: number; pages: string[] };
-      pt?: { title: string; readingMinutes: number; pages: string[] };
-    }
-  >;
+type Edition = {
+  title: string;
+  summary?: string | null;
+  readingMinutes: number;
+  pages: string[];
 };
 
-const generated = library as Generated;
+type Texts = Record<
+  string,
+  {
+    key: string;
+    publishedAt: string | null;
+    coverEmoji: string | null;
+    coverColor: string | null;
+    tags: string[];
+    en?: Edition;
+    pt?: Edition;
+  }
+>;
+
+const generated = library as { fetchedAt: string | null; texts: Texts };
+const ownTexts = (own as { texts: Texts }).texts;
 
 /** Where the baked copy of the docs came from, and when. */
 export const textsFetchedAt = generated.fetchedAt;
 
 export function libraryLeaf(key: string, lang: Lang): LibraryLeaf | undefined {
-  const entry = generated.texts[key];
-  const localised = entry?.[lang] ?? entry?.en;
+  const isOwn = key in ownTexts;
+  const entry = isOwn ? ownTexts[key] : generated.texts[key];
+  const edition: Lang = entry?.[lang] ? lang : "en";
+  const localised = entry?.[edition];
   if (!entry || !localised) return undefined;
   return {
     key: entry.key,
     title: localised.title,
+    summary: localised.summary ?? null,
+    lang: edition,
+    docsUrl: isOwn ? null : docsUrl(lang, entry.key),
     readingMinutes: localised.readingMinutes,
     pages: localised.pages,
     coverEmoji: entry.coverEmoji,

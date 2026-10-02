@@ -3,10 +3,23 @@ import type { Lang } from "../i18n/ui";
 export interface Post {
   key: string;
   title: Record<Lang, string>;
+  /**
+   * Written here, in `writing/`, rather than on the Beyou docs. It has no page
+   * anywhere else, so it opens as a book instead of linking out.
+   */
+  own?: boolean;
 }
 
-/** Newest first. Every post is published on docs.beyouweb.com in both languages. */
+/** Newest first. The Beyou posts are published on docs.beyouweb.com in both languages. */
 export const posts: Post[] = [
+  {
+    key: "cache-benchmark",
+    title: {
+      en: "CPU Cache benchmark between array and linked list",
+      pt: "Benchmark de cache da CPU: array contra lista encadeada",
+    },
+    own: true,
+  },
   {
     key: "self-hosting-beyou",
     title: {

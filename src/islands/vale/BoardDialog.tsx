@@ -50,6 +50,13 @@ export function BoardDialog({
 
   const project = kind === "project" ? findProject(key) : undefined;
   const topic = kind === "topic" ? findTopic(key) : undefined;
+  // The docs stamp only where some of the texts listed came from the docs.
+  const listed = topic
+    ? topic.texts
+    : kind === "topics"
+      ? writingTopics.flatMap((tp) => tp.texts)
+      : [];
+  const fromDocs = listed.some((k) => libraryLeaf(k, lang)?.docsUrl);
   const npc = kind === "npc" ? findNpc(key) : undefined;
   const story = kind === "story" ? findCottageObject(key) : undefined;
 
@@ -311,7 +318,7 @@ export function BoardDialog({
           </div>
         )}
 
-        {(topic || kind === "topics") && textsFetchedAt && (
+        {fromDocs && textsFetchedAt && (
           <p className="mt-6 text-xs text-[#9aa69d]">
             {dict.interior.fromDocs.replace(
               "{date}",

@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import type { Group } from "three";
 import { t, type Lang, type SectionKey } from "../../i18n/ui";
@@ -13,6 +13,7 @@ import { useKeyboardInput, type InputVec } from "./useInput";
 import { places } from "./world";
 import { interiorFor } from "./interiors";
 import { boardLabel } from "./boardSubject";
+import { libraryLeaf } from "../../data/writingTopics";
 import { Ambience } from "./ambience";
 import { localDaylight } from "./daylight";
 import { record, snapshot, type Deed, type Snapshot } from "./achievements";
@@ -106,6 +107,10 @@ export default function ValeApp({ lang }: { lang: Lang }) {
   const [dialog, setDialog] = useState<string | null>(null);
   // What to go back to when a book is closed: the shelf it came off.
   const [dialogBack, setDialogBack] = useState<string | null>(null);
+  const openLeaf = useMemo(
+    () => (dialog?.startsWith("text:") ? libraryLeaf(dialog.slice(5), lang) : undefined),
+    [dialog, lang],
+  );
   const [nearTrigger, setNearTrigger] = useState<string | null>(null);
   const [exitedFrom, setExitedFrom] = useState<SectionKey | null>(null);
   const [fading, setFading] = useState(false);
@@ -759,28 +764,35 @@ export default function ValeApp({ lang }: { lang: Lang }) {
           section={panel}
           onClose={closePanel}
           onEnter={interiorFor(panel) ? () => enterBuilding(panel) : undefined}
+          onRead={(key: string) => {
+            setDialogBack(null);
+            setDialog(`text:${key}`);
+            noteSubject(`text:${key}`);
+          }}
         />
       )}
 
       {dialog?.startsWith("text:") ? (
-        <BookReader
-          lang={lang}
-          textKey={dialog.slice(5)}
-          onClose={() => {
-            setDialog(null);
-            setDialogBack(null);
-          }}
-          onBack={
-            dialogBack
-              ? () => {
-                  setDialog(dialogBack);
-                  setDialogBack(null);
-                }
-              : undefined
-          }
-          onTurn={() => ambience.current?.page()}
-          onEnlarge={() => noteDeed({ kind: "diagram" })}
-        />
+        openLeaf && (
+          <BookReader
+            lang={lang}
+            leaf={openLeaf}
+            onClose={() => {
+              setDialog(null);
+              setDialogBack(null);
+            }}
+            onBack={
+              dialogBack
+                ? () => {
+                    setDialog(dialogBack);
+                    setDialogBack(null);
+                  }
+                : undefined
+            }
+            onTurn={() => ambience.current?.page()}
+            onEnlarge={() => noteDeed({ kind: "diagram" })}
+          />
+        )
       ) : (
         dialog && (
           <BoardDialog

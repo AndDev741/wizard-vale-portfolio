@@ -11,12 +11,22 @@ interface PanelProps {
   onClose: () => void;
   /** Given when this place has an interior, so it can be walked into. */
   onEnter?: () => void;
+  /** Opens one of the Library's texts as a book, for writing that lives only here. */
+  onRead?: (key: string) => void;
 }
 
 const linkClass =
   "inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-[#ece9dd] transition-colors hover:bg-white/10";
 
-function PanelContent({ lang, section }: { lang: Lang; section: SectionKey }) {
+function PanelContent({
+  lang,
+  section,
+  onRead,
+}: {
+  lang: Lang;
+  section: SectionKey;
+  onRead?: (key: string) => void;
+}) {
   const dict = t(lang);
 
   if (section === "about") {
@@ -121,13 +131,26 @@ function PanelContent({ lang, section }: { lang: Lang; section: SectionKey }) {
         <ul className="mt-5 space-y-4">
           {posts.map((post) => (
             <li key={post.key}>
-              <a
-                href={postUrl(lang, post.key)}
-                rel="noopener"
-                className="text-sm font-semibold leading-snug text-[#ece9dd] hover:text-[#e0a44e]"
-              >
-                {post.title[lang]}
-              </a>
+              {post.own && onRead ? (
+                <button
+                  type="button"
+                  onClick={() => onRead(post.key)}
+                  className="text-left text-sm font-semibold leading-snug text-[#ece9dd] hover:text-[#e0a44e]"
+                >
+                  {post.title[lang]}
+                  <span className="mt-0.5 block text-xs font-normal text-[#9aa69d]">
+                    {dict.writing.readBook}
+                  </span>
+                </button>
+              ) : (
+                <a
+                  href={postUrl(lang, post.key)}
+                  rel="noopener"
+                  className="text-sm font-semibold leading-snug text-[#ece9dd] hover:text-[#e0a44e]"
+                >
+                  {post.title[lang]}
+                </a>
+              )}
             </li>
           ))}
         </ul>
@@ -157,7 +180,7 @@ function PanelContent({ lang, section }: { lang: Lang; section: SectionKey }) {
   );
 }
 
-export function Panel({ lang, section, onClose, onEnter }: PanelProps) {
+export function Panel({ lang, section, onClose, onEnter, onRead }: PanelProps) {
   const dict = t(lang);
   const pageHref = section === "contact" ? null : localizePath(lang, `/${section}`);
 
@@ -189,7 +212,7 @@ export function Panel({ lang, section, onClose, onEnter }: PanelProps) {
         </button>
       )}
       <div className="mt-4">
-        <PanelContent lang={lang} section={section} />
+        <PanelContent lang={lang} section={section} onRead={onRead} />
       </div>
       {pageHref && (
         <a

@@ -37,7 +37,7 @@ export const achievements: Achievement[] = [
     icon: "📚",
     name: { en: "Read the shelf", pt: "Leu a prateleira" },
     hint: { en: "Open every text in the library", pt: "Abra todos os textos da biblioteca" },
-    outOf: 7,
+    outOf: 8,
   },
   {
     id: "listener",

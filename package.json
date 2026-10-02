@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "node scripts/fetch-library.mjs",
+    "prebuild": "node scripts/fetch-library.mjs && node scripts/bake-writing.mjs",
+    "writing": "node scripts/bake-writing.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",

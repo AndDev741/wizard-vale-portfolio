@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t, type Lang } from "../../i18n/ui";
-import { docsUrl, libraryLeaf } from "../../data/writingTopics";
+import type { LibraryLeaf } from "../../data/writingTopics";
 
 /**
  * The diagrams. A leaf can carry an illustration plate whose data attribute
@@ -75,33 +75,44 @@ function inkDiagrams(root: HTMLElement | null) {
   });
 }
 
+/** Charts and pictures on a leaf open full size too, from the keyboard as well. */
+function markImages(root: HTMLElement | null, label: string) {
+  root?.querySelectorAll<HTMLImageElement>(".book-page img:not([tabindex])").forEach((img) => {
+    img.tabIndex = 0;
+    img.title = label;
+  });
+}
+
+/** What is open full size: a diagram drawn from its source, or an image. */
+type Zoom = { kind: "diagram"; source: string } | { kind: "image"; src: string; alt: string };
+
 /**
- * A text from the Beyou docs, read as a book rather than a web page. The content
- * is the real markdown, fetched through the docs API at build time and already
- * split into leaves, so turning a page is instant and nothing has to load.
+ * A text from the shelves, read as a book rather than a web page. The content is
+ * the real markdown, split into leaves at build time, so turning a page is
+ * instant and nothing has to load. It takes the leaf itself rather than a key,
+ * so a page that shows one book does not carry the whole library with it.
  */
 export function BookReader({
   lang,
-  textKey,
+  leaf,
   onClose,
   onBack,
   onTurn,
   onEnlarge,
 }: {
   lang: Lang;
-  textKey: string;
+  leaf: LibraryLeaf;
   onClose: () => void;
   onBack?: () => void;
   /** A leaf turning. In the library it is most of the soundtrack. */
   onTurn?: () => void;
-  /** A diagram opened full size. */
+  /** A diagram or a chart opened full size. */
   onEnlarge?: () => void;
 }) {
   const dict = t(lang);
-  const leaf = libraryLeaf(textKey, lang);
   const [spread, setSpread] = useState(0);
   const [twoUp, setTwoUp] = useState(true);
-  const [zoomed, setZoomed] = useState<string | null>(null);
+  const [zoomed, setZoomed] = useState<Zoom | null>(null);
   const bookRef = useRef<HTMLDivElement>(null);
   const zoomRef = useRef<HTMLDivElement>(null);
 
@@ -113,11 +124,10 @@ export function BookReader({
   }, []);
 
   const perSpread = twoUp ? 2 : 1;
-  const spreads = leaf ? Math.max(1, Math.ceil(leaf.pages.length / perSpread)) : 1;
+  const spreads = Math.max(1, Math.ceil(leaf.pages.length / perSpread));
   const clamped = Math.min(spread, spreads - 1);
 
   const shown = useMemo(() => {
-    if (!leaf) return [];
     const from = clamped * perSpread;
     return leaf.pages.slice(from, from + perSpread).map((html, i) => ({
       html,
@@ -128,14 +138,12 @@ export function BookReader({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (zoomed) {
-          // The vale listens for Escape as well, and would shut the book behind
-          // this diagram. Capture phase plus this stops it at the diagram.
-          e.stopPropagation();
-          setZoomed(null);
-        } else {
-          onClose();
-        }
+        // The vale listens for Escape as well, and would act on whatever is
+        // behind: the book behind a diagram, or the panel or building behind the
+        // book. Capture phase plus this closes one layer per press.
+        e.stopPropagation();
+        if (zoomed) setZoomed(null);
+        else onClose();
         return;
       }
       if (zoomed) return;
@@ -161,20 +169,24 @@ export function BookReader({
   // Drawn large, from the source rather than by copying the leaf's SVG: mermaid
   // wires its arrowheads to ids inside the document, and two copies would fight.
   useEffect(() => {
-    if (zoomed) drawInto(zoomRef.current, zoomed);
+    if (zoomed?.kind === "diagram") drawInto(zoomRef.current, zoomed.source);
   }, [zoomed]);
 
-  /** A plate anywhere in the open book opens it full size. */
+  /** A plate or an image anywhere in the open book opens it full size. */
   const openPlate = (target: EventTarget | null) => {
-    const plate = (target as HTMLElement | null)?.closest<HTMLElement>(
-      "figure[data-diagram]",
-    );
+    const el = target as HTMLElement | null;
+    if (el instanceof HTMLImageElement && el.closest(".book-page")) {
+      setZoomed({ kind: "image", src: el.currentSrc || el.src, alt: el.alt });
+      onEnlarge?.();
+      return;
+    }
+    const plate = el?.closest<HTMLElement>("figure[data-diagram]");
     if (!plate?.classList.contains("book-plate--inked")) return;
     try {
       const bytes = Uint8Array.from(atob(plate.dataset.diagram ?? ""), (c) =>
         c.charCodeAt(0),
       );
-      setZoomed(new TextDecoder().decode(bytes));
+      setZoomed({ kind: "diagram", source: new TextDecoder().decode(bytes) });
       onEnlarge?.();
     } catch {
       // Nothing to open: the plate keeps its caption.
@@ -182,15 +194,18 @@ export function BookReader({
   };
 
   const onBookKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") openPlate(e.target);
+    if (e.key === "Enter" || e.key === " ") {
+      // Space would scroll the leaf as well as opening what is focused.
+      if (e.target instanceof HTMLImageElement) e.preventDefault();
+      openPlate(e.target);
+    }
   };
 
   // Ink whatever plates the current leaves carry, each time a page turns.
   useEffect(() => {
     inkDiagrams(bookRef.current);
-  }, [shown]);
-
-  if (!leaf) return null;
+    markImages(bookRef.current, dict.interior.enlarge);
+  }, [shown, dict]);
 
   return (
     <div
@@ -255,14 +270,21 @@ export function BookReader({
       </div>
 
       <div className="relative flex w-full max-w-5xl items-center justify-between gap-3 text-[#e8dcc0]">
-        <a
-          href={docsUrl(lang, leaf.key)}
-          rel="noopener"
-          target="_blank"
-          className="shrink-0 text-xs text-[#e8dcc0]/70 underline hover:text-[#e8dcc0]"
-        >
-          {dict.interior.onTheDocs}
-        </a>
+        {leaf.docsUrl ? (
+          <a
+            href={leaf.docsUrl}
+            rel="noopener"
+            target="_blank"
+            className="shrink-0 text-xs text-[#e8dcc0]/70 underline hover:text-[#e8dcc0]"
+          >
+            {dict.interior.onTheDocs}
+          </a>
+        ) : leaf.lang !== lang ? (
+          <p className="min-w-0 text-xs text-[#e8dcc0]/70">{dict.interior.onlyInEnglish}</p>
+        ) : (
+          // Nothing lives anywhere else, and the turning controls stay on the right.
+          <span />
+        )}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -322,10 +344,16 @@ export function BookReader({
               ✕ {dict.interior.closeDiagram}
             </button>
           </div>
-          <div
-            ref={zoomRef}
-            className="book-zoom w-full max-w-6xl min-h-0 flex-1 overflow-hidden rounded-lg p-4"
-          />
+          {zoomed.kind === "image" ? (
+            <div className="book-zoom w-full max-w-6xl min-h-0 flex-1 overflow-hidden rounded-lg p-4">
+              <img src={zoomed.src} alt={zoomed.alt} className="book-zoom-image" />
+            </div>
+          ) : (
+            <div
+              ref={zoomRef}
+              className="book-zoom w-full max-w-6xl min-h-0 flex-1 overflow-hidden rounded-lg p-4"
+            />
+          )}
         </div>
       )}
     </div>
