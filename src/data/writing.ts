@@ -13,6 +13,14 @@ export interface Post {
 /** Newest first. The Beyou posts are published on docs.beyouweb.com in both languages. */
 export const posts: Post[] = [
   {
+    key: "counting-with-threads",
+    title: {
+      en: "Counting with threads, from Java 8 to 27",
+      pt: "Contando com threads, do Java 8 ao 27",
+    },
+    own: true,
+  },
+  {
     key: "cache-benchmark",
     title: {
       en: "CPU Cache benchmark between array and linked list",

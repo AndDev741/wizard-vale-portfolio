@@ -68,10 +68,10 @@ export const writingTopics: WritingTopic[] = [
     key: "metal",
     title: { en: "Close to the metal", pt: "Perto do metal" },
     blurb: {
-      en: "Experiments of my own, run on my laptop and read off the CPU's hardware counters. The first one sums the same numbers from an array and from a linked list, and lets the caches decide which is faster.",
-      pt: "Experimentos meus, rodados no meu laptop e lidos direto dos contadores de hardware da CPU. O primeiro soma os mesmos números de um array e de uma lista encadeada, e deixa os caches decidirem qual é mais rápido.",
+      en: "Experiments of my own, run on my laptop. The first sums the same numbers from an array and from a linked list, and reads the CPU's hardware counters to see which one the caches favour. The second has threads fight over one counter on every Java from 8 to 27.",
+      pt: "Experimentos meus, rodados no meu laptop. O primeiro soma os mesmos números de um array e de uma lista encadeada, e lê os contadores de hardware da CPU para ver qual dos dois os caches favorecem. O segundo coloca threads brigando por um contador em todo Java do 8 ao 27.",
     },
-    texts: ["cache-benchmark"],
+    texts: ["cache-benchmark", "counting-with-threads"],
   },
 ];
 
