@@ -67,7 +67,7 @@ async function edition(file, locale) {
       title: data.title ?? file,
       summary: data.summary || null,
       readingMinutes: readingMinutes(body),
-      pages: paginate(body, locale, { imageSize, splitCode: true }),
+      pages: paginate(body, locale, { imageSize, splitCode: true, splitLists: true, keepWithNext: true }),
     },
   };
 }

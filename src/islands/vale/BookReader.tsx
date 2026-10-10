@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t, type Lang } from "../../i18n/ui";
 import type { LibraryLeaf } from "../../data/writingTopics";
+import { bakedLeaves, blocksOf, fitLeaves, settleBlocks, type FittedLeaves } from "./leafFit";
 
 /**
  * The diagrams. A leaf can carry an illustration plate whose data attribute
@@ -49,30 +50,42 @@ async function drawInto(host: HTMLElement | null, source: string) {
   }
 }
 
+async function inkPlate(plate: HTMLElement) {
+  plate.dataset.inked = "1";
+  try {
+    const bytes = Uint8Array.from(atob(plate.dataset.diagram ?? ""), (c) =>
+      c.charCodeAt(0),
+    );
+    const source = new TextDecoder().decode(bytes);
+    const mermaid = await loadMermaid();
+    inkCounter += 1;
+    const { svg } = await mermaid.render(`book-diagram-${inkCounter}`, source);
+    plate.innerHTML = svg;
+    plate.classList.add("book-plate--inked");
+    // Small diagrams are unreadable at leaf width, so the plate opens.
+    plate.setAttribute("role", "button");
+    plate.setAttribute("tabindex", "0");
+  } catch {
+    // The caption stays: "an illustration is being inked here".
+  }
+}
+
 function inkDiagrams(root: HTMLElement | null) {
-  if (!root) return;
-  const plates = root.querySelectorAll<HTMLElement>(
-    "figure[data-diagram]:not([data-inked])",
-  );
-  plates.forEach(async (plate) => {
-    plate.dataset.inked = "1";
-    try {
-      const bytes = Uint8Array.from(atob(plate.dataset.diagram ?? ""), (c) =>
-        c.charCodeAt(0),
-      );
-      const source = new TextDecoder().decode(bytes);
-      const mermaid = await loadMermaid();
-      inkCounter += 1;
-      const { svg } = await mermaid.render(`book-diagram-${inkCounter}`, source);
-      plate.innerHTML = svg;
-      plate.classList.add("book-plate--inked");
-      // Small diagrams are unreadable at leaf width, so the plate opens.
-      plate.setAttribute("role", "button");
-      plate.setAttribute("tabindex", "0");
-    } catch {
-      // The caption stays: "an illustration is being inked here".
-    }
-  });
+  root
+    ?.querySelectorAll<HTMLElement>("figure[data-diagram]:not([data-inked])")
+    .forEach((plate) => void inkPlate(plate));
+}
+
+/** Each text's blocks settled once, however many times its leaves are cut again. */
+const settledCache = new WeakMap<string[], Promise<string[]>>();
+
+function settledBlocks(blocks: string[]) {
+  let settled = settledCache.get(blocks);
+  if (!settled) {
+    settled = settleBlocks(blocks, inkPlate);
+    settledCache.set(blocks, settled);
+  }
+  return settled;
 }
 
 /** Charts and pictures on a leaf open full size too, from the keyboard as well. */
@@ -124,16 +137,70 @@ export function BookReader({
   }, []);
 
   const perSpread = twoUp ? 2 : 1;
-  const spreads = Math.max(1, Math.ceil(leaf.pages.length / perSpread));
+  const baked = useMemo(() => {
+    const blocks = blocksOf(leaf.pages);
+    return { blocks: blocks.flat(), leaves: bakedLeaves(leaf.pages, blocks) };
+  }, [leaf]);
+  // Cut for this text only: another text keeps its baked leaves until its own cut.
+  const [fitted, setFitted] = useState<{ from: typeof baked; leaves: FittedLeaves } | null>(null);
+  const leaves = fitted?.from === baked ? fitted.leaves : baked.leaves;
+  const spreads = Math.max(1, Math.ceil(leaves.pages.length / perSpread));
   const clamped = Math.min(spread, spreads - 1);
 
   const shown = useMemo(() => {
     const from = clamped * perSpread;
-    return leaf.pages.slice(from, from + perSpread).map((html, i) => ({
+    return leaves.pages.slice(from, from + perSpread).map((html, i) => ({
       html,
       index: from + i,
     }));
-  }, [leaf, clamped, perSpread]);
+  }, [leaves, clamped, perSpread]);
+
+  // Where the reader is, as a block of the text rather than a leaf number, so
+  // cutting the leaves again for a new size keeps the same words in view.
+  const readingAt = useRef(0);
+  useEffect(() => {
+    readingAt.current = leaves.firstBlock[clamped * perSpread] ?? 0;
+  }, [leaves, clamped, perSpread]);
+
+  // Cut the leaves for the leaf on screen, and again whenever it changes size.
+  useEffect(() => {
+    const book = bookRef.current;
+    if (!book) return;
+    let cancelled = false;
+    let timer = 0;
+    let lastSize = "";
+    const settled = settledBlocks(baked.blocks);
+    const fit = async () => {
+      const page = book.querySelector<HTMLElement>(".book-page");
+      if (!page) return;
+      const { width, height } = page.getBoundingClientRect();
+      const size = `${Math.round(width)}x${Math.round(height)}`;
+      if (!width || !height || size === lastSize) return;
+      lastSize = size;
+      const blocks = await settled;
+      await document.fonts?.ready;
+      if (cancelled) return;
+      const next = fitLeaves(blocks, book, width, height);
+      const at = readingAt.current;
+      let leafIndex = 0;
+      next.firstBlock.forEach((first, i) => {
+        if (first <= at) leafIndex = i;
+      });
+      setFitted({ from: baked, leaves: next });
+      setSpread(Math.floor(leafIndex / perSpread));
+    };
+    const observer = new ResizeObserver(() => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(fit, 150);
+    });
+    observer.observe(book);
+    void fit();
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [baked, perSpread]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
