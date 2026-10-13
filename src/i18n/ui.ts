@@ -96,8 +96,8 @@ export const ui = {
       flagshipFacts: [
         "One TypeScript core, two clients: React on the web and React Native on Android, published on Google Play, sharing state, API layer and i18n as source in a monorepo.",
         "An AI agent with 33 tools operates the user's real data, on a fallback chain of free-tier LLMs. Running cost so far: zero.",
-        "Self-hosted on the laptop I learned to code on, behind a Cloudflare Tunnel with zero open ports.",
-        "Watched by a full observability stack: Prometheus, Grafana, Loki and GlitchTip, in dev and in prod.",
+        "Self-hosted on the laptop I learned to code on, as a Kubernetes cluster run from Git, behind a Cloudflare Tunnel with zero open ports.",
+        "Watched by a full observability stack: Prometheus, Grafana, Loki and GlitchTip, with email alerts.",
       ],
       liveApp: "Live app",
       googlePlay: "Google Play",
@@ -307,8 +307,8 @@ export const ui = {
       flagshipFacts: [
         "Um núcleo TypeScript, dois clientes: React na web e React Native no Android, publicado na Google Play, compartilhando estado, camada de API e i18n como código-fonte em um monorepo.",
         "Um agente de IA com 33 ferramentas opera os dados reais do usuário, sobre uma cadeia de fallback de LLMs de free tier. Custo até agora: zero.",
-        "Self-hosted no laptop em que aprendi a programar, atrás de um Cloudflare Tunnel com zero portas abertas.",
-        "Vigiado por uma stack completa de observabilidade: Prometheus, Grafana, Loki e GlitchTip, em dev e em produção.",
+        "Self-hosted no laptop em que aprendi a programar, como um cluster Kubernetes operado a partir do Git, atrás de um Cloudflare Tunnel com zero portas abertas.",
+        "Vigiado por uma stack completa de observabilidade: Prometheus, Grafana, Loki e GlitchTip, com alertas por e-mail.",
       ],
       liveApp: "App ao vivo",
       googlePlay: "Google Play",

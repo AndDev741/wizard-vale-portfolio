@@ -102,6 +102,8 @@ export const techCategories: TechCategory[] = [
       { name: "ElastiCache" },
       { name: "MSK" },
       { name: "Docker", icon: "docker" },
+      { name: "Kubernetes", icon: "kubernetes" },
+      { name: "Flux (GitOps)", icon: "flux" },
       { name: "CI/CD pipelines", icon: "githubactions" },
     ],
   },

@@ -43,15 +43,15 @@ export const projectDetail: ProjectDetail[] = [
         pt: "Um agente de IA com 33 ferramentas opera os dados reais do usuário sobre SSE, em uma cadeia de fallback de LLMs de free tier. Quando um provedor falha ou limita, o próximo assume. Custo até agora: zero.",
       },
       {
-        en: "Self-hosted behind a Cloudflare Tunnel with zero open ports on the router. Images publish to GHCR and Watchtower deploys them, with a Playwright suite gating every release.",
-        pt: "Self-hosted atrás de um Cloudflare Tunnel com zero portas abertas no roteador. As imagens publicam no GHCR e o Watchtower faz o deploy, com uma suíte Playwright barrando cada release.",
+        en: "Self-hosted on a single-node Kubernetes cluster (k3s), behind a Cloudflare Tunnel with zero open ports on the router. Everything on it is declared in Git and applied by Flux: CI publishes images to GHCR, Flux deploys each new one, and a Playwright suite gates every release.",
+        pt: "Self-hosted num cluster Kubernetes de um nó só (k3s), atrás de um Cloudflare Tunnel com zero portas abertas no roteador. Tudo nele está declarado no Git e é aplicado pelo Flux: o CI publica as imagens no GHCR, o Flux faz o deploy de cada nova, e uma suíte Playwright barra cada release.",
       },
       {
-        en: "Watched by Prometheus, Grafana, Loki and a self-hosted GlitchTip, with uptime and heartbeat monitors. The same stack runs in development, so nothing about production is a surprise.",
-        pt: "Vigiado por Prometheus, Grafana, Loki e um GlitchTip self-hosted, com monitores de uptime e heartbeat. A mesma stack roda em desenvolvimento, então nada de produção é surpresa.",
+        en: "Watched by Prometheus, Grafana, Loki and a self-hosted GlitchTip, with email alerts, uptime and heartbeat monitors. Backups run nightly and get restored every week into a throwaway database, to prove they work.",
+        pt: "Vigiado por Prometheus, Grafana, Loki e um GlitchTip self-hosted, com alertas por e-mail e monitores de uptime e heartbeat. Os backups rodam toda noite e são restaurados toda semana num banco descartável, para provar que funcionam.",
       },
     ],
-    tech: ["Spring Boot", "Java", "PostgreSQL", "React", "React Native", "Spring AI", "Docker", "Grafana"],
+    tech: ["Spring Boot", "Java", "PostgreSQL", "React", "React Native", "Spring AI", "Kubernetes", "Grafana"],
     years: "2023 - now",
     links: [
       { label: { en: "Live app", pt: "App ao vivo" }, url: "https://app.beyouweb.com" },
