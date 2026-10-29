@@ -12,9 +12,47 @@ export interface ShelfItem {
   lang: string;
   year: string;
   url: string;
+  /** Where it runs, when it runs somewhere a visitor can at least see. */
+  live?: string;
   blurb: Record<Lang, string>;
   relic?: boolean;
 }
+
+/** Newer work that runs on the same node as Beyou, and the repository that runs it. */
+export const beside: ShelfItem[] = [
+  {
+    name: "beConscient",
+    lang: "Kotlin, Go, Java",
+    year: "2026",
+    url: "https://github.com/AndDev741/beConscient",
+    live: "https://beconscient.beyouweb.com",
+    blurb: {
+      en: "Self-hosted screen time for the phone and the desktop, with the hours awake away from screens as the number it puts first.",
+      pt: "Tempo de tela self-hosted para o celular e o desktop, com as horas acordado longe das telas como o número que ela mostra primeiro.",
+    },
+  },
+  {
+    name: "beFree",
+    lang: "Java",
+    year: "2026",
+    url: "https://github.com/AndDev741/beFree",
+    live: "https://befree.beyouweb.com",
+    blurb: {
+      en: "A finance tracker with a web app and a WhatsApp assistant that reads text, photos and statements.",
+      pt: "Um controle financeiro com app web e um assistente no WhatsApp que lê texto, fotos e extratos.",
+    },
+  },
+  {
+    name: "be-infra",
+    lang: "Kubernetes",
+    year: "2026",
+    url: "https://github.com/AndDev741/be-infra",
+    blurb: {
+      en: "GitOps for the k3s node that runs Beyou and everything beside it, with Flux, SOPS and a shared Postgres.",
+      pt: "GitOps do nó k3s que roda o Beyou e tudo ao lado dele, com Flux, SOPS e um Postgres compartilhado.",
+    },
+  },
+];
 
 export const shelf: ShelfItem[] = [
   {

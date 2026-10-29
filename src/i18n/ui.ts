@@ -56,7 +56,7 @@ export const ui = {
       },
       blurbs: {
         experience: "My career, told by three patrons",
-        projects: "Five floors of things I built",
+        projects: "Six floors of things I built",
         writing: "Engineering stories, shelved as books",
         about: "Who I am, by the fire",
         contact: "Where to reach me",
@@ -103,6 +103,8 @@ export const ui = {
       googlePlay: "Google Play",
       docs: "Engineering docs",
       source: "Source",
+      besideTitle: "Beside Beyou",
+      besideSub: "Newer apps on the same node, and the repository that runs them all.",
       shelfTitle: "The shelf",
       shelfSub: "Older artifacts, kept with care.",
       viewOnGithub: "View on GitHub",
@@ -189,6 +191,7 @@ export const ui = {
       },
       floors: {
         grimoire: "The Grimoire Room",
+        engine: "The Engine Room",
         ledger: "The Ledger Room",
         warding: "The Warding Room",
         attic: "The Attic",
@@ -200,6 +203,7 @@ export const ui = {
       },
       floorNotes: {
         grimoire: "The working floor. The grimoire on the table is the one still being written.",
+        engine: "The machinery behind the grimoire: the apps that run beside Beyou, and the repository that keeps them in order.",
         ledger: "Coins and chests, because in here everything is a record of what happened.",
         warding: "Where the wards are kept, the ones that decide what gets through.",
         attic: "Smaller works, and the relic that started the rest.",
@@ -267,7 +271,7 @@ export const ui = {
       },
       blurbs: {
         experience: "Minha carreira, contada por três frequentadores",
-        projects: "Cinco andares de coisas que construí",
+        projects: "Seis andares de coisas que construí",
         writing: "Histórias de engenharia, em forma de livros",
         about: "Quem eu sou, ao pé da lareira",
         contact: "Onde falar comigo",
@@ -314,6 +318,8 @@ export const ui = {
       googlePlay: "Google Play",
       docs: "Docs de engenharia",
       source: "Código",
+      besideTitle: "Ao lado do Beyou",
+      besideSub: "Apps mais novos no mesmo nó, e o repositório que roda todos eles.",
       shelfTitle: "A prateleira",
       shelfSub: "Artefatos mais antigos, guardados com carinho.",
       viewOnGithub: "Ver no GitHub",
@@ -400,6 +406,7 @@ export const ui = {
       },
       floors: {
         grimoire: "Sala do Grimório",
+        engine: "A Casa de Máquinas",
         ledger: "Sala do Livro-Razão",
         warding: "Sala das Guardas",
         attic: "O Sótão",
@@ -411,6 +418,7 @@ export const ui = {
       },
       floorNotes: {
         grimoire: "O andar de trabalho. O grimório na mesa é o que ainda está sendo escrito.",
+        engine: "As máquinas por trás do grimório: os apps que rodam ao lado do Beyou, e o repositório que mantém todos em ordem.",
         ledger: "Moedas e baús, porque aqui dentro tudo é registro do que aconteceu.",
         warding: "Onde ficam as guardas, as que decidem o que passa.",
         attic: "Trabalhos menores, e a relíquia que começou o resto.",

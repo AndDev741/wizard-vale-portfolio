@@ -58,7 +58,113 @@ export const projectDetail: ProjectDetail[] = [
       { label: { en: "Google Play", pt: "Google Play" }, url: "https://play.google.com/store/apps/details?id=com.beyou.mobile" },
       { label: { en: "Engineering docs", pt: "Docs de engenharia" }, url: "https://docs.beyouweb.com" },
       { label: source, url: "https://github.com/AndDev741/Beyou-backend-spring" },
+      { label: { en: "Infrastructure", pt: "Infraestrutura" }, url: "https://github.com/AndDev741/be-infra" },
     ],
+  },
+  {
+    key: "beconscient",
+    name: "beConscient",
+    tagline: {
+      en: "How many hours I was awake away from screens",
+      pt: "Quantas horas fiquei acordado longe das telas",
+    },
+    blurb: {
+      en: "A self-hosted measure of all my screen time, phone and computer, shown on a page I run myself. It records when I pick a screen up, what I do on it and what pulled me in. The number it puts first is the hours I spent awake away from screens, and it exists to give me an honest baseline before I try to change anything.",
+      pt: "Uma medição self-hosted de todo o meu tempo de tela, celular e computador, mostrada numa página que eu mesmo hospedo. Ela registra quando eu pego uma tela, o que faço nela e o que me puxou até lá. O número que ela mostra primeiro são as horas que passei acordado longe das telas, e ela existe para me dar uma linha de base honesta antes de eu tentar mudar qualquer coisa.",
+    },
+    facts: [
+      {
+        en: "Five parts, one contract: a Kotlin collector on Android, a Go agent on the Linux desktop, a Manifest V3 browser extension, a Quarkus backend and a React page, all built against the same event and API definitions.",
+        pt: "Cinco partes, um contrato: um coletor em Kotlin no Android, um agente em Go no desktop Linux, uma extensão Manifest V3 no navegador, um backend Quarkus e uma página React, todos construídos sobre as mesmas definições de evento e de API.",
+      },
+      {
+        en: "Events travel inside an HPKE envelope, so the TLS proxy in front of the server sees only ciphertext. Notification text, window titles and URLs are never collected, and the server drops any field the contract does not list.",
+        pt: "Os eventos viajam dentro de um envelope HPKE, então o proxy TLS na frente do servidor enxerga só texto cifrado. Texto de notificação, títulos de janela e URLs nunca são coletados, e o servidor descarta todo campo que o contrato não lista.",
+      },
+      {
+        en: "Raw events are the source of truth and screen time is a projection of them that can always be rebuilt. A version bump starts a resumable rebuild, block by block, while the page shows its progress.",
+        pt: "Os eventos brutos são a fonte da verdade e o tempo de tela é uma projeção deles que sempre pode ser refeita. Subir a versão inicia uma reconstrução retomável, bloco a bloco, enquanto a página mostra o progresso.",
+      },
+      {
+        en: "The phone collector can also be the home screen. Before it opens an app I chose, it shows a message I wrote and makes me wait, five seconds at first and twice as long with each opening, up to a minute. A focus period locks the phone to the apps I allow.",
+        pt: "O coletor do celular também pode ser a tela inicial. Antes de abrir um app que escolhi, ele mostra uma mensagem que escrevi e me faz esperar, cinco segundos no começo e o dobro a cada abertura, até um minuto. Um período de foco tranca o celular nos apps que eu permiti.",
+      },
+    ],
+    tech: ["Kotlin", "Go", "Quarkus", "React", "PostgreSQL", "HPKE", "Kubernetes"],
+    years: "2026 - now",
+    links: [
+      { label: { en: "Live app", pt: "App ao vivo" }, url: "https://beconscient.beyouweb.com" },
+      { label: source, url: "https://github.com/AndDev741/beConscient" },
+    ],
+  },
+  {
+    key: "befree",
+    name: "beFree",
+    tagline: {
+      en: "A finance tracker that takes its entries over WhatsApp",
+      pt: "Um controle financeiro que recebe os lançamentos pelo WhatsApp",
+    },
+    blurb: {
+      en: "A personal finance tracker with a web app for the month, the budgets and the savings goals, and an assistant on WhatsApp that takes the entries. I send a text, a photo or a PDF statement, and the assistant files it under the right category.",
+      pt: "Um controle de finanças pessoais com um app web para o mês, os orçamentos e as metas de economia, e um assistente no WhatsApp que recebe os lançamentos. Mando um texto, uma foto ou um extrato em PDF, e o assistente lança na categoria certa.",
+    },
+    facts: [
+      {
+        en: "The assistant is DeepSeek behind LangChain4j, with tools that read and change transactions, categories, budgets and goals. Its chat memory lives in Postgres, and every inbound WhatsApp message is recorded by id and handled once.",
+        pt: "O assistente é o DeepSeek por trás do LangChain4j, com ferramentas que leem e alteram transações, categorias, orçamentos e metas. A memória da conversa fica no Postgres, e toda mensagem recebida do WhatsApp é registrada por id e tratada uma vez só.",
+      },
+      {
+        en: "A bank statement PDF is read with PDFBox, IBANs are redacted before the text reaches the model, and the assistant summarises what it found and waits for a yes before importing anything.",
+        pt: "O PDF de um extrato é lido com PDFBox, os IBANs são ocultados antes de o texto chegar ao modelo, e o assistente resume o que achou e espera um sim antes de importar qualquer coisa.",
+      },
+      {
+        en: "A month can start on any day up to the 28th, so a salary paid on the 25th lands in the month it is meant to pay for. Every screen and every assistant tool reads the same calendar.",
+        pt: "Um mês pode começar em qualquer dia até o 28, então um salário pago no dia 25 cai no mês que ele deve pagar. Toda tela e toda ferramenta do assistente leem o mesmo calendário.",
+      },
+      {
+        en: "The backend ships as a GraalVM native image. CI builds it and runs the integration tests against the packaged app before the image goes to GHCR.",
+        pt: "O backend vai para produção como uma imagem nativa GraalVM. O CI a constrói e roda os testes de integração contra o app empacotado antes de a imagem ir para o GHCR.",
+      },
+    ],
+    tech: ["Quarkus", "Java", "GraalVM", "LangChain4j", "React", "TypeScript", "PostgreSQL", "WhatsApp API"],
+    years: "2026",
+    links: [
+      { label: { en: "Live app", pt: "App ao vivo" }, url: "https://befree.beyouweb.com" },
+      { label: source, url: "https://github.com/AndDev741/beFree" },
+    ],
+  },
+  {
+    key: "beinfra",
+    name: "be-infra",
+    tagline: {
+      en: "Everything running on the node, declared in Git",
+      pt: "Tudo que roda no nó, declarado no Git",
+    },
+    blurb: {
+      en: "The repository that describes the single-node k3s cluster behind Beyou, and the Flux that applies it. Beyou, beFree, beConscient, GlitchTip and a private photo library each run in a fenced namespace of their own, and git always shows what is running.",
+      pt: "O repositório que descreve o cluster k3s de um nó só por trás do Beyou, e o Flux que o aplica. Beyou, beFree, beConscient, GlitchTip e uma biblioteca privada de fotos rodam cada um num namespace isolado, e o git sempre mostra o que está rodando.",
+    },
+    facts: [
+      {
+        en: "One Flux Kustomization per piece, each waiting only for what it needs. A broken app never blocks the others, and one command shows the health of each.",
+        pt: "Uma Kustomization do Flux por peça, cada uma esperando só pelo que precisa. Um app quebrado nunca trava os outros, e um comando mostra a saúde de cada uma.",
+      },
+      {
+        en: "The repository is public and every Secret in it is encrypted with SOPS and age. A pre-commit hook runs gitleaks and refuses any Secret still in plain text.",
+        pt: "O repositório é público e todo Secret nele é cifrado com SOPS e age. Um hook de pre-commit roda o gitleaks e recusa qualquer Secret ainda em texto puro.",
+      },
+      {
+        en: "CI pushes an image to GHCR, then Flux image automation commits its digest to Git and rolls it out within about five minutes. A bad build goes back with a git revert.",
+        pt: "O CI publica a imagem no GHCR, depois a automação de imagens do Flux grava o digest no Git e faz o rollout em cerca de cinco minutos. Um build ruim volta com um git revert.",
+      },
+      {
+        en: "Public traffic enters through a Cloudflare Tunnel, with no port open on the router. Private apps are reachable only on the tailnet, through the Tailscale operator.",
+        pt: "O tráfego público entra por um Cloudflare Tunnel, sem porta aberta no roteador. Os apps privados só são alcançáveis pela tailnet, por meio do operador do Tailscale.",
+      },
+    ],
+    tech: ["k3s", "Flux", "SOPS", "CloudNativePG", "Traefik", "Prometheus", "Grafana", "Tailscale"],
+    years: "2026",
+    links: [{ label: source, url: "https://github.com/AndDev741/be-infra" }],
   },
   {
     key: "bitdata",
