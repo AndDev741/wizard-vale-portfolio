@@ -4,7 +4,7 @@ import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import Icon from "../components/Icon.astro";
 import { t, type Lang } from "../i18n/ui";
-import { flagshipLinks, shelf } from "../data/projects";
+import { beside, flagshipLinks, shelf } from "../data/projects";
 
 interface Props {
   lang: Lang;
@@ -12,6 +12,10 @@ interface Props {
 }
 const { lang, path } = Astro.props;
 const dict = t(lang);
+const groups = [
+  { title: dict.projects.besideTitle, sub: dict.projects.besideSub, items: beside },
+  { title: dict.projects.shelfTitle, sub: dict.projects.shelfSub, items: shelf },
+];
 ---
 
 <Base
@@ -78,34 +82,49 @@ const dict = t(lang);
       </div>
     </article>
 
-    <h2 class="mt-16 text-2xl font-bold tracking-tight">{dict.projects.shelfTitle}</h2>
-    <p class="mt-1 text-muted">{dict.projects.shelfSub}</p>
-    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {
-        shelf.map((item) => (
-          <a
-            href={item.url}
-            rel="noopener"
-            class:list={[
-              "group flex flex-col rounded-xl border bg-surface p-5 transition-colors hover:border-accent-fill/60",
-              item.relic ? "border-accent-fill/50" : "border-line",
-            ]}
-          >
-            <div class="flex items-baseline gap-2">
-              <h3 class="font-bold">{item.name}</h3>
-              <span class="ml-auto text-xs text-muted">
-                {item.lang} · {item.year}
-              </span>
-            </div>
-            <p class="mt-2 text-sm leading-relaxed text-muted">{item.blurb[lang]}</p>
-            <span class="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
-              {dict.projects.viewOnGithub}
-              <Icon name="arrowUpRight" class="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-            </span>
-          </a>
-        ))
-      }
-    </div>
+    {
+      groups.map((group) => (
+        <>
+          <h2 class="mt-16 text-2xl font-bold tracking-tight">{group.title}</h2>
+          <p class="mt-1 text-muted">{group.sub}</p>
+          <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {group.items.map((item) => (
+              <article
+                class:list={[
+                  "group relative flex flex-col rounded-xl border bg-surface p-5 transition-colors hover:border-accent-fill/60",
+                  item.relic ? "border-accent-fill/50" : "border-line",
+                ]}
+              >
+                <div class="flex items-baseline gap-2">
+                  <h3 class="font-bold">{item.name}</h3>
+                  <span class="ml-auto text-xs text-muted">
+                    {item.lang} · {item.year}
+                  </span>
+                </div>
+                <p class="mt-2 text-sm leading-relaxed text-muted">{item.blurb[lang]}</p>
+                <div class="mt-auto flex items-center gap-5 pt-4 text-sm font-semibold text-accent">
+                  {/* The whole card is the GitHub link; the live link sits above it. */}
+                  <a
+                    href={item.url}
+                    rel="noopener"
+                    class="inline-flex items-center gap-1 after:absolute after:inset-0"
+                  >
+                    {dict.projects.viewOnGithub}
+                    <Icon name="arrowUpRight" class="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </a>
+                  {item.live && (
+                    <a href={item.live} rel="noopener" class="relative z-10 inline-flex items-center gap-1 hover:underline">
+                      {dict.projects.liveApp}
+                      <Icon name="arrowUpRight" class="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      ))
+    }
   </main>
   <Footer lang={lang} />
 </Base>

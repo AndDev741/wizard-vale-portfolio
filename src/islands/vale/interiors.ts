@@ -91,6 +91,7 @@ export interface InteriorFloor {
   key:
     | "hearthroom"
     | "grimoire"
+    | "engine"
     | "ledger"
     | "warding"
     | "attic"
@@ -326,6 +327,42 @@ export const towerInterior: InteriorConfig = {
         floor("dg_barrel_small_stack", 212, 6.4, 15, 1),
         floor("dg_box_large", 232, 6.6, -10, 1),
         floor("dg_crates_stacked", 118, 6.6, 0, 1),
+      ],
+    },
+    {
+      // beConscient, be-infra and beFree. They run on the same node as Beyou, so
+      // this floor is the machinery behind the grimoire: kegs and crates in the
+      // store, and a chest with the key to the secrets on the table. Three
+      // boards across the back wall, laid out the way the observatory does it.
+      key: "engine",
+      accent: "#7fd1c2",
+      boards: [
+        { subject: "project:beconscient", angle: 310 },
+        { subject: "project:beinfra", angle: 0 },
+        { subject: "project:befree", angle: 50 },
+      ],
+      torches: [30, 330, 126, 234],
+      banners: [342, 22],
+      props: [
+        { model: "rug_rectangle_stripes_A", x: 0, z: 3.2, scale: 1.3, rotY: 0 },
+        // the table on the flank, so the board behind it stays in view
+        floor("dg_table_long_decorated_A", 312, 5, 20, 1),
+        onTop("book_set", -3.4, 3.2, TABLE_TOP, -0.3, 0.9),
+        onTop("dg_key", -4.4, 2.2, TABLE_TOP, 0.4, 0.8),
+        floor("dg_stool", 338, 4.4, 0, 1),
+        floor("dg_stool", 24, 4.6, 0, 1),
+        // pillars and columns on the near flanks, clear of every board
+        floor("dg_pillar_decorated", 130, 7, 0, 1),
+        floor("dg_pillar_decorated", 230, 7, 0, 1),
+        floor("dg_column", 160, 7.2, 0, 1),
+        floor("dg_column", 200, 7.2, 0, 1),
+        // the store
+        wall("dg_wall_shelves", 92, RADIUS - 0.1, 0, 1),
+        floor("dg_barrel_large", 70, 6.9, 0, 1),
+        floor("dg_keg", 146, 6.6, 0, 1),
+        floor("dg_candle_lit", 156, 6.4, 0, 1),
+        floor("dg_candle_triple", 210, 6.2, 0, 1),
+        floor("dg_chest", 244, 6.4, 10, 1),
       ],
     },
     {

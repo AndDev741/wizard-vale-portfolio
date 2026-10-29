@@ -1,5 +1,6 @@
 import type { Lang, SectionKey } from "../../i18n/ui";
 import { achievements } from "../../data/achievements";
+import { towerInterior } from "./interiors";
 
 /**
  * Which badges this visitor has, kept in their own browser. Nothing is sent
@@ -165,8 +166,8 @@ export function record(deed: Deed): string[] {
       if (p.langs.length >= 2) give("bilingual");
       break;
     case "floor":
-      // The observatory is the tower's fifth room.
-      if (deed.index >= 4) give("summit");
+      // The observatory is the tower's last room.
+      if (deed.index >= towerInterior.floors.length - 1) give("summit");
       break;
     case "light":
       if (deed.night > 0.6) give("nightowl");
